@@ -276,33 +276,37 @@ export const calculateSnap = (
       matchingGhostSockets.push(...ghostLocals);
     }
 
-    let bestDist = Infinity;
+    // Find the ghost socket whose normal most directly opposes the target socket's normal
+    // This ensures pieces snap edge-to-edge correctly regardless of cursor position
+    if (matchingGhostSockets.length > 0) {
+      let bestSocket = matchingGhostSockets[0];
+      let bestScore = -Infinity;
 
-    // For each matching socket on the ghost piece, calculate where it would need to be
-    // to align with the target socket (normals facing each other)
-    for (const gSocket of matchingGhostSockets) {
-      // The target normal points outward from existing building
-      // We need our socket's normal to point opposite (toward the existing building)
+      for (const gSocket of matchingGhostSockets) {
+        // Score based on how opposite the normals are
+        // We want the ghost socket's normal to point toward the target (opposite to target's normal)
+        const score = -gSocket.normal.dot(closestSocket.normal);
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestSocket = gSocket;
+        }
+      }
+
+      // Calculate rotation to align the selected ghost socket's normal opposite to target's normal
+      // Target normal points outward from existing piece
+      // Ghost socket normal should point toward target (opposite direction)
       const targetNormal = closestSocket.normal.clone().negate();
-
-      // Calculate the rotation needed to align the ghost socket's normal with target
       const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
-      const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
+      const localAngle = Math.atan2(bestSocket.normal.x, bestSocket.normal.z);
       const rotY = targetAngle - localAngle;
 
       const candidateRot = new THREE.Euler(0, rotY, 0);
-
-      // Rotate the local socket position and calculate where piece center should be
-      const rotatedLocalPos = gSocket.position.clone().applyEuler(candidateRot);
+      const rotatedLocalPos = bestSocket.position.clone().applyEuler(candidateRot);
       const candidatePos = closestSocket.position.clone().sub(rotatedLocalPos);
 
-      // Pick the socket that results in position closest to cursor
-      const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
-      if (distToCursor < bestDist) {
-        bestDist = distToCursor;
-        finalPos = candidatePos;
-        finalRot = candidateRot;
-      }
+      finalPos = candidatePos;
+      finalRot = candidateRot;
     }
     snappedToSocket = true;
   } else {
