@@ -1,20 +1,35 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Dune: Awakening Base Building Planner
 
-# Run and deploy your AI Studio app
+A 3D base building planner for Funcom's "Dune: Awakening" game, built with Three.js, React Three Fiber, and TypeScript.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1JmJN5ywGcDyyHYJk07NvgAm5QIzS3MR7
+- **Foundation pieces**: Square, triangle, and curved corners for flexible base layouts
+- **Walls**: Full walls, half walls, windows, and doorways
+- **Roofs & Inclines**: Square/triangle roofs, stairs, and ramps
+- **Smart snapping**: Socket-based system for precise piece placement
+- **Save/Load**: Quick save to browser storage
+- **Export/Import**: Share blueprints as JSON files
 
-## Run Locally
+## Quick Start
 
-**Prerequisites:**  Node.js
+```bash
+npm install
+npm run dev
+```
 
+## Controls
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- **Left Click**: Place structure
+- **Right Click**: Demolish structure
+- **R**: Rotate preview (45° increments)
+- **Middle Mouse Drag**: Orbit camera
+- **Right Mouse Drag**: Pan camera
+
+## Building System
+
+The building system uses tessellating geometric shapes based on squares and 60° triangles, allowing for structures ranging from simple rectangular bases to complex rounded, pyramidal, or organic shapes.
+
+## License
+
+MIT
