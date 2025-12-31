@@ -271,7 +271,7 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, materials
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'r') {
-        setManualRot(prev => prev + Math.PI / 4);
+        setManualRot(prev => prev + Math.PI / 2); // 90° rotation steps
       }
     };
     window.addEventListener('keydown', handleKeyDown);

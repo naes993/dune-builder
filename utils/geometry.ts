@@ -266,33 +266,37 @@ export const calculateSnap = (
 
   if (closestSocket) {
     const ghostLocals = getLocalSockets(activeType);
-    
+
     // Filter ghost sockets to those compatible with the target socket
     const targetCompatible = SOCKET_COMPATIBILITY[closestSocket.socketType] || [];
     const matchingGhostSockets = ghostLocals.filter(gs => targetCompatible.includes(gs.socketType));
-    
+
     if (matchingGhostSockets.length === 0) {
       // Fallback to all sockets if no type match
       matchingGhostSockets.push(...ghostLocals);
     }
-    
-    let bestDist = Infinity;
-    
-    const snapStep = Math.PI / 4; // 45° rotation snapping
-    const rotationOffset = Math.round(currentRotationY / snapStep) * snapStep;
 
+    let bestDist = Infinity;
+
+    // For each matching socket on the ghost piece, calculate where it would need to be
+    // to align with the target socket (normals facing each other)
     for (const gSocket of matchingGhostSockets) {
+      // The target normal points outward from existing building
+      // We need our socket's normal to point opposite (toward the existing building)
       const targetNormal = closestSocket.normal.clone().negate();
+
+      // Calculate the rotation needed to align the ghost socket's normal with target
       const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
       const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
-      
-      let angleDiff = targetAngle - localAngle;
-      const finalRotY = angleDiff + rotationOffset;
-      const candidateRot = new THREE.Euler(0, finalRotY, 0);
-      
+      const rotY = targetAngle - localAngle;
+
+      const candidateRot = new THREE.Euler(0, rotY, 0);
+
+      // Rotate the local socket position and calculate where piece center should be
       const rotatedLocalPos = gSocket.position.clone().applyEuler(candidateRot);
       const candidatePos = closestSocket.position.clone().sub(rotatedLocalPos);
-      
+
+      // Pick the socket that results in position closest to cursor
       const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
       if (distToCursor < bestDist) {
         bestDist = distToCursor;
@@ -303,11 +307,14 @@ export const calculateSnap = (
     snappedToSocket = true;
   } else {
     // Grid snapping when not near any socket
-    const gridSnap = 1;
+    const gridSnap = UNIT_SIZE; // Snap to 4-unit grid
     finalPos.x = Math.round(rayIntersectionPoint.x / gridSnap) * gridSnap;
     finalPos.z = Math.round(rayIntersectionPoint.z / gridSnap) * gridSnap;
     finalPos.y = 0;
-    finalRot = new THREE.Euler(0, currentRotationY, 0);
+    // Snap rotation to 90° increments
+    const rotSnap = Math.PI / 2;
+    const snappedRot = Math.round(currentRotationY / rotSnap) * rotSnap;
+    finalRot = new THREE.Euler(0, snappedRot, 0);
   }
 
   // Overlap detection
