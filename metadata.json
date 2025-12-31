@@ -1,0 +1,5 @@
+{
+  "name": "Dune Builder",
+  "description": "A base building planner inspired by Dune: Awakening featuring hybrid square and triangle foundation tessellation.",
+  "requestFramePermissions": []
+}
