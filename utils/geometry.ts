@@ -1,16 +1,15 @@
 import * as THREE from 'three';
-import { 
-  BuildingType, 
-  BuildingData, 
-  Socket, 
+import {
+  BuildingType,
+  BuildingData,
+  Socket,
   SocketType,
   SOCKET_COMPATIBILITY,
-  UNIT_SIZE, 
-  TRIANGLE_APOTHEM, 
+  UNIT_SIZE,
+  TRIANGLE_APOTHEM,
   WALL_HEIGHT,
   HALF_WALL_HEIGHT,
   FOUNDATION_HEIGHT,
-  CURVE_RADIUS
 } from '../types';
 
 interface LocalSocket {
@@ -47,14 +46,21 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   } 
   
   else if (type === BuildingType.TRIANGLE_FOUNDATION) {
-    // Three edge sockets at 120° intervals
+    // THREE.CylinderGeometry with 3 radial segments creates a triangular prism.
+    // Vertices are at angles 0°, 120°, 240° from +Z axis (at distance TRIANGLE_RADIUS).
+    // Edges connect adjacent vertices, so edge midpoints are at 60°, 180°, 300°
+    // at distance TRIANGLE_APOTHEM from center.
     for (let i = 0; i < 3; i++) {
-      const angle = (i * 2 * Math.PI) / 3;
-      const pos = new THREE.Vector3(0, 0, TRIANGLE_APOTHEM).applyAxisAngle(new THREE.Vector3(0, 1, 0), -angle);
-      const norm = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), -angle);
+      const angle = (i * 2 * Math.PI) / 3 + Math.PI / 3; // 60°, 180°, 300°
+      const pos = new THREE.Vector3(
+        Math.sin(angle) * TRIANGLE_APOTHEM,
+        0,
+        Math.cos(angle) * TRIANGLE_APOTHEM
+      );
+      const norm = new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle));
       sockets.push({ position: pos, normal: norm, socketType: SocketType.FOUNDATION_EDGE });
-      
-      // Top socket for each edge
+
+      // Top socket for each edge (for wall placement)
       const topPos = pos.clone();
       topPos.y = FOUNDATION_HEIGHT;
       sockets.push({ position: topPos, normal: norm.clone(), socketType: SocketType.FOUNDATION_TOP });
