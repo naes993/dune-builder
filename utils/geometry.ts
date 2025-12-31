@@ -233,6 +233,9 @@ const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
 
 /**
  * Enhanced snapping logic with socket type compatibility.
+ * Uses a two-phase approach to avoid flickering:
+ * 1. Find all possible snap configurations (target socket + ghost socket pairs)
+ * 2. Pick the one whose resulting position is closest to cursor
  */
 export const calculateSnap = (
   rayIntersectionPoint: THREE.Vector3,
@@ -245,7 +248,7 @@ export const calculateSnap = (
   }
 
   // Collect all world sockets from existing buildings
-  let allSockets: Socket[] = [];
+  const allSockets: Socket[] = [];
   buildings.forEach(b => {
     allSockets.push(...getWorldSockets(b));
   });
@@ -254,66 +257,77 @@ export const calculateSnap = (
   const compatibleTypes = getCompatibleSocketTypes(activeType);
   const compatibleSockets = allSockets.filter(s => compatibleTypes.includes(s.socketType));
 
-  // Find closest compatible socket
-  let closestSocket: Socket | null = null;
-  let minDist = 2.5; // Snap radius
-
-  for (const s of compatibleSockets) {
-    const dist = s.position.distanceTo(rayIntersectionPoint);
-    if (dist < minDist) {
-      minDist = dist;
-      closestSocket = s;
-    }
-  }
+  // Get ghost piece's local sockets
+  const ghostLocals = getLocalSockets(activeType);
 
   let finalPos = new THREE.Vector3(rayIntersectionPoint.x, 0, rayIntersectionPoint.z);
   let finalRot = new THREE.Euler(0, currentRotationY, 0);
   let snappedToSocket = false;
 
-  if (closestSocket) {
-    const ghostLocals = getLocalSockets(activeType);
+  // Find the best snap configuration by evaluating all valid socket pairs
+  // This avoids flickering by always choosing the configuration with the
+  // resulting position closest to the cursor
+  interface SnapCandidate {
+    position: THREE.Vector3;
+    rotation: THREE.Euler;
+    distToCursor: number;
+  }
 
-    // Filter ghost sockets to those compatible with the target socket
-    const targetCompatible = SOCKET_COMPATIBILITY[closestSocket.socketType] || [];
+  let bestCandidate: SnapCandidate | null = null;
+  const SNAP_RADIUS = 2.5;
+
+  for (const targetSocket of compatibleSockets) {
+    // Only consider sockets within snap radius of cursor
+    const distToSocket = targetSocket.position.distanceTo(rayIntersectionPoint);
+    if (distToSocket > SNAP_RADIUS) continue;
+
+    // Find compatible ghost sockets
+    const targetCompatible = SOCKET_COMPATIBILITY[targetSocket.socketType] || [];
     const matchingGhostSockets = ghostLocals.filter(gs => targetCompatible.includes(gs.socketType));
 
-    if (matchingGhostSockets.length === 0) {
-      // Fallback to all sockets if no type match
-      matchingGhostSockets.push(...ghostLocals);
-    }
+    if (matchingGhostSockets.length === 0) continue;
 
-    // Find the ghost socket whose normal most directly opposes the target socket's normal
-    // This ensures pieces snap edge-to-edge correctly regardless of cursor position
-    if (matchingGhostSockets.length > 0) {
-      let bestSocket = matchingGhostSockets[0];
-      let bestScore = -Infinity;
+    // For each matching ghost socket, find the one that opposes the target normal
+    // (best alignment score)
+    let bestGhostSocket = matchingGhostSockets[0];
+    let bestAlignScore = -Infinity;
 
-      for (const gSocket of matchingGhostSockets) {
-        // Score based on how opposite the normals are
-        // We want the ghost socket's normal to point toward the target (opposite to target's normal)
-        const score = -gSocket.normal.dot(closestSocket.normal);
-
-        if (score > bestScore) {
-          bestScore = score;
-          bestSocket = gSocket;
-        }
+    for (const gSocket of matchingGhostSockets) {
+      const alignScore = -gSocket.normal.dot(targetSocket.normal);
+      if (alignScore > bestAlignScore) {
+        bestAlignScore = alignScore;
+        bestGhostSocket = gSocket;
       }
-
-      // Calculate rotation to align the selected ghost socket's normal opposite to target's normal
-      // Target normal points outward from existing piece
-      // Ghost socket normal should point toward target (opposite direction)
-      const targetNormal = closestSocket.normal.clone().negate();
-      const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
-      const localAngle = Math.atan2(bestSocket.normal.x, bestSocket.normal.z);
-      const rotY = targetAngle - localAngle;
-
-      const candidateRot = new THREE.Euler(0, rotY, 0);
-      const rotatedLocalPos = bestSocket.position.clone().applyEuler(candidateRot);
-      const candidatePos = closestSocket.position.clone().sub(rotatedLocalPos);
-
-      finalPos = candidatePos;
-      finalRot = candidateRot;
     }
+
+    // Only consider well-aligned sockets (normals roughly opposing)
+    if (bestAlignScore < 0.5) continue;
+
+    // Calculate the resulting position and rotation
+    const targetNormal = targetSocket.normal.clone().negate();
+    const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
+    const localAngle = Math.atan2(bestGhostSocket.normal.x, bestGhostSocket.normal.z);
+    const rotY = targetAngle - localAngle;
+
+    const candidateRot = new THREE.Euler(0, rotY, 0);
+    const rotatedLocalPos = bestGhostSocket.position.clone().applyEuler(candidateRot);
+    const candidatePos = targetSocket.position.clone().sub(rotatedLocalPos);
+
+    // Score by distance from cursor to resulting piece center
+    const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
+
+    if (!bestCandidate || distToCursor < bestCandidate.distToCursor) {
+      bestCandidate = {
+        position: candidatePos,
+        rotation: candidateRot,
+        distToCursor,
+      };
+    }
+  }
+
+  if (bestCandidate) {
+    finalPos = bestCandidate.position;
+    finalRot = bestCandidate.rotation;
     snappedToSocket = true;
   } else {
     // Grid snapping when not near any socket
