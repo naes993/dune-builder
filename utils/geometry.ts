@@ -307,9 +307,11 @@ export const calculateSnap = (
     snappedToSocket = true;
   } else {
     // Grid snapping when not near any socket
-    const gridSnap = UNIT_SIZE; // Snap to 4-unit grid
-    finalPos.x = Math.round(rayIntersectionPoint.x / gridSnap) * gridSnap;
-    finalPos.z = Math.round(rayIntersectionPoint.z / gridSnap) * gridSnap;
+    // Offset by half grid so pieces align at grid lines (not centered on intersections)
+    const gridSnap = UNIT_SIZE;
+    const offset = gridSnap / 2;
+    finalPos.x = Math.round((rayIntersectionPoint.x - offset) / gridSnap) * gridSnap + offset;
+    finalPos.z = Math.round((rayIntersectionPoint.z - offset) / gridSnap) * gridSnap + offset;
     finalPos.y = 0;
     // Snap rotation to 90° increments
     const rotSnap = Math.PI / 2;
@@ -317,14 +319,40 @@ export const calculateSnap = (
     finalRot = new THREE.Euler(0, snappedRot, 0);
   }
 
-  // Overlap detection
+  // Overlap detection - check if new piece would overlap existing pieces
   let isValid = true;
-  const overlapThreshold = 0.2; 
+  const isFoundation = [
+    BuildingType.SQUARE_FOUNDATION,
+    BuildingType.TRIANGLE_FOUNDATION,
+    BuildingType.CURVED_FOUNDATION
+  ].includes(activeType);
+
   for (const b of buildings) {
     const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
-    if (bPos.distanceTo(finalPos) < overlapThreshold) {
-      isValid = false;
-      break;
+    const dist = bPos.distanceTo(finalPos);
+
+    // For foundations, use a larger threshold to prevent overlapping
+    if (isFoundation) {
+      const bIsFoundation = [
+        BuildingType.SQUARE_FOUNDATION,
+        BuildingType.TRIANGLE_FOUNDATION,
+        BuildingType.CURVED_FOUNDATION
+      ].includes(b.type);
+
+      if (bIsFoundation) {
+        // Foundations shouldn't overlap - minimum distance is roughly piece size
+        // Allow some tolerance for edge-to-edge placement
+        if (dist < UNIT_SIZE * 0.9) {
+          isValid = false;
+          break;
+        }
+      }
+    } else {
+      // For other pieces, just check for exact overlap
+      if (dist < 0.2) {
+        isValid = false;
+        break;
+      }
     }
   }
 
