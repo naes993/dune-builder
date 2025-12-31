@@ -61,41 +61,32 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     }
   }
   
-  else if (type === BuildingType.INNER_CURVED_CORNER) {
-    // Quarter circle - two straight edges + one curved edge
-    // The piece sits in the positive X/Z quadrant with the curved arc at radius CURVE_RADIUS
-    // Straight edges run along X axis (from origin to +X) and Z axis (from origin to +Z)
-    // Socket positions are at the CENTER of each straight edge, with normals pointing OUTWARD
+  else if (type === BuildingType.CURVED_FOUNDATION) {
+    // Quarter circle foundation - centered with corner at (-halfSize, -halfSize)
+    // Two straight edges that match square foundation edges exactly:
+    // - Edge along X axis at z = -halfSize (from x=-halfSize to x=+halfSize), normal points -Z
+    // - Edge along Z axis at x = -halfSize (from z=-halfSize to z=+halfSize), normal points -X
+    // These match the square's edges at z=-halfSize (normal -Z) and x=-halfSize (normal -X)
 
-    // Straight edge along Z axis (at x=0, from z=0 to z=CURVE_RADIUS) - normal points -X
-    sockets.push({ position: new THREE.Vector3(0, 0, halfSize), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_EDGE });
-    // Straight edge along X axis (at z=0, from x=0 to x=CURVE_RADIUS) - normal points -Z
-    sockets.push({ position: new THREE.Vector3(halfSize, 0, 0), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_EDGE });
+    // Straight edge along X (at z = -halfSize) - matches square's -Z edge
+    sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_EDGE });
+    // Straight edge along Z (at x = -halfSize) - matches square's -X edge
+    sockets.push({ position: new THREE.Vector3(-halfSize, 0, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_EDGE });
 
     // Top sockets for walls along the straight edges
-    sockets.push({ position: new THREE.Vector3(0, FOUNDATION_HEIGHT, halfSize), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
-    sockets.push({ position: new THREE.Vector3(halfSize, FOUNDATION_HEIGHT, 0), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_TOP });
+    sockets.push({ position: new THREE.Vector3(0, FOUNDATION_HEIGHT, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_TOP });
+    sockets.push({ position: new THREE.Vector3(-halfSize, FOUNDATION_HEIGHT, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
 
-    // Curved edge sockets (at intervals along the arc) - normals point outward from center
-    for (let i = 1; i < 4; i++) {
-      const angle = (i * Math.PI) / 4; // 22.5°, 45°, 67.5°
-      const x = Math.cos(angle) * CURVE_RADIUS;
-      const z = Math.sin(angle) * CURVE_RADIUS;
+    // Curved edge sockets (for snapping curved pieces to each other)
+    // Arc goes from (halfSize, -halfSize) around to (-halfSize, halfSize) centered at (-halfSize, -halfSize)
+    for (let i = 1; i <= 3; i++) {
+      const angle = (i * Math.PI) / 8; // 22.5°, 45°, 67.5°
+      const x = -halfSize + Math.cos(angle) * UNIT_SIZE;
+      const z = -halfSize + Math.sin(angle) * UNIT_SIZE;
       const normal = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
       sockets.push({ position: new THREE.Vector3(x, 0, z), normal: normal, socketType: SocketType.FOUNDATION_EDGE });
       sockets.push({ position: new THREE.Vector3(x, FOUNDATION_HEIGHT, z), normal: normal.clone(), socketType: SocketType.FOUNDATION_TOP });
     }
-  }
-  
-  else if (type === BuildingType.OUTER_CURVED_CORNER) {
-    // Concave corner piece - fills gap around circular structures
-    // Two straight edges
-    sockets.push({ position: new THREE.Vector3(-halfSize, 0, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_EDGE });
-    sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_EDGE });
-    
-    // Top sockets for walls
-    sockets.push({ position: new THREE.Vector3(-halfSize, FOUNDATION_HEIGHT, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
-    sockets.push({ position: new THREE.Vector3(0, FOUNDATION_HEIGHT, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_TOP });
   }
   
   // ===================
@@ -199,10 +190,9 @@ export const getWorldSockets = (building: BuildingData): Socket[] => {
 const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
   // Determine what socket types this piece provides
   const isFoundation = [
-    BuildingType.SQUARE_FOUNDATION, 
+    BuildingType.SQUARE_FOUNDATION,
     BuildingType.TRIANGLE_FOUNDATION,
-    BuildingType.INNER_CURVED_CORNER,
-    BuildingType.OUTER_CURVED_CORNER
+    BuildingType.CURVED_FOUNDATION
   ].includes(activeType);
   
   const isWall = [

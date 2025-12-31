@@ -49,44 +49,17 @@ const BuildingMesh = ({ type, position, rotation, isGhost, isValid = true, id, w
             {!isGhost && <lineSegments><edgesGeometry args={[new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3)]} /><meshBasicMaterial color="black" /></lineSegments>}
          </>
        )
-    } else if (type === BuildingType.INNER_CURVED_CORNER) {
-       // Quarter circle foundation (convex)
-       const shape = new THREE.Shape();
-       shape.moveTo(0, 0);
-       shape.lineTo(CURVE_RADIUS, 0);
-       shape.absarc(0, 0, CURVE_RADIUS, 0, Math.PI / 2, false);
-       shape.lineTo(0, 0);
-       
-       const extrudeSettings = { depth: FOUNDATION_HEIGHT, bevelEnabled: false };
-       return (
-         <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -FOUNDATION_HEIGHT / 2, 0]}>
-           <mesh>
-             <extrudeGeometry args={[shape, extrudeSettings]} />
-             {isGhost ? (
-               <primitive object={isValid ? materials.ghost : materials.error} attach="material" />
-             ) : (
-               <meshStandardMaterial color="#7c7c7c" roughness={0.8} wireframe={wireframe} />
-             )}
-           </mesh>
-         </group>
-       );
-    } else if (type === BuildingType.OUTER_CURVED_CORNER) {
-       // Concave corner piece (fills the gap around circular structures)
-       const shape = new THREE.Shape();
+    } else if (type === BuildingType.CURVED_FOUNDATION) {
+       // Quarter circle foundation - centered so straight edges align with square foundation edges
+       // The piece is centered at origin, with the arc in the +X/+Z quadrant
+       // Straight edges run along -X (at z=-halfSize) and -Z (at x=-halfSize)
        const halfSize = UNIT_SIZE / 2;
-       shape.moveTo(-halfSize, -halfSize);
-       shape.lineTo(halfSize, -halfSize);
-       shape.lineTo(halfSize, halfSize);
-       shape.lineTo(-halfSize, halfSize);
-       shape.lineTo(-halfSize, -halfSize);
-       
-       // Cut out the quarter circle
-       const hole = new THREE.Path();
-       hole.moveTo(halfSize, halfSize);
-       hole.absarc(halfSize, halfSize, CURVE_RADIUS, Math.PI, Math.PI * 1.5, false);
-       hole.lineTo(halfSize, halfSize);
-       shape.holes.push(hole);
-       
+       const shape = new THREE.Shape();
+       shape.moveTo(-halfSize, -halfSize);  // Corner at (-2, -2)
+       shape.lineTo(halfSize, -halfSize);   // Along -Z edge to (+2, -2)
+       shape.absarc(-halfSize, -halfSize, UNIT_SIZE, 0, Math.PI / 2, false); // Arc from (+2,-2) to (-2,+2)
+       shape.lineTo(-halfSize, -halfSize);  // Back to corner
+
        const extrudeSettings = { depth: FOUNDATION_HEIGHT, bevelEnabled: false };
        return (
          <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -FOUNDATION_HEIGHT / 2, 0]}>
@@ -260,7 +233,7 @@ const BuildingMesh = ({ type, position, rotation, isGhost, isValid = true, id, w
       offsetY = FOUNDATION_HEIGHT / 2;
       geomRotationY = Math.PI;
   }
-  else if (type === BuildingType.INNER_CURVED_CORNER || type === BuildingType.OUTER_CURVED_CORNER) {
+  else if (type === BuildingType.CURVED_FOUNDATION) {
       offsetY = FOUNDATION_HEIGHT / 2;
   }
   else if (type === BuildingType.WALL || type === BuildingType.WINDOW_WALL || type === BuildingType.DOORWAY) offsetY = WALL_HEIGHT / 2;
@@ -273,7 +246,7 @@ const BuildingMesh = ({ type, position, rotation, isGhost, isValid = true, id, w
       userData={{ isBuilding: true, id }}
       raycast={isGhost ? () => null : undefined}
     >
-      {isGhost && type !== BuildingType.STAIRS && type !== BuildingType.TRIANGLE_ROOF && type !== BuildingType.INNER_CURVED_CORNER && type !== BuildingType.OUTER_CURVED_CORNER && type !== BuildingType.DOORWAY && type !== BuildingType.RAMP ? (
+      {isGhost && type !== BuildingType.STAIRS && type !== BuildingType.TRIANGLE_ROOF && type !== BuildingType.CURVED_FOUNDATION && type !== BuildingType.DOORWAY && type !== BuildingType.RAMP ? (
           <>
              {type === BuildingType.TRIANGLE_FOUNDATION ? 
                 <cylinderGeometry args={[TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3]} /> :

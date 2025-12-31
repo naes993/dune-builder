@@ -1,6 +1,6 @@
 import React from 'react';
 import { BuildingType } from '../types';
-import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, CircleDot, DoorOpen, Minus, Download, Upload } from 'lucide-react';
+import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload } from 'lucide-react';
 
 interface UIProps {
   activeType: BuildingType;
@@ -19,8 +19,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
     // Foundations
     { type: BuildingType.SQUARE_FOUNDATION, icon: Square, label: 'Square', category: 'foundation' },
     { type: BuildingType.TRIANGLE_FOUNDATION, icon: Triangle, label: 'Triangle', category: 'foundation' },
-    { type: BuildingType.INNER_CURVED_CORNER, icon: Circle, label: 'Curve In', category: 'foundation' },
-    { type: BuildingType.OUTER_CURVED_CORNER, icon: CircleDot, label: 'Curve Out', category: 'foundation' },
+    { type: BuildingType.CURVED_FOUNDATION, icon: Circle, label: 'Curved', category: 'foundation' },
     // Walls
     { type: BuildingType.WALL, icon: BrickWall, label: 'Wall', category: 'wall' },
     { type: BuildingType.HALF_WALL, icon: Minus, label: 'Half Wall', category: 'wall' },
