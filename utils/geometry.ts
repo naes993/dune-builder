@@ -47,17 +47,41 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   
   else if (type === BuildingType.TRIANGLE_FOUNDATION) {
     // THREE.CylinderGeometry with 3 radial segments creates a triangular prism.
-    // Vertices are at angles 0°, 120°, 240° from +Z axis (at distance TRIANGLE_RADIUS).
-    // Edges connect adjacent vertices, so edge midpoints are at 60°, 180°, 300°
-    // at distance TRIANGLE_APOTHEM from center.
-    for (let i = 0; i < 3; i++) {
-      const angle = (i * 2 * Math.PI) / 3 + Math.PI / 3; // 60°, 180°, 300°
+    // In THREE.js, CylinderGeometry vertices start at +X axis and go counterclockwise when viewed from above.
+    // With 3 segments: vertices at 90°, 210°, 330° (or equivalently: +Y in 2D, then 120° apart)
+    // Actually, THREE.js CylinderGeometry starts the first vertex at angle = PI/2 (top of circle)
+    // then places subsequent vertices at 120° intervals going counterclockwise.
+    //
+    // For a 3-segment cylinder (triangular prism), vertices are at:
+    //   - Vertex 0: angle = PI/2 (90°) -> position (0, y, radius) pointing +Z
+    //   - Vertex 1: angle = PI/2 + 2PI/3 = 7PI/6 (210°)
+    //   - Vertex 2: angle = PI/2 + 4PI/3 = 11PI/6 (330°)
+    //
+    // Edge midpoints are between vertices, so at angles:
+    //   - Edge 0-1: (90° + 210°)/2 = 150°
+    //   - Edge 1-2: (210° + 330°)/2 = 270° (pointing -Z)
+    //   - Edge 2-0: (330° + 90° + 360°)/2 = 390° = 30°
+    //
+    // Converting to radians: 150° = 5PI/6, 270° = 3PI/2, 30° = PI/6
+    const edgeAngles = [
+      Math.PI / 6,      // 30° - edge between vertex 2 and vertex 0
+      (5 * Math.PI) / 6, // 150° - edge between vertex 0 and vertex 1
+      (3 * Math.PI) / 2, // 270° - edge between vertex 1 and vertex 2
+    ];
+
+    for (const angle of edgeAngles) {
+      // Position at edge midpoint (at apothem distance from center)
       const pos = new THREE.Vector3(
-        Math.sin(angle) * TRIANGLE_APOTHEM,
+        Math.cos(angle) * TRIANGLE_APOTHEM,
         0,
-        Math.cos(angle) * TRIANGLE_APOTHEM
+        -Math.sin(angle) * TRIANGLE_APOTHEM  // Negative because THREE.js Z points toward camera
       );
-      const norm = new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle));
+      // Normal points outward from edge
+      const norm = new THREE.Vector3(
+        Math.cos(angle),
+        0,
+        -Math.sin(angle)
+      );
       sockets.push({ position: pos, normal: norm, socketType: SocketType.FOUNDATION_EDGE });
 
       // Top socket for each edge (for wall placement)
@@ -344,38 +368,44 @@ export const calculateSnap = (
   }
 
   // Overlap detection - check if new piece would overlap existing pieces
+  // Skip overlap detection if we successfully snapped to a socket (trusted placement)
   let isValid = true;
-  const isFoundation = [
-    BuildingType.SQUARE_FOUNDATION,
-    BuildingType.TRIANGLE_FOUNDATION,
-    BuildingType.CURVED_FOUNDATION
-  ].includes(activeType);
 
-  for (const b of buildings) {
-    const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
-    const dist = bPos.distanceTo(finalPos);
+  if (!snappedToSocket) {
+    const isFoundation = [
+      BuildingType.SQUARE_FOUNDATION,
+      BuildingType.TRIANGLE_FOUNDATION,
+      BuildingType.CURVED_FOUNDATION
+    ].includes(activeType);
 
-    // For foundations, use a larger threshold to prevent overlapping
-    if (isFoundation) {
-      const bIsFoundation = [
-        BuildingType.SQUARE_FOUNDATION,
-        BuildingType.TRIANGLE_FOUNDATION,
-        BuildingType.CURVED_FOUNDATION
-      ].includes(b.type);
+    for (const b of buildings) {
+      const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
+      const dist = bPos.distanceTo(finalPos);
 
-      if (bIsFoundation) {
-        // Foundations shouldn't overlap - minimum distance is roughly piece size
-        // Allow some tolerance for edge-to-edge placement
-        if (dist < UNIT_SIZE * 0.9) {
+      // For foundations placed on grid (not snapped), check for overlap
+      if (isFoundation) {
+        const bIsFoundation = [
+          BuildingType.SQUARE_FOUNDATION,
+          BuildingType.TRIANGLE_FOUNDATION,
+          BuildingType.CURVED_FOUNDATION
+        ].includes(b.type);
+
+        if (bIsFoundation) {
+          // Use a smaller threshold since we're only checking grid placements
+          // Two squares edge-to-edge have centers 4 units apart
+          // A square and triangle edge-to-edge have centers ~3.15 apart
+          // So we check for actual overlap (centers too close)
+          if (dist < 2.0) {
+            isValid = false;
+            break;
+          }
+        }
+      } else {
+        // For other pieces, just check for exact overlap
+        if (dist < 0.2) {
           isValid = false;
           break;
         }
-      }
-    } else {
-      // For other pieces, just check for exact overlap
-      if (dist < 0.2) {
-        isValid = false;
-        break;
       }
     }
   }
