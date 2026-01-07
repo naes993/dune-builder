@@ -44,14 +44,24 @@ export interface Socket {
   socketType: SocketType;  // Type of socket for compatibility checking
 }
 
-// New edge-segment socket for foundations
-// Two points define the edge - no rotational ambiguity
+// Edge roles for triangles (for visualization and validation)
+export enum EdgeRole {
+  BASE = 'BASE',     // Red - bottom edge, grid-aligned on initial placement
+  RIGHT = 'RIGHT',   // Blue - right edge
+  LEFT = 'LEFT',     // Gray - left edge
+  SIDE = 'SIDE',     // For squares/curves - all edges are equivalent
+}
+
+// Edge socket with THREE points for precise alignment validation
+// All three points (start, center, end) must align for a valid snap
 export interface EdgeSocket {
   start: THREE.Vector3;    // Start point of edge (world space)
+  center: THREE.Vector3;   // Center point of edge (world space)
   end: THREE.Vector3;      // End point of edge (world space)
   id: string;              // parent building id
   socketType: SocketType;  // Type of socket for compatibility checking
   edgeLength: number;      // Length of edge (for compatibility checking)
+  edgeRole: EdgeRole;      // Role of this edge (for triangles: base/right/left)
 }
 
 // Dimensions

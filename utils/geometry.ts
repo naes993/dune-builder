@@ -4,6 +4,7 @@ import {
   BuildingData,
   Socket,
   EdgeSocket,
+  EdgeRole,
   SocketType,
   SOCKET_COMPATIBILITY,
   UNIT_SIZE,
@@ -20,12 +21,15 @@ interface LocalSocket {
   socketType: SocketType;
 }
 
-// Local edge socket (before world transform)
+// Local edge socket with THREE points (before world transform)
+// All three points must align for a valid snap
 interface LocalEdgeSocket {
   start: THREE.Vector3;
+  center: THREE.Vector3;
   end: THREE.Vector3;
   socketType: SocketType;
   edgeLength: number;
+  edgeRole: EdgeRole;
 }
 
 /**
@@ -210,102 +214,120 @@ export const getWorldSockets = (building: BuildingData): Socket[] => {
 };
 
 // =============================================================================
-// EDGE SOCKET SYSTEM - Two points per edge for rotation-locked snapping
+// EDGE SOCKET SYSTEM - THREE points per edge for rotation-locked snapping
+// All three points (start, center, end) must align for a valid snap
 // =============================================================================
 
 /**
+ * Helper to create an edge with start, center, end points
+ */
+const createEdge = (
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  edgeRole: EdgeRole
+): LocalEdgeSocket => {
+  const center = start.clone().add(end).multiplyScalar(0.5);
+  return {
+    start: start.clone(),
+    center,
+    end: end.clone(),
+    socketType: SocketType.FOUNDATION_EDGE,
+    edgeLength: start.distanceTo(end),
+    edgeRole
+  };
+};
+
+/**
  * Get local edge sockets for foundation types.
- * Each edge is defined by two endpoints - this eliminates rotational ambiguity.
+ * Each edge has THREE points (start, center, end) for precise alignment.
+ *
+ * Triangle edges are labeled:
+ * - BASE (red): The bottom edge, parallel to grid on initial placement
+ * - RIGHT (blue): The right edge going up from base
+ * - LEFT (gray): The left edge going up from base
  */
 export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
   const edges: LocalEdgeSocket[] = [];
   const halfSize = UNIT_SIZE / 2;
 
   if (type === BuildingType.SQUARE_FOUNDATION) {
-    // Four edges, each defined by start and end points (counterclockwise from +Z edge)
-    // +Z edge (North): from (-halfSize, 0, +halfSize) to (+halfSize, 0, +halfSize)
-    edges.push({
-      start: new THREE.Vector3(-halfSize, 0, halfSize),
-      end: new THREE.Vector3(halfSize, 0, halfSize),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
-    // +X edge (East): from (+halfSize, 0, +halfSize) to (+halfSize, 0, -halfSize)
-    edges.push({
-      start: new THREE.Vector3(halfSize, 0, halfSize),
-      end: new THREE.Vector3(halfSize, 0, -halfSize),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
-    // -Z edge (South): from (+halfSize, 0, -halfSize) to (-halfSize, 0, -halfSize)
-    edges.push({
-      start: new THREE.Vector3(halfSize, 0, -halfSize),
-      end: new THREE.Vector3(-halfSize, 0, -halfSize),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
-    // -X edge (West): from (-halfSize, 0, -halfSize) to (-halfSize, 0, +halfSize)
-    edges.push({
-      start: new THREE.Vector3(-halfSize, 0, -halfSize),
-      end: new THREE.Vector3(-halfSize, 0, halfSize),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
+    // Four edges - all are equivalent (SIDE role)
+    // +Z edge (North)
+    edges.push(createEdge(
+      new THREE.Vector3(-halfSize, 0, halfSize),
+      new THREE.Vector3(halfSize, 0, halfSize),
+      EdgeRole.SIDE
+    ));
+    // +X edge (East)
+    edges.push(createEdge(
+      new THREE.Vector3(halfSize, 0, halfSize),
+      new THREE.Vector3(halfSize, 0, -halfSize),
+      EdgeRole.SIDE
+    ));
+    // -Z edge (South)
+    edges.push(createEdge(
+      new THREE.Vector3(halfSize, 0, -halfSize),
+      new THREE.Vector3(-halfSize, 0, -halfSize),
+      EdgeRole.SIDE
+    ));
+    // -X edge (West)
+    edges.push(createEdge(
+      new THREE.Vector3(-halfSize, 0, -halfSize),
+      new THREE.Vector3(-halfSize, 0, halfSize),
+      EdgeRole.SIDE
+    ));
   }
 
   else if (type === BuildingType.TRIANGLE_FOUNDATION) {
-    // Equilateral triangle with vertex at +Z (90° from +X axis)
-    // Vertices at angles 90°, 210°, 330° from center at TRIANGLE_RADIUS distance
-    const v0Angle = Math.PI / 2;        // 90° - top vertex (+Z)
-    const v1Angle = (7 * Math.PI) / 6;  // 210° - bottom-left
-    const v2Angle = (11 * Math.PI) / 6; // 330° - bottom-right
+    // Triangle with BASE at -Z (south), pointing up toward +Z
+    // This means:
+    // - BASE edge is horizontal at the bottom (parallel to X axis)
+    // - Apex vertex is at +Z (north)
+    //
+    // Vertices:
+    // - V_apex: top vertex at (0, 0, +TRIANGLE_APOTHEM) - actually at +Z
+    // - V_left: bottom-left at (-halfSize, 0, -TRIANGLE_APOTHEM)
+    // - V_right: bottom-right at (+halfSize, 0, -TRIANGLE_APOTHEM)
+    //
+    // Wait, let me recalculate for equilateral triangle with side = UNIT_SIZE
+    // Height of equilateral triangle = side * sqrt(3)/2 = 4 * sqrt(3)/2 = 2*sqrt(3) ≈ 3.46
+    //
+    // For center at origin:
+    // - Base edge at z = -TRIANGLE_APOTHEM (distance from center to edge midpoint)
+    // - Apex at z = +TRIANGLE_RADIUS (distance from center to vertex)
 
-    const v0 = new THREE.Vector3(Math.cos(v0Angle) * TRIANGLE_RADIUS, 0, Math.sin(v0Angle) * TRIANGLE_RADIUS);
-    const v1 = new THREE.Vector3(Math.cos(v1Angle) * TRIANGLE_RADIUS, 0, Math.sin(v1Angle) * TRIANGLE_RADIUS);
-    const v2 = new THREE.Vector3(Math.cos(v2Angle) * TRIANGLE_RADIUS, 0, Math.sin(v2Angle) * TRIANGLE_RADIUS);
+    const apexZ = TRIANGLE_RADIUS;  // ~2.31 (center to vertex)
+    const baseZ = -TRIANGLE_APOTHEM; // ~-1.15 (center to edge midpoint, negative = south)
 
-    // Edge V0→V1 (top to bottom-left)
-    edges.push({
-      start: v0.clone(),
-      end: v1.clone(),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
-    // Edge V1→V2 (bottom-left to bottom-right) - the base
-    edges.push({
-      start: v1.clone(),
-      end: v2.clone(),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
-    // Edge V2→V0 (bottom-right to top)
-    edges.push({
-      start: v2.clone(),
-      end: v0.clone(),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
+    // Vertices
+    const vApex = new THREE.Vector3(0, 0, apexZ);                    // Top (north)
+    const vLeft = new THREE.Vector3(-halfSize, 0, baseZ);            // Bottom-left
+    const vRight = new THREE.Vector3(halfSize, 0, baseZ);            // Bottom-right
+
+    // BASE edge (red): bottom, from left to right (parallel to X axis)
+    edges.push(createEdge(vLeft, vRight, EdgeRole.BASE));
+
+    // RIGHT edge (blue): from bottom-right up to apex
+    edges.push(createEdge(vRight, vApex, EdgeRole.RIGHT));
+
+    // LEFT edge (gray): from apex down to bottom-left
+    edges.push(createEdge(vApex, vLeft, EdgeRole.LEFT));
   }
 
   else if (type === BuildingType.CURVED_FOUNDATION) {
     // Only the two straight edges have sockets (no curved edge)
-    // The curved foundation is a quarter circle in the +X/+Z quadrant
-    // with the corner (center of the circle) at (-halfSize, 0, -halfSize)
-
-    // -Z edge (South): from (-halfSize, 0, -halfSize) to (+halfSize, 0, -halfSize)
-    edges.push({
-      start: new THREE.Vector3(-halfSize, 0, -halfSize),
-      end: new THREE.Vector3(halfSize, 0, -halfSize),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
-    // -X edge (West): from (-halfSize, 0, +halfSize) to (-halfSize, 0, -halfSize)
-    edges.push({
-      start: new THREE.Vector3(-halfSize, 0, halfSize),
-      end: new THREE.Vector3(-halfSize, 0, -halfSize),
-      socketType: SocketType.FOUNDATION_EDGE,
-      edgeLength: UNIT_SIZE
-    });
+    // -Z edge (South)
+    edges.push(createEdge(
+      new THREE.Vector3(-halfSize, 0, -halfSize),
+      new THREE.Vector3(halfSize, 0, -halfSize),
+      EdgeRole.SIDE
+    ));
+    // -X edge (West)
+    edges.push(createEdge(
+      new THREE.Vector3(-halfSize, 0, halfSize),
+      new THREE.Vector3(-halfSize, 0, -halfSize),
+      EdgeRole.SIDE
+    ));
   }
 
   return edges;
@@ -313,6 +335,7 @@ export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
 
 /**
  * Transform local edge sockets to world space.
+ * Includes start, center, and end points for 3-point alignment validation.
  */
 export const getWorldEdgeSockets = (building: BuildingData): EdgeSocket[] => {
   if (!building) return [];
@@ -324,13 +347,16 @@ export const getWorldEdgeSockets = (building: BuildingData): EdgeSocket[] => {
 
   localEdges.forEach(edge => {
     const wStart = edge.start.clone().applyEuler(rotEuler).add(pos);
+    const wCenter = edge.center.clone().applyEuler(rotEuler).add(pos);
     const wEnd = edge.end.clone().applyEuler(rotEuler).add(pos);
     worldEdges.push({
       start: wStart,
+      center: wCenter,
       end: wEnd,
       id: building.id,
       socketType: edge.socketType,
-      edgeLength: edge.edgeLength
+      edgeLength: edge.edgeLength,
+      edgeRole: edge.edgeRole
     });
   });
 
@@ -352,9 +378,11 @@ const usesEdgeSockets = (type: BuildingType): boolean => {
  * Calculate the transform needed to align a ghost edge to a target edge.
  * Returns the position and rotation that would make the ghost edge coincide with the target.
  *
- * For two edges to connect:
+ * For two edges to connect (THREE-POINT VALIDATION):
  * - Ghost edge's START must align with target edge's END
+ * - Ghost edge's CENTER must align with target edge's CENTER
  * - Ghost edge's END must align with target edge's START
+ * ALL THREE points must align for a valid snap!
  * (They connect in opposite directions, like puzzle pieces)
  */
 const calculateEdgeSnapTransform = (
@@ -385,13 +413,18 @@ const calculateEdgeSnapTransform = (
   // Position = targetEnd - rotatedGhostStart
   const position = targetEdge.end.clone().sub(rotatedGhostStart);
 
-  // Verify: after this transform, ghost END should be at target START
+  // THREE-POINT VALIDATION: All three points must align
+  const rotatedGhostCenter = ghostEdge.center.clone().applyEuler(rotation).add(position);
   const rotatedGhostEnd = ghostEdge.end.clone().applyEuler(rotation).add(position);
-  const alignmentError = rotatedGhostEnd.distanceTo(targetEdge.start);
 
-  // Allow small tolerance for floating point errors
-  if (alignmentError > 0.01) {
-    return null; // Edges don't align properly (different lengths or angle issues)
+  const startError = rotatedGhostStart.clone().add(position).distanceTo(targetEdge.end);
+  const centerError = rotatedGhostCenter.distanceTo(targetEdge.center);
+  const endError = rotatedGhostEnd.distanceTo(targetEdge.start);
+
+  // All three points must be within tolerance
+  const tolerance = 0.05; // Slightly relaxed for floating point
+  if (startError > tolerance || centerError > tolerance || endError > tolerance) {
+    return null; // Edges don't align properly - prevents wrong corner-to-corner matching
   }
 
   return { position, rotation };

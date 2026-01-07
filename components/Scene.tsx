@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import {
   BuildingType,
   BuildingData,
+  EdgeRole,
   UNIT_SIZE,
   FOUNDATION_HEIGHT,
   TRIANGLE_RADIUS,
@@ -142,22 +143,40 @@ const SquareFoundation = ({ wireframe, isGhost, isValid = true, materials }: Geo
   </>
 );
 
-const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => (
-  <>
-    <cylinderGeometry args={[TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3]} />
-    {isGhost ? (
-      <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
-    ) : (
-      <meshStandardMaterial color={COLORS.foundation} roughness={0.8} wireframe={wireframe} />
-    )}
-    {!isGhost && (
-      <lineSegments>
-        <edgesGeometry args={[new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3)]} />
-        <meshBasicMaterial color={COLORS.edge} />
-      </lineSegments>
-    )}
-  </>
-);
+const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
+  // Create triangle geometry with base at -Z (south) and apex at +Z (north)
+  // CylinderGeometry with 3 segments creates a triangle with vertex at +X by default
+  // We need to rotate it so apex points to +Z and base is at -Z
+  const geometry = useMemo(() => {
+    const geom = new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3);
+    // Rotate 90° around Y to put apex at +Z instead of +X
+    geom.rotateY(Math.PI / 2);
+    return geom;
+  }, []);
+
+  const edgeGeometry = useMemo(() => {
+    const geom = new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3);
+    geom.rotateY(Math.PI / 2);
+    return new THREE.EdgesGeometry(geom);
+  }, []);
+
+  return (
+    <>
+      <primitive object={geometry} attach="geometry" />
+      {isGhost ? (
+        <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
+      ) : (
+        <meshStandardMaterial color={COLORS.foundation} roughness={0.8} wireframe={wireframe} />
+      )}
+      {!isGhost && (
+        <lineSegments>
+          <primitive object={edgeGeometry} attach="geometry" />
+          <meshBasicMaterial color={COLORS.edge} />
+        </lineSegments>
+      )}
+    </>
+  );
+};
 
 const CurvedFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
   const shape = useMemo(() => createCurvedFoundationShape(), []);
@@ -422,40 +441,71 @@ const SocketDebugVisualizer = ({ buildings }: SocketDebugProps) => {
     ].includes(type);
   };
 
+  // Edge role colors: BASE=red, RIGHT=blue, LEFT=gray, SIDE=gold
+  const getEdgeColor = (edgeRole: EdgeRole): string => {
+    switch (edgeRole) {
+      case EdgeRole.BASE: return '#FF0000';   // Red
+      case EdgeRole.RIGHT: return '#0000FF';  // Blue
+      case EdgeRole.LEFT: return '#808080';   // Gray
+      case EdgeRole.SIDE: return '#FFD700';   // Gold (for squares/curves)
+      default: return '#FFFFFF';
+    }
+  };
+
   return (
     <group>
       {buildings.map((building) => {
-        // FOUNDATIONS: Show edge endpoints (2 points per straight edge)
+        // FOUNDATIONS: Show 3 points per edge (start, center, end)
         if (usesEdgeSockets(building.type)) {
           const edges = getWorldEdgeSockets(building);
           return (
             <group key={`edges-${building.id}`}>
               {edges.map((edge, idx) => {
-                // Gold color for edge endpoints
-                const color = '#FFD700';
+                const color = getEdgeColor(edge.edgeRole);
+                const y = 0.15; // Height above foundation
 
                 return (
                   <group key={`edge-${building.id}-${idx}`}>
                     {/* Start point sphere */}
-                    <mesh position={[edge.start.x, edge.start.y + 0.15, edge.start.z]}>
+                    <mesh position={[edge.start.x, edge.start.y + y, edge.start.z]}>
                       <sphereGeometry args={[0.12, 8, 8]} />
+                      <meshBasicMaterial color={color} transparent opacity={0.9} />
+                    </mesh>
+
+                    {/* Center point sphere (slightly smaller) */}
+                    <mesh position={[edge.center.x, edge.center.y + y, edge.center.z]}>
+                      <sphereGeometry args={[0.10, 8, 8]} />
                       <meshBasicMaterial color={color} transparent opacity={0.9} />
                     </mesh>
 
                     {/* End point sphere */}
-                    <mesh position={[edge.end.x, edge.end.y + 0.15, edge.end.z]}>
+                    <mesh position={[edge.end.x, edge.end.y + y, edge.end.z]}>
                       <sphereGeometry args={[0.12, 8, 8]} />
                       <meshBasicMaterial color={color} transparent opacity={0.9} />
                     </mesh>
 
-                    {/* Line connecting the two points to show the edge */}
+                    {/* Line connecting start to center */}
                     <line>
                       <bufferGeometry>
                         <bufferAttribute
                           attach="attributes-position"
                           args={[new Float32Array([
-                            edge.start.x, edge.start.y + 0.15, edge.start.z,
-                            edge.end.x, edge.end.y + 0.15, edge.end.z
+                            edge.start.x, edge.start.y + y, edge.start.z,
+                            edge.center.x, edge.center.y + y, edge.center.z
+                          ]), 3]}
+                        />
+                      </bufferGeometry>
+                      <lineBasicMaterial color={color} linewidth={2} />
+                    </line>
+
+                    {/* Line connecting center to end */}
+                    <line>
+                      <bufferGeometry>
+                        <bufferAttribute
+                          attach="attributes-position"
+                          args={[new Float32Array([
+                            edge.center.x, edge.center.y + y, edge.center.z,
+                            edge.end.x, edge.end.y + y, edge.end.z
                           ]), 3]}
                         />
                       </bufferGeometry>
