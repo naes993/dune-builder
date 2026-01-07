@@ -47,19 +47,22 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   
   else if (type === BuildingType.TRIANGLE_FOUNDATION) {
     // THREE.CylinderGeometry with radialSegments=3 creates a triangular prism.
-    // Looking at the actual rendered mesh from a top-down view, the triangle has:
-    //   - One vertex pointing UP (toward +Z in screen space)
-    //   - Two vertices at the bottom corners
+    // Vertices are at angles 90°, 210°, 330° from +X axis (first vertex at +Z).
     //
-    // The three edge sockets need outward-pointing normals (perpendicular to edge, away from center):
-    //   - Upper-left edge: normal points NW (135°)
-    //   - Lower-left edge: normal points SW (225°)
-    //   - Lower-right edge: normal points SE (315°)
+    // For an equilateral triangle with one vertex pointing UP (+Z):
+    //   - V0 at 90° (top, +Z direction)
+    //   - V1 at 210° (bottom-left)
+    //   - V2 at 330° (bottom-right)
+    //
+    // Edge midpoints (and outward normal directions):
+    //   - Edge V0→V1: midpoint at 150°, normal points 150° (upper-left, NW-ish)
+    //   - Edge V1→V2: midpoint at 270°, normal points 270° (down, -Z)
+    //   - Edge V2→V0: midpoint at 30°, normal points 30° (upper-right, NE-ish)
 
     const edgeAngles = [
-      (3 * Math.PI) / 4,  // 135° - upper-left edge, normal points NW (-X, +Z)
-      (5 * Math.PI) / 4,  // 225° - lower-left edge, normal points SW (-X, -Z)
-      (7 * Math.PI) / 4,  // 315° - lower-right edge, normal points SE (+X, -Z)
+      (5 * Math.PI) / 6,  // 150° - upper-left edge
+      (3 * Math.PI) / 2,  // 270° - bottom edge (points down toward -Z)
+      Math.PI / 6,        // 30°  - upper-right edge
     ];
 
     for (const angle of edgeAngles) {
