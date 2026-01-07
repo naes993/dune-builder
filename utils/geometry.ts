@@ -3,10 +3,12 @@ import {
   BuildingType,
   BuildingData,
   Socket,
+  EdgeSocket,
   SocketType,
   SOCKET_COMPATIBILITY,
   UNIT_SIZE,
   TRIANGLE_APOTHEM,
+  TRIANGLE_RADIUS,
   WALL_HEIGHT,
   HALF_WALL_HEIGHT,
   FOUNDATION_HEIGHT,
@@ -16,6 +18,14 @@ interface LocalSocket {
   position: THREE.Vector3;
   normal: THREE.Vector3;
   socketType: SocketType;
+}
+
+// Local edge socket (before world transform)
+interface LocalEdgeSocket {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  socketType: SocketType;
+  edgeLength: number;
 }
 
 /**
@@ -199,6 +209,194 @@ export const getWorldSockets = (building: BuildingData): Socket[] => {
   return worldSockets;
 };
 
+// =============================================================================
+// EDGE SOCKET SYSTEM - Two points per edge for rotation-locked snapping
+// =============================================================================
+
+/**
+ * Get local edge sockets for foundation types.
+ * Each edge is defined by two endpoints - this eliminates rotational ambiguity.
+ */
+export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
+  const edges: LocalEdgeSocket[] = [];
+  const halfSize = UNIT_SIZE / 2;
+
+  if (type === BuildingType.SQUARE_FOUNDATION) {
+    // Four edges, each defined by start and end points (counterclockwise from +Z edge)
+    // +Z edge (North): from (-halfSize, 0, +halfSize) to (+halfSize, 0, +halfSize)
+    edges.push({
+      start: new THREE.Vector3(-halfSize, 0, halfSize),
+      end: new THREE.Vector3(halfSize, 0, halfSize),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+    // +X edge (East): from (+halfSize, 0, +halfSize) to (+halfSize, 0, -halfSize)
+    edges.push({
+      start: new THREE.Vector3(halfSize, 0, halfSize),
+      end: new THREE.Vector3(halfSize, 0, -halfSize),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+    // -Z edge (South): from (+halfSize, 0, -halfSize) to (-halfSize, 0, -halfSize)
+    edges.push({
+      start: new THREE.Vector3(halfSize, 0, -halfSize),
+      end: new THREE.Vector3(-halfSize, 0, -halfSize),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+    // -X edge (West): from (-halfSize, 0, -halfSize) to (-halfSize, 0, +halfSize)
+    edges.push({
+      start: new THREE.Vector3(-halfSize, 0, -halfSize),
+      end: new THREE.Vector3(-halfSize, 0, halfSize),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+  }
+
+  else if (type === BuildingType.TRIANGLE_FOUNDATION) {
+    // Equilateral triangle with vertex at +Z (90° from +X axis)
+    // Vertices at angles 90°, 210°, 330° from center at TRIANGLE_RADIUS distance
+    const v0Angle = Math.PI / 2;        // 90° - top vertex (+Z)
+    const v1Angle = (7 * Math.PI) / 6;  // 210° - bottom-left
+    const v2Angle = (11 * Math.PI) / 6; // 330° - bottom-right
+
+    const v0 = new THREE.Vector3(Math.cos(v0Angle) * TRIANGLE_RADIUS, 0, Math.sin(v0Angle) * TRIANGLE_RADIUS);
+    const v1 = new THREE.Vector3(Math.cos(v1Angle) * TRIANGLE_RADIUS, 0, Math.sin(v1Angle) * TRIANGLE_RADIUS);
+    const v2 = new THREE.Vector3(Math.cos(v2Angle) * TRIANGLE_RADIUS, 0, Math.sin(v2Angle) * TRIANGLE_RADIUS);
+
+    // Edge V0→V1 (top to bottom-left)
+    edges.push({
+      start: v0.clone(),
+      end: v1.clone(),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+    // Edge V1→V2 (bottom-left to bottom-right) - the base
+    edges.push({
+      start: v1.clone(),
+      end: v2.clone(),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+    // Edge V2→V0 (bottom-right to top)
+    edges.push({
+      start: v2.clone(),
+      end: v0.clone(),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+  }
+
+  else if (type === BuildingType.CURVED_FOUNDATION) {
+    // Only the two straight edges have sockets (no curved edge)
+    // The curved foundation is a quarter circle in the +X/+Z quadrant
+    // with the corner (center of the circle) at (-halfSize, 0, -halfSize)
+
+    // -Z edge (South): from (-halfSize, 0, -halfSize) to (+halfSize, 0, -halfSize)
+    edges.push({
+      start: new THREE.Vector3(-halfSize, 0, -halfSize),
+      end: new THREE.Vector3(halfSize, 0, -halfSize),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+    // -X edge (West): from (-halfSize, 0, +halfSize) to (-halfSize, 0, -halfSize)
+    edges.push({
+      start: new THREE.Vector3(-halfSize, 0, halfSize),
+      end: new THREE.Vector3(-halfSize, 0, -halfSize),
+      socketType: SocketType.FOUNDATION_EDGE,
+      edgeLength: UNIT_SIZE
+    });
+  }
+
+  return edges;
+};
+
+/**
+ * Transform local edge sockets to world space.
+ */
+export const getWorldEdgeSockets = (building: BuildingData): EdgeSocket[] => {
+  if (!building) return [];
+  const localEdges = getLocalEdgeSockets(building.type);
+  const worldEdges: EdgeSocket[] = [];
+
+  const rotEuler = new THREE.Euler(building.rotation[0], building.rotation[1], building.rotation[2]);
+  const pos = new THREE.Vector3(building.position[0], building.position[1], building.position[2]);
+
+  localEdges.forEach(edge => {
+    const wStart = edge.start.clone().applyEuler(rotEuler).add(pos);
+    const wEnd = edge.end.clone().applyEuler(rotEuler).add(pos);
+    worldEdges.push({
+      start: wStart,
+      end: wEnd,
+      id: building.id,
+      socketType: edge.socketType,
+      edgeLength: edge.edgeLength
+    });
+  });
+
+  return worldEdges;
+};
+
+/**
+ * Check if a building type uses edge sockets (foundations) vs point sockets (walls/roofs)
+ */
+const usesEdgeSockets = (type: BuildingType): boolean => {
+  return [
+    BuildingType.SQUARE_FOUNDATION,
+    BuildingType.TRIANGLE_FOUNDATION,
+    BuildingType.CURVED_FOUNDATION
+  ].includes(type);
+};
+
+/**
+ * Calculate the transform needed to align a ghost edge to a target edge.
+ * Returns the position and rotation that would make the ghost edge coincide with the target.
+ *
+ * For two edges to connect:
+ * - Ghost edge's START must align with target edge's END
+ * - Ghost edge's END must align with target edge's START
+ * (They connect in opposite directions, like puzzle pieces)
+ */
+const calculateEdgeSnapTransform = (
+  targetEdge: EdgeSocket,
+  ghostEdge: LocalEdgeSocket
+): { position: THREE.Vector3; rotation: THREE.Euler } | null => {
+  // Target edge direction (world space)
+  const targetDir = targetEdge.end.clone().sub(targetEdge.start).normalize();
+
+  // Ghost edge direction (local space) - we want it to face OPPOSITE to connect
+  const ghostDir = ghostEdge.end.clone().sub(ghostEdge.start).normalize();
+
+  // Calculate rotation needed to align ghost edge opposite to target edge
+  // Ghost should point in -targetDir direction for edges to meet flush
+  const desiredGhostDir = targetDir.clone().negate();
+
+  // Calculate Y rotation from ghostDir to desiredGhostDir
+  const ghostAngle = Math.atan2(ghostDir.x, ghostDir.z);
+  const targetAngle = Math.atan2(desiredGhostDir.x, desiredGhostDir.z);
+  const rotY = targetAngle - ghostAngle;
+
+  const rotation = new THREE.Euler(0, rotY, 0);
+
+  // After rotation, calculate where the ghost piece center needs to be
+  // so that ghost's START aligns with target's END
+  const rotatedGhostStart = ghostEdge.start.clone().applyEuler(rotation);
+
+  // Position = targetEnd - rotatedGhostStart
+  const position = targetEdge.end.clone().sub(rotatedGhostStart);
+
+  // Verify: after this transform, ghost END should be at target START
+  const rotatedGhostEnd = ghostEdge.end.clone().applyEuler(rotation).add(position);
+  const alignmentError = rotatedGhostEnd.distanceTo(targetEdge.start);
+
+  // Allow small tolerance for floating point errors
+  if (alignmentError > 0.01) {
+    return null; // Edges don't align properly (different lengths or angle issues)
+  }
+
+  return { position, rotation };
+};
+
 /**
  * Get the socket types that the active building type can snap to
  */
@@ -241,11 +439,12 @@ const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
 };
 
 /**
- * Enhanced snapping logic with socket type compatibility.
- * Uses a two-phase approach to avoid flickering:
- * 1. Find all possible snap configurations (target socket + ghost socket pairs)
- * 2. Pick the one whose resulting position is closest to cursor
- * 3. Check for socket occupancy to prevent ghost pieces
+ * Enhanced snapping logic using EDGE SEGMENTS for foundations.
+ *
+ * For foundations: Uses edge-to-edge matching (two points per edge).
+ * This eliminates rotational ambiguity - there's only ONE way to align two edges.
+ *
+ * For walls/roofs: Still uses point-based sockets (legacy system).
  */
 export const calculateSnap = (
   rayIntersectionPoint: THREE.Vector3,
@@ -258,126 +457,171 @@ export const calculateSnap = (
     return { position: new THREE.Vector3(), rotation: new THREE.Euler(), isValid: false };
   }
 
-  // Collect all world sockets from existing buildings
-  const allSockets: Socket[] = [];
-  buildings.forEach(b => {
-    allSockets.push(...getWorldSockets(b));
-  });
-
-  // Filter to only compatible socket types
-  const compatibleTypes = getCompatibleSocketTypes(activeType);
-  const compatibleSockets = allSockets.filter(s => compatibleTypes.includes(s.socketType));
-
-  // Get ghost piece's local sockets
-  const ghostLocals = getLocalSockets(activeType);
-
   let finalPos = new THREE.Vector3(rayIntersectionPoint.x, 0, rayIntersectionPoint.z);
   let finalRot = new THREE.Euler(0, currentRotationY, 0);
   let snappedToSocket = false;
 
-  // Find the best snap configuration by evaluating all valid socket pairs
-  // This avoids flickering by always choosing the configuration with the
-  // resulting position closest to the cursor
-  interface SnapCandidate {
-    position: THREE.Vector3;
-    rotation: THREE.Euler;
-    distToCursor: number;
-    targetSocket: Socket;
-    ghostSocket: LocalSocket;
-  }
-
-  let bestCandidate: SnapCandidate | null = null;
-  const SNAP_RADIUS = 2.5;
-  const SOCKET_OCCUPIED_THRESHOLD = 0.1; // If another building is this close to a socket, it's occupied
-
-  // Debug tracking
   const debugCandidates: any[] = [];
+  const SNAP_RADIUS = 3.5; // Slightly larger to catch edges
 
-  for (const targetSocket of compatibleSockets) {
-    // Only consider sockets within snap radius of cursor
-    const distToSocket = targetSocket.position.distanceTo(rayIntersectionPoint);
-    if (distToSocket > SNAP_RADIUS) continue;
+  // ==========================================================================
+  // FOUNDATION SNAPPING - Edge-based system
+  // ==========================================================================
+  if (usesEdgeSockets(activeType)) {
+    // Collect all world edge sockets from existing foundations
+    const allEdges: EdgeSocket[] = [];
+    buildings.forEach(b => {
+      if (usesEdgeSockets(b.type)) {
+        allEdges.push(...getWorldEdgeSockets(b));
+      }
+    });
 
-    // Check if this socket is already occupied by another building
-    // A socket is occupied if there's another building very close to it (not the parent building)
-    let isOccupied = false;
-    for (const building of buildings) {
-      if (building.id === targetSocket.id) continue; // Skip the parent building
-      const buildingPos = new THREE.Vector3(building.position[0], building.position[1], building.position[2]);
+    // Get ghost piece's local edge sockets
+    const ghostEdges = getLocalEdgeSockets(activeType);
 
-      // Check distance in XZ plane (ignore Y for vertical stacking)
-      const socketPosXZ = new THREE.Vector2(targetSocket.position.x, targetSocket.position.z);
-      const buildingPosXZ = new THREE.Vector2(buildingPos.x, buildingPos.z);
+    interface EdgeSnapCandidate {
+      position: THREE.Vector3;
+      rotation: THREE.Euler;
+      distToCursor: number;
+      targetEdge: EdgeSocket;
+      ghostEdge: LocalEdgeSocket;
+    }
 
-      if (socketPosXZ.distanceTo(buildingPosXZ) < SOCKET_OCCUPIED_THRESHOLD) {
-        isOccupied = true;
-        break;
+    let bestCandidate: EdgeSnapCandidate | null = null;
+
+    for (const targetEdge of allEdges) {
+      // Check if edge midpoint is within snap radius
+      const edgeMidpoint = targetEdge.start.clone().add(targetEdge.end).multiplyScalar(0.5);
+      const distToEdge = edgeMidpoint.distanceTo(rayIntersectionPoint);
+      if (distToEdge > SNAP_RADIUS) continue;
+
+      // Check if this edge is already occupied
+      let isOccupied = false;
+      for (const building of buildings) {
+        if (building.id === targetEdge.id) continue;
+
+        // Check if any other building's edges overlap with this target edge
+        const otherEdges = getWorldEdgeSockets(building);
+        for (const otherEdge of otherEdges) {
+          const otherMidpoint = otherEdge.start.clone().add(otherEdge.end).multiplyScalar(0.5);
+          if (edgeMidpoint.distanceTo(otherMidpoint) < 0.5) {
+            isOccupied = true;
+            break;
+          }
+        }
+        if (isOccupied) break;
+      }
+      if (isOccupied) continue;
+
+      // Try to snap each ghost edge to this target edge
+      for (const ghostEdge of ghostEdges) {
+        // Only snap edges of same length
+        if (Math.abs(ghostEdge.edgeLength - targetEdge.edgeLength) > 0.01) continue;
+
+        const transform = calculateEdgeSnapTransform(targetEdge, ghostEdge);
+        if (!transform) continue;
+
+        // Score by distance from cursor to resulting piece center
+        const distToCursor = transform.position.distanceTo(rayIntersectionPoint);
+
+        debugCandidates.push({
+          targetEdgeStart: [targetEdge.start.x, targetEdge.start.y, targetEdge.start.z],
+          targetEdgeEnd: [targetEdge.end.x, targetEdge.end.y, targetEdge.end.z],
+          ghostEdgeStart: [ghostEdge.start.x, ghostEdge.start.y, ghostEdge.start.z],
+          ghostEdgeEnd: [ghostEdge.end.x, ghostEdge.end.y, ghostEdge.end.z],
+          resultingPosition: [transform.position.x, transform.position.y, transform.position.z],
+          resultingRotation: [transform.rotation.x, transform.rotation.y, transform.rotation.z],
+          distanceToCursor: distToCursor,
+        });
+
+        if (!bestCandidate || distToCursor < bestCandidate.distToCursor) {
+          bestCandidate = {
+            position: transform.position,
+            rotation: transform.rotation,
+            distToCursor,
+            targetEdge,
+            ghostEdge,
+          };
+        }
       }
     }
 
-    if (isOccupied) continue; // Skip occupied sockets
-
-    // Find compatible ghost sockets
-    const targetCompatible = SOCKET_COMPATIBILITY[targetSocket.socketType] || [];
-    const matchingGhostSockets = ghostLocals.filter(gs => targetCompatible.includes(gs.socketType));
-
-    if (matchingGhostSockets.length === 0) continue;
-
-    // Evaluate each ghost socket as a potential snap candidate
-    // Calculate the actual rotation needed and pick the best option by distance to cursor
-    const targetNormal = targetSocket.normal.clone().negate();
-    const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
-
-    for (const gSocket of matchingGhostSockets) {
-      // Calculate rotation needed to align this ghost socket with target
-      const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
-      const rotY = targetAngle - localAngle;
-
-      const candidateRot = new THREE.Euler(0, rotY, 0);
-      const rotatedLocalPos = gSocket.position.clone().applyEuler(candidateRot);
-      const candidatePos = targetSocket.position.clone().sub(rotatedLocalPos);
-
-      // Score by distance from cursor to resulting piece center
-      const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
-
-      // Track this candidate for debugging
-      debugCandidates.push({
-        targetSocketType: targetSocket.socketType,
-        targetSocketPos: [targetSocket.position.x, targetSocket.position.y, targetSocket.position.z],
-        targetSocketNormal: [targetSocket.normal.x, targetSocket.normal.y, targetSocket.normal.z],
-        ghostSocketType: gSocket.socketType,
-        ghostSocketPos: [gSocket.position.x, gSocket.position.y, gSocket.position.z],
-        ghostSocketNormal: [gSocket.normal.x, gSocket.normal.y, gSocket.normal.z],
-        resultingPosition: [candidatePos.x, candidatePos.y, candidatePos.z],
-        resultingRotation: [candidateRot.x, candidateRot.y, candidateRot.z],
-        distanceToCursor: distToCursor,
-        wasOccupied: false,
-      });
-
-      if (!bestCandidate || distToCursor < bestCandidate.distToCursor) {
-        bestCandidate = {
-          position: candidatePos,
-          rotation: candidateRot,
-          distToCursor,
-          targetSocket,
-          ghostSocket: gSocket,
-        };
-      }
+    if (bestCandidate) {
+      finalPos = bestCandidate.position;
+      finalRot = bestCandidate.rotation;
+      snappedToSocket = true;
     }
   }
 
-  if (bestCandidate) {
-    finalPos = bestCandidate.position;
-    finalRot = bestCandidate.rotation;
-    snappedToSocket = true;
-  } else {
-    // Grid snapping when not near any socket
-    // Offset by half grid so pieces align at grid lines (not centered on intersections)
+  // ==========================================================================
+  // WALL/ROOF SNAPPING - Point-based system (legacy)
+  // ==========================================================================
+  else {
+    const allSockets: Socket[] = [];
+    buildings.forEach(b => {
+      allSockets.push(...getWorldSockets(b));
+    });
+
+    const compatibleTypes = getCompatibleSocketTypes(activeType);
+    const compatibleSockets = allSockets.filter(s => compatibleTypes.includes(s.socketType));
+    const ghostLocals = getLocalSockets(activeType);
+
+    interface PointSnapCandidate {
+      position: THREE.Vector3;
+      rotation: THREE.Euler;
+      distToCursor: number;
+    }
+
+    let bestCandidate: PointSnapCandidate | null = null;
+
+    for (const targetSocket of compatibleSockets) {
+      const distToSocket = targetSocket.position.distanceTo(rayIntersectionPoint);
+      if (distToSocket > SNAP_RADIUS) continue;
+
+      const targetCompatible = SOCKET_COMPATIBILITY[targetSocket.socketType] || [];
+      const matchingGhostSockets = ghostLocals.filter(gs => targetCompatible.includes(gs.socketType));
+
+      if (matchingGhostSockets.length === 0) continue;
+
+      const targetNormal = targetSocket.normal.clone().negate();
+      const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
+
+      for (const gSocket of matchingGhostSockets) {
+        const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
+        const rotY = targetAngle - localAngle;
+
+        const candidateRot = new THREE.Euler(0, rotY, 0);
+        const rotatedLocalPos = gSocket.position.clone().applyEuler(candidateRot);
+        const candidatePos = targetSocket.position.clone().sub(rotatedLocalPos);
+        const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
+
+        if (!bestCandidate || distToCursor < bestCandidate.distToCursor) {
+          bestCandidate = {
+            position: candidatePos,
+            rotation: candidateRot,
+            distToCursor,
+          };
+        }
+      }
+    }
+
+    if (bestCandidate) {
+      finalPos = bestCandidate.position;
+      finalRot = bestCandidate.rotation;
+      snappedToSocket = true;
+    }
+  }
+
+  // ==========================================================================
+  // GRID FALLBACK - When no snap target found
+  // ==========================================================================
+  if (!snappedToSocket) {
     const gridSnap = UNIT_SIZE;
     const offset = gridSnap / 2;
     finalPos.x = Math.round((rayIntersectionPoint.x - offset) / gridSnap) * gridSnap + offset;
     finalPos.z = Math.round((rayIntersectionPoint.z - offset) / gridSnap) * gridSnap + offset;
     finalPos.y = 0;
+
     // Snap rotation: 60° for triangles, 90° for everything else
     const isTriangle = activeType === BuildingType.TRIANGLE_FOUNDATION ||
                       activeType === BuildingType.TRIANGLE_ROOF;
@@ -386,71 +630,42 @@ export const calculateSnap = (
     finalRot = new THREE.Euler(0, snappedRot, 0);
   }
 
-  // Overlap detection - check if new piece would overlap existing pieces
-  // Skip overlap detection if we successfully snapped to a socket (trusted placement)
+  // ==========================================================================
+  // VALIDATION
+  // ==========================================================================
   let isValid = true;
 
   if (!snappedToSocket) {
-    const isFoundation = [
-      BuildingType.SQUARE_FOUNDATION,
-      BuildingType.TRIANGLE_FOUNDATION,
-      BuildingType.CURVED_FOUNDATION
-    ].includes(activeType);
+    const isFoundation = usesEdgeSockets(activeType);
 
     for (const b of buildings) {
       const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
       const dist = bPos.distanceTo(finalPos);
 
-      // For foundations placed on grid (not snapped), check for overlap
-      if (isFoundation) {
-        const bIsFoundation = [
-          BuildingType.SQUARE_FOUNDATION,
-          BuildingType.TRIANGLE_FOUNDATION,
-          BuildingType.CURVED_FOUNDATION
-        ].includes(b.type);
-
-        if (bIsFoundation) {
-          // Use a smaller threshold since we're only checking grid placements
-          // Two squares edge-to-edge have centers 4 units apart
-          // A square and triangle edge-to-edge have centers ~3.15 apart
-          // So we check for actual overlap (centers too close)
-          if (dist < 2.0) {
-            isValid = false;
-            break;
-          }
-        }
-      } else {
-        // For other pieces, just check for exact overlap
-        if (dist < 0.2) {
+      if (isFoundation && usesEdgeSockets(b.type)) {
+        if (dist < 2.0) {
           isValid = false;
           break;
         }
+      } else if (dist < 0.2) {
+        isValid = false;
+        break;
       }
     }
   }
 
-  // Roofs require snapping to wall tops
+  // Roofs require snapping
   if (!snappedToSocket) {
     if (activeType === BuildingType.SQUARE_ROOF || activeType === BuildingType.TRIANGLE_ROOF) {
       isValid = false;
     }
   }
 
-  // Send debug info if callback provided
+  // Debug callback
   if (debugCallback) {
-    const selectedIndex = bestCandidate
-      ? debugCandidates.findIndex(c =>
-          c.resultingPosition[0] === bestCandidate.position.x &&
-          c.resultingPosition[1] === bestCandidate.position.y &&
-          c.resultingPosition[2] === bestCandidate.position.z
-        )
-      : null;
-
     debugCallback({
       rayPoint: [rayIntersectionPoint.x, rayIntersectionPoint.y, rayIntersectionPoint.z],
-      compatibleSocketsFound: compatibleSockets.length,
       candidates: debugCandidates,
-      selectedCandidate: selectedIndex,
       finalPosition: [finalPos.x, finalPos.y, finalPos.z],
       finalRotation: [finalRot.x, finalRot.y, finalRot.z],
       isValid,

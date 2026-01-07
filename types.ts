@@ -36,11 +36,22 @@ export interface SavedBlueprint {
   buildings: BuildingData[];
 }
 
+// Legacy single-point socket (kept for walls/roofs)
 export interface Socket {
   position: THREE.Vector3; // World position of the connection point
   normal: THREE.Vector3;   // Outward facing normal
   id: string;              // parent building id
   socketType: SocketType;  // Type of socket for compatibility checking
+}
+
+// New edge-segment socket for foundations
+// Two points define the edge - no rotational ambiguity
+export interface EdgeSocket {
+  start: THREE.Vector3;    // Start point of edge (world space)
+  end: THREE.Vector3;      // End point of edge (world space)
+  id: string;              // parent building id
+  socketType: SocketType;  // Type of socket for compatibility checking
+  edgeLength: number;      // Length of edge (for compatibility checking)
 }
 
 // Dimensions
