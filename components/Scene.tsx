@@ -9,6 +9,7 @@ import {
   UNIT_SIZE,
   FOUNDATION_HEIGHT,
   TRIANGLE_RADIUS,
+  TRIANGLE_APOTHEM,
   WALL_HEIGHT,
   HALF_WALL_HEIGHT,
 } from '../types';
@@ -144,27 +145,68 @@ const SquareFoundation = ({ wireframe, isGhost, isValid = true, materials }: Geo
 );
 
 const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
-  // Create triangle geometry with base at -Z (south) and apex at +Z (north)
+  // Custom triangle geometry with FLAT BASE at -Z (south), apex at +Z (north)
   //
-  // THREE.js CylinderGeometry with 3 segments creates vertices at angles:
-  //   theta = 0, 2π/3, 4π/3 (measured from +Z axis, going counterclockwise when viewed from above)
-  //   vertex positions: x = r*sin(theta), z = r*cos(theta)
+  // For an equilateral triangle with side length = UNIT_SIZE (4):
+  // - Height = side * sqrt(3)/2 ≈ 3.46
+  // - Center to vertex (circumradius) = TRIANGLE_RADIUS ≈ 2.31
+  // - Center to edge midpoint (apothem) = TRIANGLE_APOTHEM ≈ 1.15
   //
-  // Default vertices (before rotation):
-  //   V0: theta=0      -> (0, y, +r)        = apex at +Z (north)
-  //   V1: theta=2π/3   -> (+r*sin(120°), y, -r/2) = bottom-right
-  //   V2: theta=4π/3   -> (-r*sin(120°), y, -r/2) = bottom-left
+  // Vertices (with center at origin):
+  // - vApex:  (0, 0, +TRIANGLE_RADIUS)           = (0, 0, ~2.31)  - north
+  // - vLeft:  (-UNIT_SIZE/2, 0, -TRIANGLE_APOTHEM) = (-2, 0, ~-1.15) - southwest
+  // - vRight: (+UNIT_SIZE/2, 0, -TRIANGLE_APOTHEM) = (+2, 0, ~-1.15) - southeast
   //
-  // This already matches our socket layout! Apex at +Z, base at -Z.
-  // No rotation needed.
+  // The BASE edge (vLeft to vRight) is HORIZONTAL (parallel to X-axis)
+
   const geometry = useMemo(() => {
-    return new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3);
+    const halfSize = UNIT_SIZE / 2;
+    const apexZ = TRIANGLE_RADIUS;
+    const baseZ = -TRIANGLE_APOTHEM;
+    const halfHeight = FOUNDATION_HEIGHT / 2;
+
+    // Vertices: apex (north), left (southwest), right (southeast)
+    // Top face (y = +halfHeight)
+    const topApex =  [0, halfHeight, apexZ];
+    const topLeft =  [-halfSize, halfHeight, baseZ];
+    const topRight = [halfSize, halfHeight, baseZ];
+
+    // Bottom face (y = -halfHeight)
+    const botApex =  [0, -halfHeight, apexZ];
+    const botLeft =  [-halfSize, -halfHeight, baseZ];
+    const botRight = [halfSize, -halfHeight, baseZ];
+
+    // Create BufferGeometry with triangles
+    const vertices = new Float32Array([
+      // Top face (counterclockwise when viewed from above)
+      ...topApex, ...topLeft, ...topRight,
+
+      // Bottom face (clockwise when viewed from above = counterclockwise from below)
+      ...botApex, ...botRight, ...botLeft,
+
+      // South face (BASE edge) - two triangles
+      ...topLeft, ...botLeft, ...botRight,
+      ...topLeft, ...botRight, ...topRight,
+
+      // Right face (RIGHT edge) - two triangles
+      ...topRight, ...botRight, ...botApex,
+      ...topRight, ...botApex, ...topApex,
+
+      // Left face (LEFT edge) - two triangles
+      ...topApex, ...botApex, ...botLeft,
+      ...topApex, ...botLeft, ...topLeft,
+    ]);
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geom.computeVertexNormals();
+
+    return geom;
   }, []);
 
   const edgeGeometry = useMemo(() => {
-    const geom = new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3);
-    return new THREE.EdgesGeometry(geom);
-  }, []);
+    return new THREE.EdgesGeometry(geometry);
+  }, [geometry]);
 
   return (
     <>
