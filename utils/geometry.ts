@@ -46,48 +46,48 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   } 
   
   else if (type === BuildingType.TRIANGLE_FOUNDATION) {
-    // THREE.CylinderGeometry with 3 radial segments creates a triangular prism.
-    // In THREE.js, CylinderGeometry vertices start at +X axis and go counterclockwise when viewed from above.
-    // With 3 segments: vertices at 90°, 210°, 330° (or equivalently: +Y in 2D, then 120° apart)
-    // Actually, THREE.js CylinderGeometry starts the first vertex at angle = PI/2 (top of circle)
-    // then places subsequent vertices at 120° intervals going counterclockwise.
+    // THREE.CylinderGeometry with radialSegments=3 creates a triangular prism.
+    // By default, CylinderGeometry is Y-up (vertical axis), and the first vertex starts at +X.
+    // With radialSegments=3, vertices are at: 0°, 120°, 240° measured from +X axis in XZ plane.
     //
-    // For a 3-segment cylinder (triangular prism), vertices are at:
-    //   - Vertex 0: angle = PI/2 (90°) -> position (0, y, radius) pointing +Z
-    //   - Vertex 1: angle = PI/2 + 2PI/3 = 7PI/6 (210°)
-    //   - Vertex 2: angle = PI/2 + 4PI/3 = 11PI/6 (330°)
+    // Vertices positions in XZ plane (Y is vertical):
+    //   V0: angle = 0°   → (+TRIANGLE_RADIUS, 0)     [pointing +X]
+    //   V1: angle = 120° → (-TRIANGLE_RADIUS/2, +TRIANGLE_RADIUS*√3/2)  [pointing upper-left]
+    //   V2: angle = 240° → (-TRIANGLE_RADIUS/2, -TRIANGLE_RADIUS*√3/2)  [pointing lower-left]
     //
-    // Edge midpoints are between vertices, so at angles:
-    //   - Edge 0-1: (90° + 210°)/2 = 150°
-    //   - Edge 1-2: (210° + 330°)/2 = 270° (pointing -Z)
-    //   - Edge 2-0: (330° + 90° + 360°)/2 = 390° = 30°
+    // Edge midpoints and normals (perpendicular to each edge, pointing outward):
+    //   Edge V0→V1: midpoint angle = 60°,  normal angle = 60°   (northeast)
+    //   Edge V1→V2: midpoint angle = 180°, normal angle = 180°  (west, -X direction)
+    //   Edge V2→V0: midpoint angle = 300°, normal angle = 300°  (southeast)
     //
-    // Converting to radians: 150° = 5PI/6, 270° = 3PI/2, 30° = PI/6
+    // Edge midpoints are at distance TRIANGLE_APOTHEM from center.
+
     const edgeAngles = [
-      Math.PI / 6,      // 30° - edge between vertex 2 and vertex 0
-      (5 * Math.PI) / 6, // 150° - edge between vertex 0 and vertex 1
-      (3 * Math.PI) / 2, // 270° - edge between vertex 1 and vertex 2
+      Math.PI / 3,       // 60°  - Edge between V0 and V1 (northeast)
+      Math.PI,           // 180° - Edge between V1 and V2 (west)
+      5 * Math.PI / 3,   // 300° - Edge between V2 and V0 (southeast)
     ];
 
     for (const angle of edgeAngles) {
-      // Position at edge midpoint (at apothem distance from center)
-      const pos = new THREE.Vector3(
-        Math.cos(angle) * TRIANGLE_APOTHEM,
-        0,
-        -Math.sin(angle) * TRIANGLE_APOTHEM  // Negative because THREE.js Z points toward camera
-      );
-      // Normal points outward from edge
-      const norm = new THREE.Vector3(
-        Math.cos(angle),
-        0,
-        -Math.sin(angle)
-      );
-      sockets.push({ position: pos, normal: norm, socketType: SocketType.FOUNDATION_EDGE });
+      // Normal vector pointing outward from edge
+      const normal = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
 
-      // Top socket for each edge (for wall placement)
-      const topPos = pos.clone();
-      topPos.y = FOUNDATION_HEIGHT;
-      sockets.push({ position: topPos, normal: norm.clone(), socketType: SocketType.FOUNDATION_TOP });
+      // Edge midpoint position at TRIANGLE_APOTHEM distance from center
+      const position = normal.clone().multiplyScalar(TRIANGLE_APOTHEM);
+
+      // Foundation edge socket (for connecting to other foundations)
+      sockets.push({
+        position: position.clone(),
+        normal: normal.clone(),
+        socketType: SocketType.FOUNDATION_EDGE
+      });
+
+      // Foundation top socket (for walls to snap onto)
+      sockets.push({
+        position: new THREE.Vector3(position.x, FOUNDATION_HEIGHT, position.z),
+        normal: normal.clone(),
+        socketType: SocketType.FOUNDATION_TOP
+      });
     }
   }
   
@@ -260,12 +260,14 @@ const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
  * Uses a two-phase approach to avoid flickering:
  * 1. Find all possible snap configurations (target socket + ghost socket pairs)
  * 2. Pick the one whose resulting position is closest to cursor
+ * 3. Check for socket occupancy to prevent ghost pieces
  */
 export const calculateSnap = (
   rayIntersectionPoint: THREE.Vector3,
   buildings: BuildingData[],
   activeType: BuildingType,
-  currentRotationY: number
+  currentRotationY: number,
+  debugCallback?: (debugInfo: any) => void
 ): { position: THREE.Vector3, rotation: THREE.Euler, isValid: boolean } => {
   if (!rayIntersectionPoint) {
     return { position: new THREE.Vector3(), rotation: new THREE.Euler(), isValid: false };
@@ -295,15 +297,40 @@ export const calculateSnap = (
     position: THREE.Vector3;
     rotation: THREE.Euler;
     distToCursor: number;
+    targetSocket: Socket;
+    ghostSocket: LocalSocket;
   }
 
   let bestCandidate: SnapCandidate | null = null;
   const SNAP_RADIUS = 2.5;
+  const SOCKET_OCCUPIED_THRESHOLD = 0.1; // If another building is this close to a socket, it's occupied
+
+  // Debug tracking
+  const debugCandidates: any[] = [];
 
   for (const targetSocket of compatibleSockets) {
     // Only consider sockets within snap radius of cursor
     const distToSocket = targetSocket.position.distanceTo(rayIntersectionPoint);
     if (distToSocket > SNAP_RADIUS) continue;
+
+    // Check if this socket is already occupied by another building
+    // A socket is occupied if there's another building very close to it (not the parent building)
+    let isOccupied = false;
+    for (const building of buildings) {
+      if (building.id === targetSocket.id) continue; // Skip the parent building
+      const buildingPos = new THREE.Vector3(building.position[0], building.position[1], building.position[2]);
+
+      // Check distance in XZ plane (ignore Y for vertical stacking)
+      const socketPosXZ = new THREE.Vector2(targetSocket.position.x, targetSocket.position.z);
+      const buildingPosXZ = new THREE.Vector2(buildingPos.x, buildingPos.z);
+
+      if (socketPosXZ.distanceTo(buildingPosXZ) < SOCKET_OCCUPIED_THRESHOLD) {
+        isOccupied = true;
+        break;
+      }
+    }
+
+    if (isOccupied) continue; // Skip occupied sockets
 
     // Find compatible ghost sockets
     const targetCompatible = SOCKET_COMPATIBILITY[targetSocket.socketType] || [];
@@ -311,41 +338,46 @@ export const calculateSnap = (
 
     if (matchingGhostSockets.length === 0) continue;
 
-    // For each matching ghost socket, find the one that opposes the target normal
-    // (best alignment score)
-    let bestGhostSocket = matchingGhostSockets[0];
-    let bestAlignScore = -Infinity;
-
-    for (const gSocket of matchingGhostSockets) {
-      const alignScore = -gSocket.normal.dot(targetSocket.normal);
-      if (alignScore > bestAlignScore) {
-        bestAlignScore = alignScore;
-        bestGhostSocket = gSocket;
-      }
-    }
-
-    // Only consider well-aligned sockets (normals roughly opposing)
-    if (bestAlignScore < 0.5) continue;
-
-    // Calculate the resulting position and rotation
+    // Evaluate each ghost socket as a potential snap candidate
+    // Calculate the actual rotation needed and pick the best option by distance to cursor
     const targetNormal = targetSocket.normal.clone().negate();
     const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
-    const localAngle = Math.atan2(bestGhostSocket.normal.x, bestGhostSocket.normal.z);
-    const rotY = targetAngle - localAngle;
 
-    const candidateRot = new THREE.Euler(0, rotY, 0);
-    const rotatedLocalPos = bestGhostSocket.position.clone().applyEuler(candidateRot);
-    const candidatePos = targetSocket.position.clone().sub(rotatedLocalPos);
+    for (const gSocket of matchingGhostSockets) {
+      // Calculate rotation needed to align this ghost socket with target
+      const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
+      const rotY = targetAngle - localAngle;
 
-    // Score by distance from cursor to resulting piece center
-    const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
+      const candidateRot = new THREE.Euler(0, rotY, 0);
+      const rotatedLocalPos = gSocket.position.clone().applyEuler(candidateRot);
+      const candidatePos = targetSocket.position.clone().sub(rotatedLocalPos);
 
-    if (!bestCandidate || distToCursor < bestCandidate.distToCursor) {
-      bestCandidate = {
-        position: candidatePos,
-        rotation: candidateRot,
-        distToCursor,
-      };
+      // Score by distance from cursor to resulting piece center
+      const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
+
+      // Track this candidate for debugging
+      debugCandidates.push({
+        targetSocketType: targetSocket.socketType,
+        targetSocketPos: [targetSocket.position.x, targetSocket.position.y, targetSocket.position.z],
+        targetSocketNormal: [targetSocket.normal.x, targetSocket.normal.y, targetSocket.normal.z],
+        ghostSocketType: gSocket.socketType,
+        ghostSocketPos: [gSocket.position.x, gSocket.position.y, gSocket.position.z],
+        ghostSocketNormal: [gSocket.normal.x, gSocket.normal.y, gSocket.normal.z],
+        resultingPosition: [candidatePos.x, candidatePos.y, candidatePos.z],
+        resultingRotation: [candidateRot.x, candidateRot.y, candidateRot.z],
+        distanceToCursor: distToCursor,
+        wasOccupied: false,
+      });
+
+      if (!bestCandidate || distToCursor < bestCandidate.distToCursor) {
+        bestCandidate = {
+          position: candidatePos,
+          rotation: candidateRot,
+          distToCursor,
+          targetSocket,
+          ghostSocket: gSocket,
+        };
+      }
     }
   }
 
@@ -361,8 +393,10 @@ export const calculateSnap = (
     finalPos.x = Math.round((rayIntersectionPoint.x - offset) / gridSnap) * gridSnap + offset;
     finalPos.z = Math.round((rayIntersectionPoint.z - offset) / gridSnap) * gridSnap + offset;
     finalPos.y = 0;
-    // Snap rotation to 90° increments
-    const rotSnap = Math.PI / 2;
+    // Snap rotation: 60° for triangles, 90° for everything else
+    const isTriangle = activeType === BuildingType.TRIANGLE_FOUNDATION ||
+                      activeType === BuildingType.TRIANGLE_ROOF;
+    const rotSnap = isTriangle ? Math.PI / 3 : Math.PI / 2;
     const snappedRot = Math.round(currentRotationY / rotSnap) * rotSnap;
     finalRot = new THREE.Euler(0, snappedRot, 0);
   }
@@ -415,6 +449,28 @@ export const calculateSnap = (
     if (activeType === BuildingType.SQUARE_ROOF || activeType === BuildingType.TRIANGLE_ROOF) {
       isValid = false;
     }
+  }
+
+  // Send debug info if callback provided
+  if (debugCallback) {
+    const selectedIndex = bestCandidate
+      ? debugCandidates.findIndex(c =>
+          c.resultingPosition[0] === bestCandidate.position.x &&
+          c.resultingPosition[1] === bestCandidate.position.y &&
+          c.resultingPosition[2] === bestCandidate.position.z
+        )
+      : null;
+
+    debugCallback({
+      rayPoint: [rayIntersectionPoint.x, rayIntersectionPoint.y, rayIntersectionPoint.z],
+      compatibleSocketsFound: compatibleSockets.length,
+      candidates: debugCandidates,
+      selectedCandidate: selectedIndex,
+      finalPosition: [finalPos.x, finalPos.y, finalPos.z],
+      finalRotation: [finalRot.x, finalRot.y, finalRot.z],
+      isValid,
+      snappedToSocket,
+    });
   }
 
   return { position: finalPos, rotation: finalRot, isValid };

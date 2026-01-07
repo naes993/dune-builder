@@ -11,7 +11,7 @@ import {
   WALL_HEIGHT,
   HALF_WALL_HEIGHT,
 } from '../types';
-import { calculateSnap } from '../utils/geometry';
+import { calculateSnap, getWorldSockets, getLocalSockets } from '../utils/geometry';
 import {
   createCurvedFoundationShape,
   createDoorwayShape,
@@ -51,7 +51,12 @@ interface SceneProps {
   setBuildings: React.Dispatch<React.SetStateAction<BuildingData[]>>;
   activeType: BuildingType;
   showWireframe: boolean;
+  showSocketDebug: boolean;
   materials: MaterialsType;
+  debugRecorder?: {
+    isRecording: boolean;
+    addFrame: (frame: any) => void;
+  };
 }
 
 interface BuildingMeshProps {
@@ -399,10 +404,70 @@ const BuildingMesh = ({
 };
 
 // =============================================================================
+// Socket Debug Visualizer
+// =============================================================================
+
+interface SocketDebugProps {
+  buildings: BuildingData[];
+}
+
+const SocketDebugVisualizer = ({ buildings }: SocketDebugProps) => {
+  // Socket type colors
+  const socketColors = useMemo(() => ({
+    FOUNDATION_EDGE: '#FFD700',    // Gold
+    FOUNDATION_TOP: '#00FF00',     // Green
+    WALL_BOTTOM: '#FF00FF',        // Magenta
+    WALL_SIDE: '#00FFFF',          // Cyan
+    WALL_TOP: '#FF8C00',           // Orange
+    ROOF_EDGE: '#FF0000',          // Red
+    INCLINE_BOTTOM: '#1E90FF',     // Dodger Blue
+    INCLINE_TOP: '#9400D3',        // Dark Violet
+  }), []);
+
+  return (
+    <group>
+      {buildings.map((building) => {
+        const sockets = getWorldSockets(building);
+        return (
+          <group key={`sockets-${building.id}`}>
+            {sockets.map((socket: any, idx: number) => {
+              const color = socketColors[socket.socketType as keyof typeof socketColors] || '#FFFFFF';
+              const arrowEnd = socket.position.clone().add(socket.normal.clone().multiplyScalar(0.5));
+
+              return (
+                <group key={`socket-${building.id}-${idx}`}>
+                  {/* Socket position sphere */}
+                  <mesh position={[socket.position.x, socket.position.y, socket.position.z]}>
+                    <sphereGeometry args={[0.1, 8, 8]} />
+                    <meshBasicMaterial color={color} transparent opacity={0.8} />
+                  </mesh>
+
+                  {/* Normal direction arrow */}
+                  <arrowHelper
+                    args={[
+                      socket.normal,
+                      socket.position,
+                      0.5,
+                      color,
+                      0.2,
+                      0.15
+                    ]}
+                  />
+                </group>
+              );
+            })}
+          </group>
+        );
+      })}
+    </group>
+  );
+};
+
+// =============================================================================
 // Planner Component (handles placement logic)
 // =============================================================================
 
-const Planner = ({ buildings, setBuildings, activeType, showWireframe, materials }: SceneProps) => {
+const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocketDebug, materials, debugRecorder }: SceneProps) => {
   const { camera, raycaster, mouse } = useThree();
   const [ghostPos, setGhostPos] = useState<[number, number, number]>([0, 0, 0]);
   const [ghostRot, setGhostRot] = useState<[number, number, number]>([0, 0, 0]);
@@ -410,17 +475,38 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, materials
   const [manualRot, setManualRot] = useState(0);
 
   const groupRef = useRef<THREE.Group>(null);
+  const lastMousePos = useRef<[number, number]>([0, 0]);
 
   // Handle rotation key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'r') {
-        setManualRot((prev) => prev + Math.PI / 2);
+        // Use 60° (π/3) for triangles, 90° (π/2) for everything else
+        const isTriangle = activeType === BuildingType.TRIANGLE_FOUNDATION ||
+                          activeType === BuildingType.TRIANGLE_ROOF;
+        const rotIncrement = isTriangle ? Math.PI / 3 : Math.PI / 2;
+        const newRot = manualRot + rotIncrement;
+        setManualRot(newRot);
+
+        // Record key press
+        if (debugRecorder?.isRecording) {
+          debugRecorder.addFrame({
+            timestamp: Date.now(),
+            cursorPosition: null,
+            cursorScreen: lastMousePos.current,
+            activeType,
+            rotation: newRot,
+            keyPress: {
+              key: 'r',
+              action: 'rotate',
+            },
+          });
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [manualRot, activeType, debugRecorder]);
 
   // Update ghost position based on mouse
   useFrame(() => {
@@ -428,9 +514,27 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, materials
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(groupRef.current.children, true);
 
+    // Track mouse position for recording
+    lastMousePos.current = [mouse.x, mouse.y];
+
     if (intersects.length > 0) {
       const targetPoint = intersects[0].point;
-      const snap = calculateSnap(targetPoint, buildings, activeType, manualRot);
+
+      // Debug callback for recording
+      const debugCallback = debugRecorder?.isRecording
+        ? (snapCalculation: any) => {
+            debugRecorder.addFrame({
+              timestamp: Date.now(),
+              cursorPosition: [targetPoint.x, targetPoint.y, targetPoint.z],
+              cursorScreen: [mouse.x, mouse.y],
+              activeType,
+              rotation: manualRot,
+              snapCalculation,
+            });
+          }
+        : undefined;
+
+      const snap = calculateSnap(targetPoint, buildings, activeType, manualRot, debugCallback);
       if (snap) {
         setGhostPos([snap.position.x, snap.position.y, snap.position.z]);
         setGhostRot([snap.rotation.x, snap.rotation.y, snap.rotation.z]);
@@ -451,13 +555,50 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, materials
         rotation: [...ghostRot],
       };
       setBuildings((prev) => [...prev, newBuilding]);
+
+      // Record placement
+      if (debugRecorder?.isRecording) {
+        debugRecorder.addFrame({
+          timestamp: Date.now(),
+          cursorPosition: ghostPos,
+          cursorScreen: lastMousePos.current,
+          activeType,
+          rotation: manualRot,
+          buildingAction: {
+            action: 'place',
+            buildingId: newBuilding.id,
+            buildingType: newBuilding.type,
+            position: newBuilding.position,
+            rotation: newBuilding.rotation,
+          },
+        });
+      }
     }
   };
 
   // Handle building removal
   const removeBuilding = (id: string, e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    const removedBuilding = buildings.find((b) => b.id === id);
     setBuildings(buildings.filter((b) => b.id !== id));
+
+    // Record removal
+    if (debugRecorder?.isRecording && removedBuilding) {
+      debugRecorder.addFrame({
+        timestamp: Date.now(),
+        cursorPosition: null,
+        cursorScreen: lastMousePos.current,
+        activeType,
+        rotation: manualRot,
+        buildingAction: {
+          action: 'remove',
+          buildingId: removedBuilding.id,
+          buildingType: removedBuilding.type,
+          position: removedBuilding.position,
+          rotation: removedBuilding.rotation,
+        },
+      });
+    }
   };
 
   return (
@@ -477,6 +618,9 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, materials
           <BuildingMesh {...b} wireframe={showWireframe} materials={materials} />
         </group>
       ))}
+
+      {/* Socket debug visualization */}
+      {showSocketDebug && <SocketDebugVisualizer buildings={buildings} />}
 
       {/* Ghost preview */}
       <BuildingMesh
@@ -511,7 +655,7 @@ export const GameScene = (props: Omit<SceneProps, 'materials'>) => {
       <ambientLight intensity={0.6} />
       <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-      <Planner {...props} materials={materials} />
+      <Planner {...props} showSocketDebug={props.showSocketDebug} debugRecorder={props.debugRecorder} materials={materials} />
       <OrbitControls
         makeDefault
         maxPolarAngle={Math.PI / 2 - 0.1}

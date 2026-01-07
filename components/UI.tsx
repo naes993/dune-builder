@@ -1,6 +1,6 @@
 import React from 'react';
 import { BuildingType } from '../types';
-import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload } from 'lucide-react';
+import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload, Bug, Video, VideoOff, FilmIcon } from 'lucide-react';
 
 interface UIProps {
   activeType: BuildingType;
@@ -12,9 +12,19 @@ interface UIProps {
   onImport: () => void;
   showWireframe: boolean;
   setShowWireframe: (b: boolean) => void;
+  showSocketDebug: boolean;
+  setShowSocketDebug: (b: boolean) => void;
+  debugRecorder: {
+    isRecording: boolean;
+    frameCount: number;
+    startRecording: () => void;
+    stopRecording: () => void;
+    downloadRecording: () => void;
+    clearRecording: () => void;
+  };
 }
 
-const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onImport, showWireframe, setShowWireframe }: UIProps) => {
+const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onImport, showWireframe, setShowWireframe, showSocketDebug, setShowSocketDebug, debugRecorder }: UIProps) => {
   const tools = [
     // Foundations
     { type: BuildingType.SQUARE_FOUNDATION, icon: Square, label: 'Square', category: 'foundation' },
@@ -143,6 +153,16 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
         </button>
 
         <button
+          onClick={() => setShowSocketDebug(!showSocketDebug)}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
+               ${showSocketDebug ? 'bg-purple-500/50 text-white' : 'hover:bg-white/10 text-gray-300'}`}
+          title="Toggle Socket Debug View"
+        >
+          <Bug size={20} />
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider">Sockets</span>
+        </button>
+
+        <button
           onClick={onClear}
           className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-red-900/50 text-red-300 transition-all w-16 sm:w-20"
         >
@@ -155,7 +175,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 };
 
 // Build version - increment this with each deployment
-export const BUILD_VERSION = 'v1.0.4';
+export const BUILD_VERSION = 'v1.4.0';
 
 export const Instructions = () => (
     <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">
@@ -168,6 +188,79 @@ export const Instructions = () => (
         </ul>
         <div className="mt-3 pt-2 border-t border-white/20 text-[10px] text-white/50">
             Build: {BUILD_VERSION}
+        </div>
+    </div>
+);
+
+interface DebugRecorderUIProps {
+  debugRecorder: {
+    isRecording: boolean;
+    frameCount: number;
+    startRecording: () => void;
+    stopRecording: () => void;
+    downloadRecording: () => void;
+    clearRecording: () => void;
+  };
+}
+
+export const DebugRecorderUI = ({ debugRecorder }: DebugRecorderUIProps) => (
+    <div className="absolute top-4 right-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-r-2 border-red-500 max-w-xs pointer-events-auto">
+        <h3 className="text-red-400 font-bold mb-2 uppercase flex items-center gap-2">
+            <Video size={16} className={debugRecorder.isRecording ? 'animate-pulse text-red-500' : ''} />
+            Debug Recorder
+        </h3>
+
+        <div className="space-y-2">
+            <div className="text-xs text-white/60">
+                {debugRecorder.isRecording ? (
+                    <span className="text-red-400 font-bold">● RECORDING</span>
+                ) : (
+                    <span>Ready</span>
+                )}
+                <span className="ml-2">({debugRecorder.frameCount} frames)</span>
+            </div>
+
+            <div className="flex gap-2">
+                {!debugRecorder.isRecording ? (
+                    <button
+                        onClick={debugRecorder.startRecording}
+                        className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded text-white text-xs font-bold uppercase transition-colors"
+                    >
+                        <Video size={14} className="inline mr-1" />
+                        Start
+                    </button>
+                ) : (
+                    <button
+                        onClick={debugRecorder.stopRecording}
+                        className="flex-1 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 rounded text-white text-xs font-bold uppercase transition-colors"
+                    >
+                        <VideoOff size={14} className="inline mr-1" />
+                        Stop
+                    </button>
+                )}
+
+                <button
+                    onClick={debugRecorder.downloadRecording}
+                    disabled={debugRecorder.frameCount === 0}
+                    className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded text-white text-xs font-bold uppercase transition-colors"
+                >
+                    <Download size={14} className="inline mr-1" />
+                    Save
+                </button>
+            </div>
+
+            {debugRecorder.frameCount > 0 && (
+                <button
+                    onClick={debugRecorder.clearRecording}
+                    className="w-full px-3 py-1 bg-gray-800 hover:bg-gray-900 rounded text-white/60 text-xs uppercase transition-colors"
+                >
+                    Clear
+                </button>
+            )}
+
+            <div className="mt-3 pt-2 border-t border-white/20 text-[10px] text-white/40">
+                Records cursor, snaps, placements for debugging
+            </div>
         </div>
     </div>
 );
