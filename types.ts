@@ -72,13 +72,14 @@ export enum SocketType {
 }
 
 // Socket compatibility rules
+// Each entry defines what socket types can connect to this socket type
 export const SOCKET_COMPATIBILITY: Record<SocketType, SocketType[]> = {
   [SocketType.FOUNDATION_EDGE]: [SocketType.FOUNDATION_EDGE],
-  [SocketType.FOUNDATION_TOP]: [SocketType.WALL_BOTTOM, SocketType.INCLINE_BOTTOM],
-  [SocketType.WALL_BOTTOM]: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP],
+  [SocketType.FOUNDATION_TOP]: [SocketType.WALL_BOTTOM, SocketType.INCLINE_BOTTOM, SocketType.INCLINE_TOP],
+  [SocketType.WALL_BOTTOM]: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.INCLINE_TOP],
   [SocketType.WALL_SIDE]: [SocketType.WALL_SIDE],
-  [SocketType.WALL_TOP]: [SocketType.WALL_BOTTOM, SocketType.ROOF_EDGE],
+  [SocketType.WALL_TOP]: [SocketType.WALL_BOTTOM, SocketType.ROOF_EDGE, SocketType.INCLINE_BOTTOM, SocketType.INCLINE_TOP],
   [SocketType.ROOF_EDGE]: [SocketType.ROOF_EDGE, SocketType.WALL_TOP],
-  [SocketType.INCLINE_BOTTOM]: [SocketType.FOUNDATION_TOP],
-  [SocketType.INCLINE_TOP]: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP],
+  [SocketType.INCLINE_BOTTOM]: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP],
+  [SocketType.INCLINE_TOP]: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.WALL_BOTTOM],
 };

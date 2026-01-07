@@ -52,6 +52,7 @@ interface SceneProps {
   activeType: BuildingType;
   showWireframe: boolean;
   showSocketDebug: boolean;
+  is2DMode: boolean;
   materials: MaterialsType;
   debugRecorder?: {
     isRecording: boolean;
@@ -467,7 +468,7 @@ const SocketDebugVisualizer = ({ buildings }: SocketDebugProps) => {
 // Planner Component (handles placement logic)
 // =============================================================================
 
-const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocketDebug, materials, debugRecorder }: SceneProps) => {
+const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocketDebug, is2DMode, materials, debugRecorder }: SceneProps) => {
   const { camera, raycaster, mouse } = useThree();
   const [ghostPos, setGhostPos] = useState<[number, number, number]>([0, 0, 0]);
   const [ghostRot, setGhostRot] = useState<[number, number, number]>([0, 0, 0]);
@@ -636,6 +637,182 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocke
 };
 
 // =============================================================================
+// Camera Controller for 2D Mode
+// =============================================================================
+
+interface CameraControllerProps {
+  is2DMode: boolean;
+  controlsRef: React.RefObject<any>;
+}
+
+const CameraController = ({ is2DMode, controlsRef }: CameraControllerProps) => {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    if (is2DMode) {
+      // Top-down orthographic-like view
+      camera.position.set(0, 30, 0.001); // Small Z offset to avoid gimbal lock
+      camera.lookAt(0, 0, 0);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+      }
+    } else {
+      // Default 3D view
+      camera.position.set(10, 15, 10);
+      camera.lookAt(0, 0, 0);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+      }
+    }
+  }, [is2DMode, camera, controlsRef]);
+
+  return null;
+};
+
+// =============================================================================
+// Compass Component - shows N/S/E/W in the scene
+// =============================================================================
+
+const Compass = () => {
+  const compassSize = 3;
+  const arrowLength = 2;
+  const labelOffset = 2.5;
+
+  return (
+    <group position={[-12, 0.1, -12]}>
+      {/* Compass circle */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[compassSize - 0.1, compassSize, 32]} />
+        <meshBasicMaterial color="#333" side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* North arrow (+Z direction in Three.js when looking down) */}
+      <group>
+        <mesh position={[0, 0.05, arrowLength / 2]}>
+          <boxGeometry args={[0.15, 0.1, arrowLength]} />
+          <meshBasicMaterial color="#FF0000" />
+        </mesh>
+        <mesh position={[0, 0.05, arrowLength]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.3, 0.5, 8]} />
+          <meshBasicMaterial color="#FF0000" />
+        </mesh>
+        {/* N label */}
+        <mesh position={[0, 0.1, labelOffset]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.8, 0.8]} />
+          <meshBasicMaterial color="#FF0000" transparent opacity={0.9} />
+        </mesh>
+      </group>
+
+      {/* South arrow (-Z direction) */}
+      <group>
+        <mesh position={[0, 0.05, -arrowLength / 2]}>
+          <boxGeometry args={[0.1, 0.08, arrowLength]} />
+          <meshBasicMaterial color="#666" />
+        </mesh>
+      </group>
+
+      {/* East arrow (+X direction) */}
+      <group>
+        <mesh position={[arrowLength / 2, 0.05, 0]}>
+          <boxGeometry args={[arrowLength, 0.08, 0.1]} />
+          <meshBasicMaterial color="#0066FF" />
+        </mesh>
+        <mesh position={[arrowLength, 0.05, 0]} rotation={[0, 0, -Math.PI / 2]}>
+          <coneGeometry args={[0.2, 0.4, 8]} />
+          <meshBasicMaterial color="#0066FF" />
+        </mesh>
+      </group>
+
+      {/* West arrow (-X direction) */}
+      <group>
+        <mesh position={[-arrowLength / 2, 0.05, 0]}>
+          <boxGeometry args={[arrowLength, 0.08, 0.1]} />
+          <meshBasicMaterial color="#666" />
+        </mesh>
+      </group>
+
+      {/* Direction labels using simple colored planes */}
+      {/* N = Red (+Z) */}
+      <group position={[0, 0.2, labelOffset + 0.5]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.6, 0.6]} />
+          <meshBasicMaterial color="#FF0000" />
+        </mesh>
+      </group>
+      {/* E = Blue (+X) */}
+      <group position={[labelOffset + 0.5, 0.2, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.6, 0.6]} />
+          <meshBasicMaterial color="#0066FF" />
+        </mesh>
+      </group>
+      {/* S = Gray (-Z) */}
+      <group position={[0, 0.2, -labelOffset - 0.5]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.5, 0.5]} />
+          <meshBasicMaterial color="#666" />
+        </mesh>
+      </group>
+      {/* W = Gray (-X) */}
+      <group position={[-labelOffset - 0.5, 0.2, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.5, 0.5]} />
+          <meshBasicMaterial color="#666" />
+        </mesh>
+      </group>
+    </group>
+  );
+};
+
+// =============================================================================
+// Axis Labels - shows +X, -X, +Z, -Z labels at grid edges
+// =============================================================================
+
+const AxisLabels = ({ is2DMode }: { is2DMode: boolean }) => {
+  if (!is2DMode) return null;
+
+  const gridExtent = 10;
+
+  return (
+    <group>
+      {/* +X label (East/Right) */}
+      <group position={[gridExtent + 1, 0.5, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.5, 0.8]} />
+          <meshBasicMaterial color="#0066FF" transparent opacity={0.8} />
+        </mesh>
+      </group>
+
+      {/* -X label (West/Left) */}
+      <group position={[-gridExtent - 1, 0.5, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.5, 0.8]} />
+          <meshBasicMaterial color="#666" transparent opacity={0.8} />
+        </mesh>
+      </group>
+
+      {/* +Z label (North/Up on screen) */}
+      <group position={[0, 0.5, gridExtent + 1]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.5, 0.8]} />
+          <meshBasicMaterial color="#FF0000" transparent opacity={0.8} />
+        </mesh>
+      </group>
+
+      {/* -Z label (South/Down on screen) */}
+      <group position={[0, 0.5, -gridExtent - 1]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.5, 0.8]} />
+          <meshBasicMaterial color="#666" transparent opacity={0.8} />
+        </mesh>
+      </group>
+    </group>
+  );
+};
+
+// =============================================================================
 // Main Scene Export
 // =============================================================================
 
@@ -648,20 +825,28 @@ export const GameScene = (props: Omit<SceneProps, 'materials'>) => {
     []
   );
 
+  const controlsRef = useRef<any>(null);
+
   return (
-    <Canvas shadows camera={{ position: [10, 15, 10], fov: 50 }}>
-      <color attach="background" args={['#87CEEB']} />
-      <fog attach="fog" args={['#E6C288', 20, 100]} />
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-      <Planner {...props} showSocketDebug={props.showSocketDebug} debugRecorder={props.debugRecorder} materials={materials} />
+    <Canvas shadows camera={{ position: props.is2DMode ? [0, 30, 0.001] : [10, 15, 10], fov: 50 }}>
+      <color attach="background" args={[props.is2DMode ? '#1a1a2e' : '#87CEEB']} />
+      {!props.is2DMode && <fog attach="fog" args={['#E6C288', 20, 100]} />}
+      <ambientLight intensity={props.is2DMode ? 1.0 : 0.6} />
+      <directionalLight position={[10, 20, 10]} intensity={props.is2DMode ? 0.5 : 1} castShadow />
+      {!props.is2DMode && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />}
+      <CameraController is2DMode={props.is2DMode} controlsRef={controlsRef} />
+      <Compass />
+      <AxisLabels is2DMode={props.is2DMode} />
+      <Planner {...props} showSocketDebug={props.showSocketDebug} is2DMode={props.is2DMode} debugRecorder={props.debugRecorder} materials={materials} />
       <OrbitControls
+        ref={controlsRef}
         makeDefault
-        maxPolarAngle={Math.PI / 2 - 0.1}
+        enableRotate={!props.is2DMode}
+        maxPolarAngle={props.is2DMode ? 0 : Math.PI / 2 - 0.1}
+        minPolarAngle={props.is2DMode ? 0 : 0}
         mouseButtons={{
           LEFT: undefined,
-          MIDDLE: THREE.MOUSE.ROTATE,
+          MIDDLE: props.is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE,
           RIGHT: THREE.MOUSE.PAN,
         }}
       />

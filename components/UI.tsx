@@ -1,6 +1,6 @@
 import React from 'react';
 import { BuildingType } from '../types';
-import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload, Bug, Video, VideoOff, FilmIcon } from 'lucide-react';
+import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload, Bug, Video, VideoOff, FilmIcon, Compass } from 'lucide-react';
 
 interface UIProps {
   activeType: BuildingType;
@@ -14,6 +14,8 @@ interface UIProps {
   setShowWireframe: (b: boolean) => void;
   showSocketDebug: boolean;
   setShowSocketDebug: (b: boolean) => void;
+  is2DMode: boolean;
+  setIs2DMode: (b: boolean) => void;
   debugRecorder: {
     isRecording: boolean;
     frameCount: number;
@@ -24,7 +26,7 @@ interface UIProps {
   };
 }
 
-const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onImport, showWireframe, setShowWireframe, showSocketDebug, setShowSocketDebug, debugRecorder }: UIProps) => {
+const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onImport, showWireframe, setShowWireframe, showSocketDebug, setShowSocketDebug, is2DMode, setIs2DMode, debugRecorder }: UIProps) => {
   const tools = [
     // Foundations
     { type: BuildingType.SQUARE_FOUNDATION, icon: Square, label: 'Square', category: 'foundation' },
@@ -163,6 +165,16 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
         </button>
 
         <button
+          onClick={() => setIs2DMode(!is2DMode)}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
+               ${is2DMode ? 'bg-green-500/50 text-white' : 'hover:bg-white/10 text-gray-300'}`}
+          title="Toggle 2D Top-Down View"
+        >
+          <Compass size={20} />
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider">2D</span>
+        </button>
+
+        <button
           onClick={onClear}
           className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-red-900/50 text-red-300 transition-all w-16 sm:w-20"
         >
@@ -175,7 +187,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 };
 
 // Build version - increment this with each deployment
-export const BUILD_VERSION = 'v1.4.1';
+export const BUILD_VERSION = 'v1.5.0';
 
 export const Instructions = () => (
     <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">

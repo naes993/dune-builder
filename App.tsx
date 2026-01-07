@@ -11,6 +11,7 @@ export default function App() {
   const [buildings, setBuildings] = useState<BuildingData[]>([]);
   const [showWireframe, setShowWireframe] = useState(false);
   const [showSocketDebug, setShowSocketDebug] = useState(false);
+  const [is2DMode, setIs2DMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Debug recorder
@@ -169,6 +170,7 @@ export default function App() {
           activeType={activeType}
           showWireframe={showWireframe}
           showSocketDebug={showSocketDebug}
+          is2DMode={is2DMode}
           debugRecorder={debugRecorder}
         />
       </div>
@@ -189,6 +191,8 @@ export default function App() {
            setShowWireframe={setShowWireframe}
            showSocketDebug={showSocketDebug}
            setShowSocketDebug={setShowSocketDebug}
+           is2DMode={is2DMode}
+           setIs2DMode={setIs2DMode}
            debugRecorder={debugRecorder}
          />
       </div>
