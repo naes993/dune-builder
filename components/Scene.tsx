@@ -145,18 +145,24 @@ const SquareFoundation = ({ wireframe, isGhost, isValid = true, materials }: Geo
 
 const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
   // Create triangle geometry with base at -Z (south) and apex at +Z (north)
-  // CylinderGeometry with 3 segments creates a triangle with vertex at +X by default
-  // We need to rotate it so apex points to +Z and base is at -Z
+  //
+  // THREE.js CylinderGeometry with 3 segments creates vertices at angles:
+  //   theta = 0, 2π/3, 4π/3 (measured from +Z axis, going counterclockwise when viewed from above)
+  //   vertex positions: x = r*sin(theta), z = r*cos(theta)
+  //
+  // Default vertices (before rotation):
+  //   V0: theta=0      -> (0, y, +r)        = apex at +Z (north)
+  //   V1: theta=2π/3   -> (+r*sin(120°), y, -r/2) = bottom-right
+  //   V2: theta=4π/3   -> (-r*sin(120°), y, -r/2) = bottom-left
+  //
+  // This already matches our socket layout! Apex at +Z, base at -Z.
+  // No rotation needed.
   const geometry = useMemo(() => {
-    const geom = new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3);
-    // Rotate 90° around Y to put apex at +Z instead of +X
-    geom.rotateY(Math.PI / 2);
-    return geom;
+    return new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3);
   }, []);
 
   const edgeGeometry = useMemo(() => {
     const geom = new THREE.CylinderGeometry(TRIANGLE_RADIUS, TRIANGLE_RADIUS, FOUNDATION_HEIGHT, 3);
-    geom.rotateY(Math.PI / 2);
     return new THREE.EdgesGeometry(geom);
   }, []);
 
