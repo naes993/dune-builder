@@ -47,25 +47,19 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   
   else if (type === BuildingType.TRIANGLE_FOUNDATION) {
     // THREE.CylinderGeometry with radialSegments=3 creates a triangular prism.
-    // By default, CylinderGeometry is Y-up (vertical axis), and the first vertex starts at +X.
-    // With radialSegments=3, vertices are at: 0°, 120°, 240° measured from +X axis in XZ plane.
+    // Looking at the actual rendered mesh from a top-down view, the triangle has:
+    //   - One vertex pointing UP (toward +Z in screen space)
+    //   - Two vertices at the bottom corners
     //
-    // Vertices positions in XZ plane (Y is vertical):
-    //   V0: angle = 0°   → (+TRIANGLE_RADIUS, 0)     [pointing +X]
-    //   V1: angle = 120° → (-TRIANGLE_RADIUS/2, +TRIANGLE_RADIUS*√3/2)  [pointing upper-left]
-    //   V2: angle = 240° → (-TRIANGLE_RADIUS/2, -TRIANGLE_RADIUS*√3/2)  [pointing lower-left]
-    //
-    // Edge midpoints and normals (perpendicular to each edge, pointing outward):
-    //   Edge V0→V1: midpoint angle = 60°,  normal angle = 60°   (northeast)
-    //   Edge V1→V2: midpoint angle = 180°, normal angle = 180°  (west, -X direction)
-    //   Edge V2→V0: midpoint angle = 300°, normal angle = 300°  (southeast)
-    //
-    // Edge midpoints are at distance TRIANGLE_APOTHEM from center.
+    // The three edge sockets need outward-pointing normals (perpendicular to edge, away from center):
+    //   - Upper-left edge: normal points NW (135°)
+    //   - Lower-left edge: normal points SW (225°)
+    //   - Lower-right edge: normal points SE (315°)
 
     const edgeAngles = [
-      Math.PI / 3,       // 60°  - Edge between V0 and V1 (northeast)
-      Math.PI,           // 180° - Edge between V1 and V2 (west)
-      5 * Math.PI / 3,   // 300° - Edge between V2 and V0 (southeast)
+      (3 * Math.PI) / 4,  // 135° - upper-left edge, normal points NW (-X, +Z)
+      (5 * Math.PI) / 4,  // 225° - lower-left edge, normal points SW (-X, -Z)
+      (7 * Math.PI) / 4,  // 315° - lower-right edge, normal points SE (+X, -Z)
     ];
 
     for (const angle of edgeAngles) {
@@ -92,11 +86,10 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   }
   
   else if (type === BuildingType.CURVED_FOUNDATION) {
-    // Quarter circle foundation - centered with corner at (-halfSize, -halfSize)
-    // Two straight edges that match square foundation edges exactly:
-    // - Edge along X axis at z = -halfSize (from x=-halfSize to x=+halfSize), normal points -Z
-    // - Edge along Z axis at x = -halfSize (from z=-halfSize to z=+halfSize), normal points -X
-    // These match the square's edges at z=-halfSize (normal -Z) and x=-halfSize (normal -X)
+    // Quarter circle foundation - only the two STRAIGHT edges have sockets
+    // The curved edge does not snap to other pieces
+    // - Edge along X axis at z = -halfSize, normal points -Z
+    // - Edge along Z axis at x = -halfSize, normal points -X
 
     // Straight edge along X (at z = -halfSize) - matches square's -Z edge
     sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_EDGE });
@@ -106,17 +99,6 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     // Top sockets for walls along the straight edges
     sockets.push({ position: new THREE.Vector3(0, FOUNDATION_HEIGHT, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_TOP });
     sockets.push({ position: new THREE.Vector3(-halfSize, FOUNDATION_HEIGHT, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
-
-    // Curved edge sockets (for snapping curved pieces to each other)
-    // Arc goes from (halfSize, -halfSize) around to (-halfSize, halfSize) centered at (-halfSize, -halfSize)
-    for (let i = 1; i <= 3; i++) {
-      const angle = (i * Math.PI) / 8; // 22.5°, 45°, 67.5°
-      const x = -halfSize + Math.cos(angle) * UNIT_SIZE;
-      const z = -halfSize + Math.sin(angle) * UNIT_SIZE;
-      const normal = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
-      sockets.push({ position: new THREE.Vector3(x, 0, z), normal: normal, socketType: SocketType.FOUNDATION_EDGE });
-      sockets.push({ position: new THREE.Vector3(x, FOUNDATION_HEIGHT, z), normal: normal.clone(), socketType: SocketType.FOUNDATION_TOP });
-    }
   }
   
   // ===================
