@@ -11,7 +11,7 @@ import {
   WALL_HEIGHT,
   HALF_WALL_HEIGHT,
 } from '../types';
-import { calculateSnap, getWorldSockets, getLocalSockets } from '../utils/geometry';
+import { calculateSnap, getWorldSockets, getLocalSockets, getWorldEdgeSockets } from '../utils/geometry';
 import {
   createCurvedFoundationShape,
   createDoorwayShape,
@@ -413,27 +413,80 @@ interface SocketDebugProps {
 }
 
 const SocketDebugVisualizer = ({ buildings }: SocketDebugProps) => {
-  // Socket type colors
-  const socketColors = useMemo(() => ({
-    FOUNDATION_EDGE: '#FFD700',    // Gold
-    FOUNDATION_TOP: '#00FF00',     // Green
-    WALL_BOTTOM: '#FF00FF',        // Magenta
-    WALL_SIDE: '#00FFFF',          // Cyan
-    WALL_TOP: '#FF8C00',           // Orange
-    ROOF_EDGE: '#FF0000',          // Red
-    INCLINE_BOTTOM: '#1E90FF',     // Dodger Blue
-    INCLINE_TOP: '#9400D3',        // Dark Violet
-  }), []);
+  // Check if building type uses edge sockets (foundations)
+  const usesEdgeSockets = (type: BuildingType): boolean => {
+    return [
+      BuildingType.SQUARE_FOUNDATION,
+      BuildingType.TRIANGLE_FOUNDATION,
+      BuildingType.CURVED_FOUNDATION
+    ].includes(type);
+  };
 
   return (
     <group>
       {buildings.map((building) => {
+        // FOUNDATIONS: Show edge endpoints (2 points per straight edge)
+        if (usesEdgeSockets(building.type)) {
+          const edges = getWorldEdgeSockets(building);
+          return (
+            <group key={`edges-${building.id}`}>
+              {edges.map((edge, idx) => {
+                // Gold color for edge endpoints
+                const color = '#FFD700';
+
+                return (
+                  <group key={`edge-${building.id}-${idx}`}>
+                    {/* Start point sphere */}
+                    <mesh position={[edge.start.x, edge.start.y + 0.15, edge.start.z]}>
+                      <sphereGeometry args={[0.12, 8, 8]} />
+                      <meshBasicMaterial color={color} transparent opacity={0.9} />
+                    </mesh>
+
+                    {/* End point sphere */}
+                    <mesh position={[edge.end.x, edge.end.y + 0.15, edge.end.z]}>
+                      <sphereGeometry args={[0.12, 8, 8]} />
+                      <meshBasicMaterial color={color} transparent opacity={0.9} />
+                    </mesh>
+
+                    {/* Line connecting the two points to show the edge */}
+                    <line>
+                      <bufferGeometry>
+                        <bufferAttribute
+                          attach="attributes-position"
+                          args={[new Float32Array([
+                            edge.start.x, edge.start.y + 0.15, edge.start.z,
+                            edge.end.x, edge.end.y + 0.15, edge.end.z
+                          ]), 3]}
+                        />
+                      </bufferGeometry>
+                      <lineBasicMaterial color={color} linewidth={2} />
+                    </line>
+                  </group>
+                );
+              })}
+            </group>
+          );
+        }
+
+        // WALLS/ROOFS: Show point sockets (legacy system)
         const sockets = getWorldSockets(building);
+        const socketColors: Record<string, string> = {
+          FOUNDATION_TOP: '#00FF00',     // Green
+          WALL_BOTTOM: '#FF00FF',        // Magenta
+          WALL_SIDE: '#00FFFF',          // Cyan
+          WALL_TOP: '#FF8C00',           // Orange
+          ROOF_EDGE: '#FF0000',          // Red
+          INCLINE_BOTTOM: '#1E90FF',     // Dodger Blue
+          INCLINE_TOP: '#9400D3',        // Dark Violet
+        };
+
         return (
           <group key={`sockets-${building.id}`}>
             {sockets.map((socket: any, idx: number) => {
+              // Skip FOUNDATION_EDGE sockets for non-foundations (shouldn't exist, but just in case)
+              if (socket.socketType === 'FOUNDATION_EDGE') return null;
+
               const color = socketColors[socket.socketType as keyof typeof socketColors] || '#FFFFFF';
-              const arrowEnd = socket.position.clone().add(socket.normal.clone().multiplyScalar(0.5));
 
               return (
                 <group key={`socket-${building.id}-${idx}`}>
