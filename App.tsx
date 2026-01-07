@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { GameScene } from './components/Scene';
-import UI, { Instructions } from './components/UI';
+import UI, { Instructions, DebugRecorderUI } from './components/UI';
 import { BuildingType, BuildingData, SavedBlueprint } from './types';
+import { useDebugRecorder } from './hooks/useDebugRecorder';
 
 const BLUEPRINT_VERSION = 1;
 
@@ -9,7 +10,11 @@ export default function App() {
   const [activeType, setActiveType] = useState<BuildingType>(BuildingType.SQUARE_FOUNDATION);
   const [buildings, setBuildings] = useState<BuildingData[]>([]);
   const [showWireframe, setShowWireframe] = useState(false);
+  const [showSocketDebug, setShowSocketDebug] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Debug recorder
+  const debugRecorder = useDebugRecorder();
 
   // Quick save to localStorage
   const handleSave = () => {
@@ -163,12 +168,15 @@ export default function App() {
           setBuildings={setBuildings}
           activeType={activeType}
           showWireframe={showWireframe}
+          showSocketDebug={showSocketDebug}
+          debugRecorder={debugRecorder}
         />
       </div>
 
       {/* UI Overlay Layer - pointer-events-none allows clicks to pass through to canvas */}
       <div className="absolute inset-0 z-10 pointer-events-none">
          <Instructions />
+         <DebugRecorderUI debugRecorder={debugRecorder} />
          <UI
            activeType={activeType}
            setActiveType={setActiveType}
@@ -179,6 +187,9 @@ export default function App() {
            onImport={handleImport}
            showWireframe={showWireframe}
            setShowWireframe={setShowWireframe}
+           showSocketDebug={showSocketDebug}
+           setShowSocketDebug={setShowSocketDebug}
+           debugRecorder={debugRecorder}
          />
       </div>
     </div>
