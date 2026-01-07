@@ -145,27 +145,30 @@ const SquareFoundation = ({ wireframe, isGhost, isValid = true, materials }: Geo
 );
 
 const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
-  // Custom triangle geometry with FLAT BASE at -Z (south), apex at +Z (north)
+  // Custom triangle geometry with FLAT BASE at BOTTOM of screen, apex at TOP
   //
-  // For an equilateral triangle with side length = UNIT_SIZE (4):
-  // - Height = side * sqrt(3)/2 ≈ 3.46
-  // - Center to vertex (circumradius) = TRIANGLE_RADIUS ≈ 2.31
-  // - Center to edge midpoint (apothem) = TRIANGLE_APOTHEM ≈ 1.15
+  // In 2D mode, camera looks down from Y+. On screen:
+  // - BOTTOM of screen = +Z direction (where red North arrow points)
+  // - TOP of screen = -Z direction
+  // - RIGHT = +X (blue East arrow)
+  // - LEFT = -X
+  //
+  // We want the triangle to "sit" on the grid like a pyramid:
+  // - FLAT BASE at +Z (bottom of screen) = connects to grid/other edges
+  // - APEX pointing toward -Z (top of screen)
   //
   // Vertices (with center at origin):
-  // - vApex:  (0, 0, +TRIANGLE_RADIUS)           = (0, 0, ~2.31)  - north
-  // - vLeft:  (-UNIT_SIZE/2, 0, -TRIANGLE_APOTHEM) = (-2, 0, ~-1.15) - southwest
-  // - vRight: (+UNIT_SIZE/2, 0, -TRIANGLE_APOTHEM) = (+2, 0, ~-1.15) - southeast
-  //
-  // The BASE edge (vLeft to vRight) is HORIZONTAL (parallel to X-axis)
+  // - vApex:  (0, 0, -TRIANGLE_RADIUS)           = apex pointing south (TOP of screen)
+  // - vLeft:  (-UNIT_SIZE/2, 0, +TRIANGLE_APOTHEM) = base left corner (BOTTOM-left)
+  // - vRight: (+UNIT_SIZE/2, 0, +TRIANGLE_APOTHEM) = base right corner (BOTTOM-right)
 
   const geometry = useMemo(() => {
     const halfSize = UNIT_SIZE / 2;
-    const apexZ = TRIANGLE_RADIUS;
-    const baseZ = -TRIANGLE_APOTHEM;
+    const apexZ = -TRIANGLE_RADIUS;     // -2.31 = south (TOP of screen)
+    const baseZ = TRIANGLE_APOTHEM;     // +1.15 = north (BOTTOM of screen)
     const halfHeight = FOUNDATION_HEIGHT / 2;
 
-    // Vertices: apex (north), left (southwest), right (southeast)
+    // Vertices: apex at -Z (south/top of screen), base corners at +Z (north/bottom of screen)
     // Top face (y = +halfHeight)
     const topApex =  [0, halfHeight, apexZ];
     const topLeft =  [-halfSize, halfHeight, baseZ];
@@ -177,24 +180,25 @@ const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: G
     const botRight = [halfSize, -halfHeight, baseZ];
 
     // Create BufferGeometry with triangles
+    // Winding order: counterclockwise when viewed from outside
     const vertices = new Float32Array([
-      // Top face (counterclockwise when viewed from above)
+      // Top face (viewed from above, counterclockwise: apex -> left -> right)
       ...topApex, ...topLeft, ...topRight,
 
-      // Bottom face (clockwise when viewed from above = counterclockwise from below)
+      // Bottom face (viewed from below, counterclockwise: apex -> right -> left)
       ...botApex, ...botRight, ...botLeft,
 
-      // South face (BASE edge) - two triangles
-      ...topLeft, ...botLeft, ...botRight,
-      ...topLeft, ...botRight, ...topRight,
+      // North face (BASE edge at +Z, bottom of screen) - two triangles
+      ...topRight, ...topLeft, ...botLeft,
+      ...topRight, ...botLeft, ...botRight,
 
-      // Right face (RIGHT edge) - two triangles
-      ...topRight, ...botRight, ...botApex,
-      ...topRight, ...botApex, ...topApex,
+      // Southwest face (LEFT edge) - two triangles
+      ...topLeft, ...topApex, ...botApex,
+      ...topLeft, ...botApex, ...botLeft,
 
-      // Left face (LEFT edge) - two triangles
-      ...topApex, ...botApex, ...botLeft,
-      ...topApex, ...botLeft, ...topLeft,
+      // Southeast face (RIGHT edge) - two triangles
+      ...topApex, ...topRight, ...botRight,
+      ...topApex, ...botRight, ...botApex,
     ]);
 
     const geom = new THREE.BufferGeometry();

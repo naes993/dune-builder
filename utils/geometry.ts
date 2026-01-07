@@ -279,38 +279,33 @@ export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
   }
 
   else if (type === BuildingType.TRIANGLE_FOUNDATION) {
-    // Triangle with BASE at -Z (south), pointing up toward +Z
-    // This means:
-    // - BASE edge is horizontal at the bottom (parallel to X axis)
-    // - Apex vertex is at +Z (north)
+    // Triangle with FLAT BASE at +Z (bottom of screen), apex at -Z (top of screen)
     //
-    // Vertices:
-    // - V_apex: top vertex at (0, 0, +TRIANGLE_APOTHEM) - actually at +Z
-    // - V_left: bottom-left at (-halfSize, 0, -TRIANGLE_APOTHEM)
-    // - V_right: bottom-right at (+halfSize, 0, -TRIANGLE_APOTHEM)
+    // In 2D mode with camera looking down:
+    // - +Z is BOTTOM of screen (where red North arrow points)
+    // - -Z is TOP of screen
+    // - The triangle "sits" on the grid with flat base at bottom
     //
-    // Wait, let me recalculate for equilateral triangle with side = UNIT_SIZE
-    // Height of equilateral triangle = side * sqrt(3)/2 = 4 * sqrt(3)/2 = 2*sqrt(3) ≈ 3.46
-    //
-    // For center at origin:
-    // - Base edge at z = -TRIANGLE_APOTHEM (distance from center to edge midpoint)
-    // - Apex at z = +TRIANGLE_RADIUS (distance from center to vertex)
+    // Vertices (with center at origin):
+    // - vApex:  (0, 0, -TRIANGLE_RADIUS)           = apex at -Z (top of screen)
+    // - vLeft:  (-UNIT_SIZE/2, 0, +TRIANGLE_APOTHEM) = base left corner (+Z, bottom-left)
+    // - vRight: (+UNIT_SIZE/2, 0, +TRIANGLE_APOTHEM) = base right corner (+Z, bottom-right)
 
-    const apexZ = TRIANGLE_RADIUS;  // ~2.31 (center to vertex)
-    const baseZ = -TRIANGLE_APOTHEM; // ~-1.15 (center to edge midpoint, negative = south)
+    const apexZ = -TRIANGLE_RADIUS;   // -2.31 = top of screen
+    const baseZ = TRIANGLE_APOTHEM;   // +1.15 = bottom of screen (where base sits)
 
     // Vertices
-    const vApex = new THREE.Vector3(0, 0, apexZ);                    // Top (north)
-    const vLeft = new THREE.Vector3(-halfSize, 0, baseZ);            // Bottom-left
-    const vRight = new THREE.Vector3(halfSize, 0, baseZ);            // Bottom-right
+    const vApex = new THREE.Vector3(0, 0, apexZ);                    // Apex (top of screen)
+    const vLeft = new THREE.Vector3(-halfSize, 0, baseZ);            // Base left (bottom-left)
+    const vRight = new THREE.Vector3(halfSize, 0, baseZ);            // Base right (bottom-right)
 
-    // BASE edge (red): bottom, from left to right (parallel to X axis)
+    // BASE edge (red): flat bottom, from left to right (parallel to X axis)
     edges.push(createEdge(vLeft, vRight, EdgeRole.BASE));
 
-    // RIGHT edge (blue): from bottom-right up to apex
+    // RIGHT edge (blue): from base-right up to apex
     edges.push(createEdge(vRight, vApex, EdgeRole.RIGHT));
 
-    // LEFT edge (gray): from apex down to bottom-left
+    // LEFT edge (gray): from apex down to base-left
     edges.push(createEdge(vApex, vLeft, EdgeRole.LEFT));
   }
 
