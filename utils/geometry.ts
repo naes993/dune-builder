@@ -310,14 +310,19 @@ export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
   }
 
   else if (type === BuildingType.CURVED_FOUNDATION) {
-    // Only the two straight edges have sockets (no curved edge)
-    // -Z edge (South)
+    // Only the two STRAIGHT edges have sockets (curved arc has NONE)
+    // The geometry has corner at (-halfSize, 0, +halfSize), with:
+    // - Bottom edge at Z=+halfSize from corner to (+halfSize, 0, +halfSize)
+    // - Left edge at X=-halfSize from corner to (-halfSize, 0, -halfSize)
+    // The curved arc connects (+halfSize, 0, +halfSize) to (-halfSize, 0, -halfSize)
+
+    // Bottom edge (at Z=+halfSize): from left corner to right
     edges.push(createEdge(
-      new THREE.Vector3(-halfSize, 0, -halfSize),
-      new THREE.Vector3(halfSize, 0, -halfSize),
+      new THREE.Vector3(-halfSize, 0, halfSize),
+      new THREE.Vector3(halfSize, 0, halfSize),
       EdgeRole.SIDE
     ));
-    // -X edge (West)
+    // Left edge (at X=-halfSize): from bottom corner up to top
     edges.push(createEdge(
       new THREE.Vector3(-halfSize, 0, halfSize),
       new THREE.Vector3(-halfSize, 0, -halfSize),
