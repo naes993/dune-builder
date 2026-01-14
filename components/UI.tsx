@@ -54,8 +54,8 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
             key={t.type}
             onClick={() => setActiveType(t.type)}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
-              ${activeType === t.type 
-                ? 'bg-dune-gold text-black scale-105 font-bold shadow-[0_0_15px_rgba(212,160,86,0.5)]' 
+              ${activeType === t.type
+                ? 'bg-dune-gold text-black scale-105 font-bold shadow-[0_0_15px_rgba(212,160,86,0.5)]'
                 : 'hover:bg-white/10 text-gray-300'
               }`}
           >
@@ -64,7 +64,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
           </button>
         ))}
       </div>
-      
+
       <div className="w-px bg-white/20 mx-1"></div>
 
       {/* Walls */}
@@ -74,8 +74,8 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
             key={t.type}
             onClick={() => setActiveType(t.type)}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
-              ${activeType === t.type 
-                ? 'bg-dune-gold text-black scale-105 font-bold shadow-[0_0_15px_rgba(212,160,86,0.5)]' 
+              ${activeType === t.type
+                ? 'bg-dune-gold text-black scale-105 font-bold shadow-[0_0_15px_rgba(212,160,86,0.5)]'
                 : 'hover:bg-white/10 text-gray-300'
               }`}
           >
@@ -84,7 +84,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
           </button>
         ))}
       </div>
-      
+
       <div className="w-px bg-white/20 mx-1"></div>
 
       {/* Roofs & Inclines */}
@@ -94,8 +94,8 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
             key={t.type}
             onClick={() => setActiveType(t.type)}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
-              ${activeType === t.type 
-                ? 'bg-dune-gold text-black scale-105 font-bold shadow-[0_0_15px_rgba(212,160,86,0.5)]' 
+              ${activeType === t.type
+                ? 'bg-dune-gold text-black scale-105 font-bold shadow-[0_0_15px_rgba(212,160,86,0.5)]'
                 : 'hover:bg-white/10 text-gray-300'
               }`}
           >
@@ -104,7 +104,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
           </button>
         ))}
       </div>
-      
+
       <div className="w-px bg-white/20 mx-1"></div>
 
       {/* Actions */}
@@ -190,18 +190,19 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 export const BUILD_VERSION = 'v1.7.3';
 
 export const Instructions = () => (
-    <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">
-        <h3 className="text-dune-gold font-bold mb-2 uppercase">Protocol</h3>
-        <ul className="space-y-1 list-disc pl-4">
-            <li><strong className="text-white">Left Click</strong>: Place Structure</li>
-            <li><strong className="text-white">Right Click</strong>: Demolish</li>
-            <li><strong className="text-white">R</strong>: Rotate Preview</li>
-            <li><strong className="text-white">Drag</strong>: Orbit Camera</li>
-        </ul>
-        <div className="mt-3 pt-2 border-t border-white/20 text-[10px] text-white/50">
-            Build: {BUILD_VERSION}
-        </div>
+  <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">
+    <h3 className="text-dune-gold font-bold mb-2 uppercase">Protocol</h3>
+    <ul className="space-y-1 list-disc pl-4">
+      <li><strong className="text-white">Left Click</strong>: Place Structure</li>
+      <li><strong className="text-white">Right Click</strong>: Demolish</li>
+      <li><strong className="text-white">R</strong>: Rotate Preview</li>
+      <li><strong className="text-white">Arrow Up/Down</strong>: Stack Height</li>
+      <li><strong className="text-white">Drag</strong>: Orbit Camera</li>
+    </ul>
+    <div className="mt-3 pt-2 border-t border-white/20 text-[10px] text-white/50">
+      Build: {BUILD_VERSION}
     </div>
+  </div>
 );
 
 interface DebugRecorderUIProps {
@@ -216,65 +217,65 @@ interface DebugRecorderUIProps {
 }
 
 export const DebugRecorderUI = ({ debugRecorder }: DebugRecorderUIProps) => (
-    <div className="absolute top-4 right-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-r-2 border-red-500 max-w-xs pointer-events-auto">
-        <h3 className="text-red-400 font-bold mb-2 uppercase flex items-center gap-2">
-            <Video size={16} className={debugRecorder.isRecording ? 'animate-pulse text-red-500' : ''} />
-            Debug Recorder
-        </h3>
+  <div className="absolute top-4 right-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-r-2 border-red-500 max-w-xs pointer-events-auto">
+    <h3 className="text-red-400 font-bold mb-2 uppercase flex items-center gap-2">
+      <Video size={16} className={debugRecorder.isRecording ? 'animate-pulse text-red-500' : ''} />
+      Debug Recorder
+    </h3>
 
-        <div className="space-y-2">
-            <div className="text-xs text-white/60">
-                {debugRecorder.isRecording ? (
-                    <span className="text-red-400 font-bold">● RECORDING</span>
-                ) : (
-                    <span>Ready</span>
-                )}
-                <span className="ml-2">({debugRecorder.frameCount} frames)</span>
-            </div>
+    <div className="space-y-2">
+      <div className="text-xs text-white/60">
+        {debugRecorder.isRecording ? (
+          <span className="text-red-400 font-bold">● RECORDING</span>
+        ) : (
+          <span>Ready</span>
+        )}
+        <span className="ml-2">({debugRecorder.frameCount} frames)</span>
+      </div>
 
-            <div className="flex gap-2">
-                {!debugRecorder.isRecording ? (
-                    <button
-                        onClick={debugRecorder.startRecording}
-                        className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded text-white text-xs font-bold uppercase transition-colors"
-                    >
-                        <Video size={14} className="inline mr-1" />
-                        Start
-                    </button>
-                ) : (
-                    <button
-                        onClick={debugRecorder.stopRecording}
-                        className="flex-1 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 rounded text-white text-xs font-bold uppercase transition-colors"
-                    >
-                        <VideoOff size={14} className="inline mr-1" />
-                        Stop
-                    </button>
-                )}
+      <div className="flex gap-2">
+        {!debugRecorder.isRecording ? (
+          <button
+            onClick={debugRecorder.startRecording}
+            className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded text-white text-xs font-bold uppercase transition-colors"
+          >
+            <Video size={14} className="inline mr-1" />
+            Start
+          </button>
+        ) : (
+          <button
+            onClick={debugRecorder.stopRecording}
+            className="flex-1 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 rounded text-white text-xs font-bold uppercase transition-colors"
+          >
+            <VideoOff size={14} className="inline mr-1" />
+            Stop
+          </button>
+        )}
 
-                <button
-                    onClick={debugRecorder.downloadRecording}
-                    disabled={debugRecorder.frameCount === 0}
-                    className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded text-white text-xs font-bold uppercase transition-colors"
-                >
-                    <Download size={14} className="inline mr-1" />
-                    Save
-                </button>
-            </div>
+        <button
+          onClick={debugRecorder.downloadRecording}
+          disabled={debugRecorder.frameCount === 0}
+          className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded text-white text-xs font-bold uppercase transition-colors"
+        >
+          <Download size={14} className="inline mr-1" />
+          Save
+        </button>
+      </div>
 
-            {debugRecorder.frameCount > 0 && (
-                <button
-                    onClick={debugRecorder.clearRecording}
-                    className="w-full px-3 py-1 bg-gray-800 hover:bg-gray-900 rounded text-white/60 text-xs uppercase transition-colors"
-                >
-                    Clear
-                </button>
-            )}
+      {debugRecorder.frameCount > 0 && (
+        <button
+          onClick={debugRecorder.clearRecording}
+          className="w-full px-3 py-1 bg-gray-800 hover:bg-gray-900 rounded text-white/60 text-xs uppercase transition-colors"
+        >
+          Clear
+        </button>
+      )}
 
-            <div className="mt-3 pt-2 border-t border-white/20 text-[10px] text-white/40">
-                Records cursor, snaps, placements for debugging
-            </div>
-        </div>
+      <div className="mt-3 pt-2 border-t border-white/20 text-[10px] text-white/40">
+        Records cursor, snaps, placements for debugging
+      </div>
     </div>
+  </div>
 );
 
 export default UI;

@@ -170,13 +170,13 @@ const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: G
 
     // Vertices: apex at -Z (south/top of screen), base corners at +Z (north/bottom of screen)
     // Top face (y = +halfHeight)
-    const topApex =  [0, halfHeight, apexZ];
-    const topLeft =  [-halfSize, halfHeight, baseZ];
+    const topApex = [0, halfHeight, apexZ];
+    const topLeft = [-halfSize, halfHeight, baseZ];
     const topRight = [halfSize, halfHeight, baseZ];
 
     // Bottom face (y = -halfHeight)
-    const botApex =  [0, -halfHeight, apexZ];
-    const botLeft =  [-halfSize, -halfHeight, baseZ];
+    const botApex = [0, -halfHeight, apexZ];
+    const botLeft = [-halfSize, -halfHeight, baseZ];
     const botRight = [halfSize, -halfHeight, baseZ];
 
     // Create BufferGeometry with triangles
@@ -620,6 +620,78 @@ const SocketDebugVisualizer = ({ buildings }: SocketDebugProps) => {
 };
 
 // =============================================================================
+// Snap Collider System
+// =============================================================================
+
+import { getCompatibleSocketTypes, usesEdgeSockets as utilUsesEdgeSockets } from '../utils/geometry';
+
+interface SnapColliderProps {
+  buildings: BuildingData[];
+  activeType: BuildingType;
+}
+
+/**
+ * Invisible colliders placed at socket locations to catch raycasts.
+ * Solves the issue of "thin air" snaps being twitchy by giving them volume.
+ */
+const SnapColliders = ({ buildings, activeType }: SnapColliderProps) => {
+  const compatibleTypes = useMemo(() => getCompatibleSocketTypes(activeType), [activeType]);
+
+  // Don't render if nothing to snap to
+  if (compatibleTypes.length === 0) return null;
+
+  return (
+    <group>
+      {buildings.map((building) => {
+        // If building uses edge sockets (foundations), check if we can snap to edges
+        // (Simplified: if we are a foundation, we snap to edges. logic handled in getCompatibleSocketTypes)
+        // However, getWorldEdgeSockets is expensive to call every frame? Memoized in geometry logic hopefully.
+        // Actually, we just render colliders for ALL compatible sockets.
+
+        const sockets = getWorldSockets(building);
+
+        return (
+          <group key={`colliders-${building.id}`}>
+            {sockets.map((socket: any, idx: number) => {
+              if (!compatibleTypes.includes(socket.socketType)) return null;
+
+              return (
+                <mesh
+                  key={`collider-${building.id}-${idx}`}
+                  position={[socket.position.x, socket.position.y, socket.position.z]}
+                  visible={false} // Invisible raycast target
+                >
+                  <sphereGeometry args={[0.4, 8, 8]} /> {/* 0.4 radius = 80cm target */}
+                  <meshBasicMaterial color="pink" wireframe />
+                </mesh>
+              );
+            })}
+
+            {/* Also render edge midpoints as colliders if compatible */}
+            {utilUsesEdgeSockets(building.type) && compatibleTypes.includes('FOUNDATION_EDGE' as any) && (
+              getWorldEdgeSockets(building).map((edge, idx) => (
+                <mesh
+                  key={`edge-collider-${building.id}-${idx}`}
+                  position={[edge.center.x, edge.center.y, edge.center.z]}
+                  visible={false}
+                >
+                  <boxGeometry args={[edge.edgeLength * 0.8, 0.5, 0.5]} />
+                  <meshBasicMaterial color="cyan" wireframe />
+                  {/* Rotate towards edge alignment? Ideally yes, but sphere/box approximation is okay for now 
+                        since we just want to catch the mouse near the edge.
+                        Actually, box without rotation might be weird. Let's use Sphere at center for now.
+                    */}
+                </mesh>
+              ))
+            )}
+          </group>
+        );
+      })}
+    </group>
+  );
+};
+
+// =============================================================================
 // Planner Component (handles placement logic)
 // =============================================================================
 
@@ -629,17 +701,25 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocke
   const [ghostRot, setGhostRot] = useState<[number, number, number]>([0, 0, 0]);
   const [ghostIsValid, setGhostIsValid] = useState(true);
   const [manualRot, setManualRot] = useState(0);
+  const [verticalOffset, setVerticalOffset] = useState(0);
 
   const groupRef = useRef<THREE.Group>(null);
   const lastMousePos = useRef<[number, number]>([0, 0]);
 
-  // Handle rotation key
+  // Reset vertical offset when changing building type
+  useEffect(() => {
+    setVerticalOffset(0);
+  }, [activeType]);
+
+  // Handle keyboard controls (Rotation and Vertical Stacking)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'r') {
-        // Use 60° (π/3) for triangles, 90° (π/2) for everything else
+      const key = e.key.toLowerCase();
+
+      // Rotation
+      if (key === 'r') {
         const isTriangle = activeType === BuildingType.TRIANGLE_FOUNDATION ||
-                          activeType === BuildingType.TRIANGLE_ROOF;
+          activeType === BuildingType.TRIANGLE_ROOF;
         const rotIncrement = isTriangle ? Math.PI / 3 : Math.PI / 2;
         const newRot = manualRot + rotIncrement;
         setManualRot(newRot);
@@ -652,12 +732,19 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocke
             cursorScreen: lastMousePos.current,
             activeType,
             rotation: newRot,
-            keyPress: {
-              key: 'r',
-              action: 'rotate',
-            },
+            keyPress: { key: 'r', action: 'rotate' },
           });
         }
+      }
+
+      // Vertical Stacking (Arrow Keys)
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setVerticalOffset((prev) => prev + HALF_WALL_HEIGHT);
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setVerticalOffset((prev) => prev - HALF_WALL_HEIGHT);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -679,20 +766,20 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocke
       // Debug callback for recording
       const debugCallback = debugRecorder?.isRecording
         ? (snapCalculation: any) => {
-            debugRecorder.addFrame({
-              timestamp: Date.now(),
-              cursorPosition: [targetPoint.x, targetPoint.y, targetPoint.z],
-              cursorScreen: [mouse.x, mouse.y],
-              activeType,
-              rotation: manualRot,
-              snapCalculation,
-            });
-          }
+          debugRecorder.addFrame({
+            timestamp: Date.now(),
+            cursorPosition: [targetPoint.x, targetPoint.y, targetPoint.z],
+            cursorScreen: [mouse.x, mouse.y],
+            activeType,
+            rotation: manualRot,
+            snapCalculation,
+          });
+        }
         : undefined;
 
       const snap = calculateSnap(targetPoint, buildings, activeType, manualRot, debugCallback);
       if (snap) {
-        setGhostPos([snap.position.x, snap.position.y, snap.position.z]);
+        setGhostPos([snap.position.x, snap.position.y + verticalOffset, snap.position.z]);
         setGhostRot([snap.rotation.x, snap.rotation.y, snap.rotation.z]);
         setGhostIsValid(snap.isValid);
       }
@@ -777,6 +864,9 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocke
 
       {/* Socket debug visualization */}
       {showSocketDebug && <SocketDebugVisualizer buildings={buildings} />}
+
+      {/* Snap Colliders (Invisible) */}
+      <SnapColliders buildings={buildings} activeType={activeType} />
 
       {/* Ghost preview */}
       <BuildingMesh

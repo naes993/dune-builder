@@ -322,10 +322,10 @@ export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
       new THREE.Vector3(halfSize, 0, halfSize),
       EdgeRole.SIDE
     ));
-    // Left edge (at X=-halfSize): from bottom corner up to top
+    // Left edge (at X=-halfSize): from top to bottom corner (CCW winding)
     edges.push(createEdge(
-      new THREE.Vector3(-halfSize, 0, halfSize),
       new THREE.Vector3(-halfSize, 0, -halfSize),
+      new THREE.Vector3(-halfSize, 0, halfSize),
       EdgeRole.SIDE
     ));
   }
@@ -366,7 +366,10 @@ export const getWorldEdgeSockets = (building: BuildingData): EdgeSocket[] => {
 /**
  * Check if a building type uses edge sockets (foundations) vs point sockets (walls/roofs)
  */
-const usesEdgeSockets = (type: BuildingType): boolean => {
+/**
+ * Check if a building type uses edge sockets (foundations) vs point sockets (walls/roofs)
+ */
+export const usesEdgeSockets = (type: BuildingType): boolean => {
   return [
     BuildingType.SQUARE_FOUNDATION,
     BuildingType.TRIANGLE_FOUNDATION,
@@ -433,7 +436,7 @@ const calculateEdgeSnapTransform = (
 /**
  * Get the socket types that the active building type can snap to
  */
-const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
+export const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
   // Determine what socket types this piece provides
   const isFoundation = [
     BuildingType.SQUARE_FOUNDATION,
