@@ -462,7 +462,8 @@ export const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[]
   ].includes(activeType);
 
   if (isFoundation) {
-    return [SocketType.FOUNDATION_EDGE];
+    // Foundations primarily snap to edges, but can now snap to wall tops/foundation tops for stacking
+    return [SocketType.FOUNDATION_EDGE, SocketType.WALL_TOP, SocketType.FOUNDATION_TOP];
   } else if (isWall) {
     return [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.WALL_SIDE];
   } else if (isRoof) {
@@ -590,9 +591,10 @@ export const calculateSnap = (
   }
 
   // ==========================================================================
-  // WALL/ROOF SNAPPING - Point-based system (legacy)
+  // WALL/ROOF/FOUNDATION FALLBACK - Point-based system
   // ==========================================================================
-  else {
+  // If we haven't snapped yet (e.g. Foundation didn't find an edge), try point snapping
+  if (!snappedToSocket) {
     const allSockets: Socket[] = [];
     buildings.forEach(b => {
       allSockets.push(...getWorldSockets(b));
