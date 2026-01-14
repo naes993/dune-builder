@@ -43,22 +43,22 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   // ===================
   // FOUNDATIONS
   // ===================
-  
+
   if (type === BuildingType.SQUARE_FOUNDATION) {
     // Edge sockets (for connecting to other foundations)
     sockets.push({ position: new THREE.Vector3(0, 0, halfSize), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.FOUNDATION_EDGE });
     sockets.push({ position: new THREE.Vector3(halfSize, 0, 0), normal: new THREE.Vector3(1, 0, 0), socketType: SocketType.FOUNDATION_EDGE });
     sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_EDGE });
     sockets.push({ position: new THREE.Vector3(-halfSize, 0, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_EDGE });
-    
+
     // Top sockets for walls (at each edge center, on top of foundation)
     const topY = FOUNDATION_HEIGHT;
     sockets.push({ position: new THREE.Vector3(0, topY, halfSize), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.FOUNDATION_TOP });
     sockets.push({ position: new THREE.Vector3(halfSize, topY, 0), normal: new THREE.Vector3(1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
     sockets.push({ position: new THREE.Vector3(0, topY, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_TOP });
     sockets.push({ position: new THREE.Vector3(-halfSize, topY, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
-  } 
-  
+  }
+
   else if (type === BuildingType.TRIANGLE_FOUNDATION) {
     // THREE.CylinderGeometry with radialSegments=3 creates a triangular prism.
     // Vertices are at angles 90°, 210°, 330° from +X axis (first vertex at +Z).
@@ -101,7 +101,7 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
       });
     }
   }
-  
+
   else if (type === BuildingType.CURVED_FOUNDATION) {
     // Quarter circle foundation - only the two STRAIGHT edges have sockets
     // The curved edge does not snap to other pieces
@@ -117,30 +117,30 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     sockets.push({ position: new THREE.Vector3(0, FOUNDATION_HEIGHT, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_TOP });
     sockets.push({ position: new THREE.Vector3(-halfSize, FOUNDATION_HEIGHT, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
   }
-  
+
   // ===================
   // WALLS
   // ===================
-  
+
   else if (type === BuildingType.WALL || type === BuildingType.WINDOW_WALL || type === BuildingType.DOORWAY) {
     const wallHeight = WALL_HEIGHT;
-    
+
     // Bottom socket (snaps to foundation top)
     sockets.push({ position: new THREE.Vector3(0, 0, 0), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.WALL_BOTTOM });
     sockets.push({ position: new THREE.Vector3(0, 0, 0), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.WALL_BOTTOM });
-    
+
     // Side sockets (connect to adjacent walls)
     sockets.push({ position: new THREE.Vector3(-halfSize, wallHeight / 2, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.WALL_SIDE });
     sockets.push({ position: new THREE.Vector3(halfSize, wallHeight / 2, 0), normal: new THREE.Vector3(1, 0, 0), socketType: SocketType.WALL_SIDE });
-    
+
     // Top sockets (for roofs or stacking)
     sockets.push({ position: new THREE.Vector3(0, wallHeight, 0), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.WALL_TOP });
     sockets.push({ position: new THREE.Vector3(0, wallHeight, 0), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.WALL_TOP });
   }
-  
+
   else if (type === BuildingType.HALF_WALL) {
     const wallHeight = HALF_WALL_HEIGHT;
-    
+
     sockets.push({ position: new THREE.Vector3(0, 0, 0), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.WALL_BOTTOM });
     sockets.push({ position: new THREE.Vector3(0, 0, 0), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.WALL_BOTTOM });
     sockets.push({ position: new THREE.Vector3(-halfSize, wallHeight / 2, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.WALL_SIDE });
@@ -148,18 +148,18 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     sockets.push({ position: new THREE.Vector3(0, wallHeight, 0), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.WALL_TOP });
     sockets.push({ position: new THREE.Vector3(0, wallHeight, 0), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.WALL_TOP });
   }
-  
+
   // ===================
   // ROOFS
   // ===================
-  
+
   else if (type === BuildingType.SQUARE_ROOF) {
     sockets.push({ position: new THREE.Vector3(0, 0, halfSize), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.ROOF_EDGE });
     sockets.push({ position: new THREE.Vector3(halfSize, 0, 0), normal: new THREE.Vector3(1, 0, 0), socketType: SocketType.ROOF_EDGE });
     sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.ROOF_EDGE });
     sockets.push({ position: new THREE.Vector3(-halfSize, 0, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.ROOF_EDGE });
-  } 
-  
+  }
+
   else if (type === BuildingType.TRIANGLE_ROOF) {
     for (let i = 0; i < 3; i++) {
       const angle = (i * 2 * Math.PI) / 3;
@@ -168,17 +168,17 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
       sockets.push({ position: pos, normal: norm, socketType: SocketType.ROOF_EDGE });
     }
   }
-  
+
   // ===================
   // INCLINES
   // ===================
-  
+
   else if (type === BuildingType.STAIRS) {
     sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.INCLINE_BOTTOM });
     sockets.push({ position: new THREE.Vector3(0, 0, halfSize), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.INCLINE_BOTTOM });
     sockets.push({ position: new THREE.Vector3(0, WALL_HEIGHT, halfSize), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.INCLINE_TOP });
   }
-  
+
   else if (type === BuildingType.RAMP) {
     sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.INCLINE_BOTTOM });
     sockets.push({ position: new THREE.Vector3(0, 0, halfSize), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.INCLINE_BOTTOM });
@@ -440,19 +440,19 @@ const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
     BuildingType.TRIANGLE_FOUNDATION,
     BuildingType.CURVED_FOUNDATION
   ].includes(activeType);
-  
+
   const isWall = [
     BuildingType.WALL,
     BuildingType.HALF_WALL,
     BuildingType.WINDOW_WALL,
     BuildingType.DOORWAY
   ].includes(activeType);
-  
+
   const isRoof = [
     BuildingType.SQUARE_ROOF,
     BuildingType.TRIANGLE_ROOF
   ].includes(activeType);
-  
+
   const isIncline = [
     BuildingType.STAIRS,
     BuildingType.RAMP
@@ -467,7 +467,7 @@ const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
   } else if (isIncline) {
     return [SocketType.FOUNDATION_TOP, SocketType.FOUNDATION_EDGE];
   }
-  
+
   return [];
 };
 
@@ -657,7 +657,7 @@ export const calculateSnap = (
 
     // Snap rotation: 60° for triangles, 90° for everything else
     const isTriangle = activeType === BuildingType.TRIANGLE_FOUNDATION ||
-                      activeType === BuildingType.TRIANGLE_ROOF;
+      activeType === BuildingType.TRIANGLE_ROOF;
     const rotSnap = isTriangle ? Math.PI / 3 : Math.PI / 2;
     const snappedRot = Math.round(currentRotationY / rotSnap) * rotSnap;
     finalRot = new THREE.Euler(0, snappedRot, 0);
@@ -668,7 +668,30 @@ export const calculateSnap = (
   // ==========================================================================
   let isValid = true;
 
-  if (!snappedToSocket) {
+  // Global collision check (even if snapped)
+  // Prevent foundations from overlapping other foundations
+  if (usesEdgeSockets(activeType)) {
+    for (const b of buildings) {
+      // Only check against other foundations
+      if (!usesEdgeSockets(b.type)) continue;
+
+      const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
+      const dist = bPos.distanceTo(finalPos);
+
+      // If distance is too small, they are overlapping
+      // Unit size is 4. Standard adjacent distance is 4.
+      // Diagonal adjacent is sqrt(32) ~ 5.6
+      // Overlapping is dist ~ 0.
+      // We use 2.0 as a safe threshold (half a unit).
+      if (dist < 2.0) {
+        isValid = false;
+        break;
+      }
+    }
+  }
+
+  // Legacy distance check for non-snapped items (prevents placing inside others when free-placing)
+  if (!snappedToSocket && isValid) {
     const isFoundation = usesEdgeSockets(activeType);
 
     for (const b of buildings) {
