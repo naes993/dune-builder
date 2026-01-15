@@ -1,6 +1,6 @@
 import React from 'react';
 import { BuildingType } from '../types';
-import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload, Bug, Video, VideoOff, FilmIcon, Compass } from 'lucide-react';
+import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload, Bug, Video, VideoOff, FilmIcon, Compass, ArrowUpFromLine, ArrowUpDown } from 'lucide-react';
 
 interface UIProps {
   activeType: BuildingType;
@@ -16,6 +16,10 @@ interface UIProps {
   setShowSocketDebug: (b: boolean) => void;
   is2DMode: boolean;
   setIs2DMode: (b: boolean) => void;
+  autoHeight: boolean;
+  setAutoHeight: (b: boolean) => void;
+  manualHeight: boolean;
+  setManualHeight: (b: boolean) => void;
   debugRecorder: {
     isRecording: boolean;
     frameCount: number;
@@ -26,7 +30,7 @@ interface UIProps {
   };
 }
 
-const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onImport, showWireframe, setShowWireframe, showSocketDebug, setShowSocketDebug, is2DMode, setIs2DMode, debugRecorder }: UIProps) => {
+const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onImport, showWireframe, setShowWireframe, showSocketDebug, setShowSocketDebug, is2DMode, setIs2DMode, autoHeight, setAutoHeight, manualHeight, setManualHeight, debugRecorder }: UIProps) => {
   const tools = [
     // Foundations
     { type: BuildingType.SQUARE_FOUNDATION, icon: Square, label: 'Square', category: 'foundation' },
@@ -166,6 +170,26 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
         </button>
 
         <button
+          onClick={() => setAutoHeight(!autoHeight)}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
+               ${autoHeight ? 'bg-yellow-500/50 text-white' : 'hover:bg-white/10 text-gray-300'}`}
+          title="Auto-snap to socket height when snapping"
+        >
+          <ArrowUpFromLine size={20} />
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider">Auto H</span>
+        </button>
+
+        <button
+          onClick={() => setManualHeight(!manualHeight)}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
+               ${manualHeight ? 'bg-orange-500/50 text-white' : 'hover:bg-white/10 text-gray-300'}`}
+          title="Allow Arrow Up/Down for manual height adjustment"
+        >
+          <ArrowUpDown size={20} />
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider">Manual H</span>
+        </button>
+
+        <button
           onClick={() => setIs2DMode(!is2DMode)}
           className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
                ${is2DMode ? 'bg-green-500/50 text-white' : 'hover:bg-white/10 text-gray-300'}`}
@@ -188,7 +212,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 };
 
 // Build version - increment this with each deployment
-export const BUILD_VERSION = 'v1.7.3';
+export const BUILD_VERSION = 'v1.7.5';
 
 export const Instructions = () => (
   <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">

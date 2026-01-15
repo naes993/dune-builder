@@ -8,6 +8,8 @@ interface GameState {
     showWireframe: boolean;
     showSocketDebug: boolean;
     is2DMode: boolean;
+    autoHeight: boolean;      // Auto-snap to socket height when snapping
+    manualHeight: boolean;    // Allow arrow key height adjustment
 
     // Actions
     setBuildings: (buildings: BuildingData[] | ((prev: BuildingData[]) => BuildingData[])) => void;
@@ -17,6 +19,8 @@ interface GameState {
     toggleWireframe: () => void;
     toggleSocketDebug: () => void;
     toggle2DMode: () => void;
+    toggleAutoHeight: () => void;
+    toggleManualHeight: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -26,6 +30,8 @@ export const useGameStore = create<GameState>((set) => ({
     showWireframe: false,
     showSocketDebug: false,
     is2DMode: false,
+    autoHeight: true,
+    manualHeight: true,
 
     // Actions
     setBuildings: (buildings) => set((state) => ({
@@ -44,4 +50,6 @@ export const useGameStore = create<GameState>((set) => ({
     toggleWireframe: () => set((state) => ({ showWireframe: !state.showWireframe })),
     toggleSocketDebug: () => set((state) => ({ showSocketDebug: !state.showSocketDebug })),
     toggle2DMode: () => set((state) => ({ is2DMode: !state.is2DMode })),
+    toggleAutoHeight: () => set((state) => ({ autoHeight: !state.autoHeight })),
+    toggleManualHeight: () => set((state) => ({ manualHeight: !state.manualHeight })),
 }));

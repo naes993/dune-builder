@@ -674,7 +674,7 @@ interface PlannerProps {
 }
 
 const Planner = ({ materials, debugRecorder }: PlannerProps) => {
-  const { buildings, addBuilding, removeBuilding, activeType, showWireframe, showSocketDebug } = useGameStore();
+  const { buildings, addBuilding, removeBuilding, activeType, showWireframe, showSocketDebug, autoHeight, manualHeight } = useGameStore();
   const { camera, raycaster, mouse } = useThree();
   const [ghostPos, setGhostPos] = useState<[number, number, number]>([0, 0, 0]);
   const [ghostRot, setGhostRot] = useState<[number, number, number]>([0, 0, 0]);
@@ -716,19 +716,21 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
         }
       }
 
-      // Vertical Stacking (Arrow Keys)
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setVerticalOffset((prev) => prev + HALF_WALL_HEIGHT);
-      }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setVerticalOffset((prev) => prev - HALF_WALL_HEIGHT);
+      // Vertical Stacking (Arrow Keys) - only if manualHeight is enabled
+      if (manualHeight) {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setVerticalOffset((prev) => prev + HALF_WALL_HEIGHT);
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setVerticalOffset((prev) => prev - HALF_WALL_HEIGHT);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [manualRot, activeType, debugRecorder]);
+  }, [manualRot, activeType, debugRecorder, manualHeight]);
 
   // Update ghost position based on mouse
   useFrame(() => {
@@ -758,7 +760,18 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
 
       const snap = calculateSnap(targetPoint, buildings, activeType, manualRot, debugCallback);
       if (snap) {
-        setGhostPos([snap.position.x, snap.position.y + verticalOffset, snap.position.z]);
+        // Calculate base Y position
+        // If autoHeight is ON and we snapped to a socket, use socket's world Y
+        // Otherwise use snap.position.y (which is 0 for grid fallback)
+        let baseY = snap.position.y;
+        if (autoHeight && snap.socketWorldY !== null) {
+          baseY = snap.socketWorldY;
+        }
+
+        // Apply manual offset only if manualHeight is enabled
+        const finalY = manualHeight ? baseY + verticalOffset : baseY;
+
+        setGhostPos([snap.position.x, finalY, snap.position.z]);
         setGhostRot([snap.rotation.x, snap.rotation.y, snap.rotation.z]);
         setGhostIsValid(snap.isValid);
       }

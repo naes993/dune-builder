@@ -551,6 +551,8 @@ export const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[]
  * This eliminates rotational ambiguity - there's only ONE way to align two edges.
  *
  * For walls/roofs: Still uses point-based sockets (legacy system).
+ *
+ * Returns socketWorldY for height auto-snapping (null for grid fallback).
  */
 export const calculateSnap = (
   rayIntersectionPoint: THREE.Vector3,
@@ -558,14 +560,15 @@ export const calculateSnap = (
   activeType: BuildingType,
   currentRotationY: number,
   debugCallback?: (debugInfo: any) => void
-): { position: THREE.Vector3, rotation: THREE.Euler, isValid: boolean } => {
+): { position: THREE.Vector3, rotation: THREE.Euler, isValid: boolean, socketWorldY: number | null } => {
   if (!rayIntersectionPoint) {
-    return { position: new THREE.Vector3(), rotation: new THREE.Euler(), isValid: false };
+    return { position: new THREE.Vector3(), rotation: new THREE.Euler(), isValid: false, socketWorldY: null };
   }
 
   let finalPos = new THREE.Vector3(rayIntersectionPoint.x, 0, rayIntersectionPoint.z);
   let finalRot = new THREE.Euler(0, currentRotationY, 0);
   let snappedToSocket = false;
+  let socketWorldY: number | null = null;
 
   const debugCandidates: any[] = [];
   const SNAP_RADIUS = 3.5; // Slightly larger to catch edges
@@ -656,6 +659,8 @@ export const calculateSnap = (
       finalPos = bestCandidate.position;
       finalRot = bestCandidate.rotation;
       snappedToSocket = true;
+      // For edge snapping, use the edge center's Y as the socket height
+      socketWorldY = bestCandidate.targetEdge.center.y;
     }
   }
 
@@ -678,6 +683,7 @@ export const calculateSnap = (
       rotation: THREE.Euler;
       distToCursor: number;
       score: number;
+      targetSocketY: number;
     }
 
     let bestCandidate: PointSnapCandidate | null = null;
@@ -728,6 +734,7 @@ export const calculateSnap = (
             rotation: candidateRot,
             distToCursor,
             score,
+            targetSocketY: targetSocket.position.y,
           };
         }
       }
@@ -737,6 +744,7 @@ export const calculateSnap = (
       finalPos = bestCandidate.position;
       finalRot = bestCandidate.rotation;
       snappedToSocket = true;
+      socketWorldY = bestCandidate.targetSocketY;
     }
   }
 
@@ -817,8 +825,9 @@ export const calculateSnap = (
       finalRotation: [finalRot.x, finalRot.y, finalRot.z],
       isValid,
       snappedToSocket,
+      socketWorldY,
     });
   }
 
-  return { position: finalPos, rotation: finalRot, isValid };
+  return { position: finalPos, rotation: finalRot, isValid, socketWorldY };
 };

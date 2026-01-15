@@ -24,7 +24,11 @@ export default function App() {
     showSocketDebug,
     toggleSocketDebug,
     is2DMode,
-    toggle2DMode
+    toggle2DMode,
+    autoHeight,
+    toggleAutoHeight,
+    manualHeight,
+    toggleManualHeight
   } = useGameStore();
 
   // Quick save to localStorage
@@ -197,6 +201,10 @@ export default function App() {
           setShowSocketDebug={(val) => toggleSocketDebug()}
           is2DMode={is2DMode}
           setIs2DMode={(val) => toggle2DMode()}
+          autoHeight={autoHeight}
+          setAutoHeight={(val) => toggleAutoHeight()}
+          manualHeight={manualHeight}
+          setManualHeight={(val) => toggleManualHeight()}
           debugRecorder={debugRecorder}
         />
       </div>
