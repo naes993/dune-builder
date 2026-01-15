@@ -1,21 +1,31 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { GameScene } from './components/Scene';
 import UI, { Instructions, DebugRecorderUI } from './components/UI';
 import { BuildingType, BuildingData, SavedBlueprint } from './types';
 import { useDebugRecorder } from './hooks/useDebugRecorder';
+import { useGameStore } from './store/gameStore';
 
 const BLUEPRINT_VERSION = 1;
 
 export default function App() {
-  const [activeType, setActiveType] = useState<BuildingType>(BuildingType.SQUARE_FOUNDATION);
-  const [buildings, setBuildings] = useState<BuildingData[]>([]);
-  const [showWireframe, setShowWireframe] = useState(false);
-  const [showSocketDebug, setShowSocketDebug] = useState(false);
-  const [is2DMode, setIs2DMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Debug recorder
   const debugRecorder = useDebugRecorder();
+
+  // Store access
+  const {
+    buildings,
+    setBuildings,
+    activeType,
+    setActiveType,
+    showWireframe,
+    toggleWireframe,
+    showSocketDebug,
+    toggleSocketDebug,
+    is2DMode,
+    toggle2DMode
+  } = useGameStore();
 
   // Quick save to localStorage
   const handleSave = () => {
@@ -150,8 +160,8 @@ export default function App() {
 
   return (
     <div
-        className="relative w-full h-screen bg-black selection:bg-dune-gold selection:text-black"
-        onContextMenu={(e) => e.preventDefault()}
+      className="relative w-full h-screen bg-black selection:bg-dune-gold selection:text-black"
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Hidden file input for import */}
       <input
@@ -165,36 +175,30 @@ export default function App() {
       {/* 3D Canvas Layer */}
       <div className="absolute inset-0 z-0">
         <GameScene
-          buildings={buildings}
-          setBuildings={setBuildings}
-          activeType={activeType}
-          showWireframe={showWireframe}
-          showSocketDebug={showSocketDebug}
-          is2DMode={is2DMode}
           debugRecorder={debugRecorder}
         />
       </div>
 
       {/* UI Overlay Layer - pointer-events-none allows clicks to pass through to canvas */}
       <div className="absolute inset-0 z-10 pointer-events-none">
-         <Instructions />
-         <DebugRecorderUI debugRecorder={debugRecorder} />
-         <UI
-           activeType={activeType}
-           setActiveType={setActiveType}
-           onClear={() => setBuildings([])}
-           onSave={handleSave}
-           onLoad={handleLoad}
-           onExport={handleExport}
-           onImport={handleImport}
-           showWireframe={showWireframe}
-           setShowWireframe={setShowWireframe}
-           showSocketDebug={showSocketDebug}
-           setShowSocketDebug={setShowSocketDebug}
-           is2DMode={is2DMode}
-           setIs2DMode={setIs2DMode}
-           debugRecorder={debugRecorder}
-         />
+        <Instructions />
+        <DebugRecorderUI debugRecorder={debugRecorder} />
+        <UI
+          activeType={activeType}
+          setActiveType={setActiveType}
+          onClear={() => setBuildings([])}
+          onSave={handleSave}
+          onLoad={handleLoad}
+          onExport={handleExport}
+          onImport={handleImport}
+          showWireframe={showWireframe}
+          setShowWireframe={(val) => toggleWireframe()}
+          showSocketDebug={showSocketDebug}
+          setShowSocketDebug={(val) => toggleSocketDebug()}
+          is2DMode={is2DMode}
+          setIs2DMode={(val) => toggle2DMode()}
+          debugRecorder={debugRecorder}
+        />
       </div>
     </div>
   );

@@ -102,6 +102,52 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     }
   }
 
+  else if (type === BuildingType.TRIANGLE_FOUNDATION_2) {
+    // New Triangle 2 logic with CORRECTED normals (pointing OUTWARD) and uniform roles.
+
+    // 1. BASE Edge (Bottom, +Z)
+    sockets.push({
+      position: new THREE.Vector3(0, 0, TRIANGLE_APOTHEM),
+      normal: new THREE.Vector3(0, 0, 1),
+      socketType: SocketType.FOUNDATION_EDGE
+    });
+    sockets.push({
+      position: new THREE.Vector3(0, FOUNDATION_HEIGHT, TRIANGLE_APOTHEM),
+      normal: new THREE.Vector3(0, 0, 1),
+      socketType: SocketType.FOUNDATION_TOP
+    });
+
+    // 2. RIGHT Edge (Top-Right)
+    // Normal points 30 degrees (pi/6)
+    const normRight = new THREE.Vector3(Math.cos(Math.PI / 6), 0, -Math.sin(Math.PI / 6));
+    const posRight = normRight.clone().multiplyScalar(TRIANGLE_APOTHEM);
+    sockets.push({
+      position: posRight,
+      normal: normRight,
+      socketType: SocketType.FOUNDATION_EDGE
+    });
+    sockets.push({
+      position: new THREE.Vector3(posRight.x, FOUNDATION_HEIGHT, posRight.z),
+      normal: normRight,
+      socketType: SocketType.FOUNDATION_TOP
+    });
+
+    // 3. LEFT Edge (Top-Left)
+    // Normal points 150 degrees (5pi/6)
+    const normLeft = new THREE.Vector3(Math.cos(5 * Math.PI / 6), 0, -Math.sin(5 * Math.PI / 6));
+    const posLeft = normLeft.clone().multiplyScalar(TRIANGLE_APOTHEM);
+    sockets.push({
+      position: posLeft,
+      normal: normLeft,
+      socketType: SocketType.FOUNDATION_EDGE
+    });
+    sockets.push({
+      position: new THREE.Vector3(posLeft.x, FOUNDATION_HEIGHT, posLeft.z),
+      normal: normLeft,
+      socketType: SocketType.FOUNDATION_TOP
+    });
+  }
+
   else if (type === BuildingType.CURVED_FOUNDATION) {
     // Quarter circle foundation - only the two STRAIGHT edges have sockets
     // The curved edge does not snap to other pieces
@@ -309,6 +355,26 @@ export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
     edges.push(createEdge(vApex, vLeft, EdgeRole.LEFT));
   }
 
+  else if (type === BuildingType.TRIANGLE_FOUNDATION_2) {
+    // Same geometry as Triangle 1, but uniform edge roles (SIDE)
+    const halfSize = UNIT_SIZE / 2;
+    const apexZ = -TRIANGLE_RADIUS;
+    const baseZ = TRIANGLE_APOTHEM;
+
+    const vApex = new THREE.Vector3(0, 0, apexZ);
+    const vLeft = new THREE.Vector3(-halfSize, 0, baseZ);
+    const vRight = new THREE.Vector3(halfSize, 0, baseZ);
+
+    // BASE edge: Left to Right
+    edges.push(createEdge(vLeft, vRight, EdgeRole.SIDE));
+
+    // RIGHT edge: Right to Apex
+    edges.push(createEdge(vRight, vApex, EdgeRole.SIDE));
+
+    // LEFT edge: Apex to Left
+    edges.push(createEdge(vApex, vLeft, EdgeRole.SIDE));
+  }
+
   else if (type === BuildingType.CURVED_FOUNDATION) {
     // Only the two STRAIGHT edges have sockets (curved arc has NONE)
     // The geometry has corner at (-halfSize, 0, +halfSize), with:
@@ -326,6 +392,49 @@ export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
     edges.push(createEdge(
       new THREE.Vector3(-halfSize, 0, -halfSize),
       new THREE.Vector3(-halfSize, 0, halfSize),
+      EdgeRole.SIDE
+    ));
+  }
+
+  else if (type === BuildingType.WALL || type === BuildingType.WINDOW_WALL || type === BuildingType.DOORWAY || type === BuildingType.HALF_WALL) {
+    // Wall Top Edges (Bidirectional at center)
+    // Allows snapping to both sides of the wall top
+    const h = (type === BuildingType.HALF_WALL) ? HALF_WALL_HEIGHT : WALL_HEIGHT;
+
+    // Left-to-Right Edge
+    edges.push(createEdge(
+      new THREE.Vector3(-halfSize, h, 0),
+      new THREE.Vector3(halfSize, h, 0),
+      EdgeRole.SIDE
+    ));
+    // Right-to-Left Edge (allows reverse orientation snap)
+    edges.push(createEdge(
+      new THREE.Vector3(halfSize, h, 0),
+      new THREE.Vector3(-halfSize, h, 0),
+      EdgeRole.SIDE
+    ));
+  }
+
+  else if (type === BuildingType.RAMP || type === BuildingType.STAIRS) {
+    // Ramps/Stairs have two main edges for connection:
+    // 1. Low Edge (Bottom) - connects to Foundation Edges or Wall Top Edges
+    // 2. High Edge (Top) - connects to Wall Top Edges or upper floors
+
+    // Geometry parameters based on getRampParams logic
+    // Low End is at +Z (z = halfSize)
+    // High End is at -Z (z = -halfSize), and raised by WALL_HEIGHT (y = WALL_HEIGHT)
+
+    // Low Edge (at y=0, z=halfSize)
+    edges.push(createEdge(
+      new THREE.Vector3(-halfSize, 0, halfSize),
+      new THREE.Vector3(halfSize, 0, halfSize),
+      EdgeRole.SIDE
+    ));
+
+    // High Edge (at y=WALL_HEIGHT, z=-halfSize)
+    edges.push(createEdge(
+      new THREE.Vector3(-halfSize, WALL_HEIGHT, -halfSize),
+      new THREE.Vector3(halfSize, WALL_HEIGHT, -halfSize),
       EdgeRole.SIDE
     ));
   }
@@ -363,18 +472,13 @@ export const getWorldEdgeSockets = (building: BuildingData): EdgeSocket[] => {
   return worldEdges;
 };
 
-/**
- * Check if a building type uses edge sockets (foundations) vs point sockets (walls/roofs)
- */
+import { getBuildingDef } from '../data/BuildingRegistry';
+
 /**
  * Check if a building type uses edge sockets (foundations) vs point sockets (walls/roofs)
  */
 export const usesEdgeSockets = (type: BuildingType): boolean => {
-  return [
-    BuildingType.SQUARE_FOUNDATION,
-    BuildingType.TRIANGLE_FOUNDATION,
-    BuildingType.CURVED_FOUNDATION
-  ].includes(type);
+  return getBuildingDef(type).usesEdgeSockets;
 };
 
 /**
@@ -437,42 +541,7 @@ const calculateEdgeSnapTransform = (
  * Get the socket types that the active building type can snap to
  */
 export const getCompatibleSocketTypes = (activeType: BuildingType): SocketType[] => {
-  // Determine what socket types this piece provides
-  const isFoundation = [
-    BuildingType.SQUARE_FOUNDATION,
-    BuildingType.TRIANGLE_FOUNDATION,
-    BuildingType.CURVED_FOUNDATION
-  ].includes(activeType);
-
-  const isWall = [
-    BuildingType.WALL,
-    BuildingType.HALF_WALL,
-    BuildingType.WINDOW_WALL,
-    BuildingType.DOORWAY
-  ].includes(activeType);
-
-  const isRoof = [
-    BuildingType.SQUARE_ROOF,
-    BuildingType.TRIANGLE_ROOF
-  ].includes(activeType);
-
-  const isIncline = [
-    BuildingType.STAIRS,
-    BuildingType.RAMP
-  ].includes(activeType);
-
-  if (isFoundation) {
-    // Foundations primarily snap to edges, but can now snap to wall tops/foundation tops for stacking
-    return [SocketType.FOUNDATION_EDGE, SocketType.WALL_TOP, SocketType.FOUNDATION_TOP];
-  } else if (isWall) {
-    return [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.WALL_SIDE];
-  } else if (isRoof) {
-    return [SocketType.WALL_TOP, SocketType.ROOF_EDGE];
-  } else if (isIncline) {
-    return [SocketType.FOUNDATION_TOP, SocketType.FOUNDATION_EDGE];
-  }
-
-  return [];
+  return getBuildingDef(activeType).compatibleWith;
 };
 
 /**
@@ -608,6 +677,7 @@ export const calculateSnap = (
       position: THREE.Vector3;
       rotation: THREE.Euler;
       distToCursor: number;
+      score: number;
     }
 
     let bestCandidate: PointSnapCandidate | null = null;
@@ -633,11 +703,31 @@ export const calculateSnap = (
         const candidatePos = targetSocket.position.clone().sub(rotatedLocalPos);
         const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
 
-        if (!bestCandidate || distToCursor < bestCandidate.distToCursor) {
+        // Preference for rotation matching the current manual rotation (allows 'R' to cycle options)
+        // If rotations are different, add a small penalty to distance score.
+        // This makes the "closest" socket that matches the user's desired rotation win.
+        let rotationPenalty = 0;
+
+        // Normalize angles to 0..2PI
+        const normCandidateRot = (candidateRot.y % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        const normCurrentRot = (currentRotationY % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+
+        const rotDiff = Math.abs(normCandidateRot - normCurrentRot);
+        // Small tolerance for float comparison, treat 2PI as 0
+        const isMatch = rotDiff < 0.1 || Math.abs(rotDiff - 2 * Math.PI) < 0.1;
+
+        if (!isMatch) {
+          rotationPenalty = 0.5; // Penalty equivalent to 0.5 units of distance
+        }
+
+        const score = distToCursor + rotationPenalty;
+
+        if (!bestCandidate || score < bestCandidate.score) {
           bestCandidate = {
             position: candidatePos,
             rotation: candidateRot,
             distToCursor,
+            score,
           };
         }
       }
@@ -660,10 +750,8 @@ export const calculateSnap = (
     finalPos.z = Math.round((rayIntersectionPoint.z - offset) / gridSnap) * gridSnap + offset;
     finalPos.y = 0;
 
-    // Snap rotation: 60° for triangles, 90° for everything else
-    const isTriangle = activeType === BuildingType.TRIANGLE_FOUNDATION ||
-      activeType === BuildingType.TRIANGLE_ROOF;
-    const rotSnap = isTriangle ? Math.PI / 3 : Math.PI / 2;
+    // Use rotation increment from registry
+    const rotSnap = getBuildingDef(activeType).rotationIncrement;
     const snappedRot = Math.round(currentRotationY / rotSnap) * rotSnap;
     finalRot = new THREE.Euler(0, snappedRot, 0);
   }
@@ -715,11 +803,9 @@ export const calculateSnap = (
     }
   }
 
-  // Roofs require snapping
-  if (!snappedToSocket) {
-    if (activeType === BuildingType.SQUARE_ROOF || activeType === BuildingType.TRIANGLE_ROOF) {
-      isValid = false;
-    }
+  // Roofs require snapping (use category from registry)
+  if (!snappedToSocket && getBuildingDef(activeType).category === 'roof') {
+    isValid = false;
   }
 
   // Debug callback

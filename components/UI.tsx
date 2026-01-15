@@ -31,6 +31,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
     // Foundations
     { type: BuildingType.SQUARE_FOUNDATION, icon: Square, label: 'Square', category: 'foundation' },
     { type: BuildingType.TRIANGLE_FOUNDATION, icon: Triangle, label: 'Triangle', category: 'foundation' },
+    { type: BuildingType.TRIANGLE_FOUNDATION_2, icon: Triangle, label: 'Tri 2', category: 'foundation' },
     { type: BuildingType.CURVED_FOUNDATION, icon: Circle, label: 'Curved', category: 'foundation' },
     // Walls
     { type: BuildingType.WALL, icon: BrickWall, label: 'Wall', category: 'wall' },

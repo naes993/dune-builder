@@ -27,6 +27,8 @@ import {
   WINDOW_HEIGHT,
   WINDOW_WIDTH_RATIO,
 } from '../utils/buildingGeometries';
+import { useGameStore } from '../store/gameStore';
+import { getYOffsetFromRegistry } from '../data/BuildingRegistry';
 
 // Material colors
 const COLORS = {
@@ -48,19 +50,7 @@ interface MaterialsType {
   error: THREE.MeshBasicMaterial;
 }
 
-interface SceneProps {
-  buildings: BuildingData[];
-  setBuildings: React.Dispatch<React.SetStateAction<BuildingData[]>>;
-  activeType: BuildingType;
-  showWireframe: boolean;
-  showSocketDebug: boolean;
-  is2DMode: boolean;
-  materials: MaterialsType;
-  debugRecorder?: {
-    isRecording: boolean;
-    addFrame: (frame: any) => void;
-  };
-}
+// SceneProps removed - components now use useGameStore directly
 
 interface BuildingMeshProps {
   type: BuildingType;
@@ -77,20 +67,7 @@ interface BuildingMeshProps {
  * Returns the Y offset for a building type (how high above placement point the center is)
  */
 function getYOffset(type: BuildingType): number {
-  switch (type) {
-    case BuildingType.SQUARE_FOUNDATION:
-    case BuildingType.TRIANGLE_FOUNDATION:
-    case BuildingType.CURVED_FOUNDATION:
-      return FOUNDATION_HEIGHT / 2;
-    case BuildingType.WALL:
-    case BuildingType.WINDOW_WALL:
-    case BuildingType.DOORWAY:
-      return WALL_HEIGHT / 2;
-    case BuildingType.HALF_WALL:
-      return HALF_WALL_HEIGHT / 2;
-    default:
-      return 0;
-  }
+  return getYOffsetFromRegistry(type);
 }
 
 /**
@@ -479,11 +456,8 @@ const BuildingMesh = ({
 // Socket Debug Visualizer
 // =============================================================================
 
-interface SocketDebugProps {
-  buildings: BuildingData[];
-}
-
-const SocketDebugVisualizer = ({ buildings }: SocketDebugProps) => {
+const SocketDebugVisualizer = () => {
+  const { buildings } = useGameStore();
   // Check if building type uses edge sockets (foundations)
   const usesEdgeSockets = (type: BuildingType): boolean => {
     return [
@@ -625,16 +599,12 @@ const SocketDebugVisualizer = ({ buildings }: SocketDebugProps) => {
 
 import { getCompatibleSocketTypes, usesEdgeSockets as utilUsesEdgeSockets } from '../utils/geometry';
 
-interface SnapColliderProps {
-  buildings: BuildingData[];
-  activeType: BuildingType;
-}
-
 /**
  * Invisible colliders placed at socket locations to catch raycasts.
  * Solves the issue of "thin air" snaps being twitchy by giving them volume.
  */
-const SnapColliders = ({ buildings, activeType }: SnapColliderProps) => {
+const SnapColliders = () => {
+  const { buildings, activeType } = useGameStore();
   const compatibleTypes = useMemo(() => getCompatibleSocketTypes(activeType), [activeType]);
 
   // Don't render if nothing to snap to
@@ -695,7 +665,16 @@ const SnapColliders = ({ buildings, activeType }: SnapColliderProps) => {
 // Planner Component (handles placement logic)
 // =============================================================================
 
-const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocketDebug, is2DMode, materials, debugRecorder }: SceneProps) => {
+interface PlannerProps {
+  materials: MaterialsType;
+  debugRecorder?: {
+    isRecording: boolean;
+    addFrame: (frame: any) => void;
+  };
+}
+
+const Planner = ({ materials, debugRecorder }: PlannerProps) => {
+  const { buildings, addBuilding, removeBuilding, activeType, showWireframe, showSocketDebug } = useGameStore();
   const { camera, raycaster, mouse } = useThree();
   const [ghostPos, setGhostPos] = useState<[number, number, number]>([0, 0, 0]);
   const [ghostRot, setGhostRot] = useState<[number, number, number]>([0, 0, 0]);
@@ -797,7 +776,7 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocke
         position: [...ghostPos],
         rotation: [...ghostRot],
       };
-      setBuildings((prev) => [...prev, newBuilding]);
+      addBuilding(newBuilding);
 
       // Record placement
       if (debugRecorder?.isRecording) {
@@ -820,10 +799,10 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocke
   };
 
   // Handle building removal
-  const removeBuilding = (id: string, e: ThreeEvent<MouseEvent>) => {
+  const handleRemoveBuilding = (id: string, e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     const removedBuilding = buildings.find((b) => b.id === id);
-    setBuildings(buildings.filter((b) => b.id !== id));
+    removeBuilding(id);
 
     // Record removal
     if (debugRecorder?.isRecording && removedBuilding) {
@@ -857,16 +836,16 @@ const Planner = ({ buildings, setBuildings, activeType, showWireframe, showSocke
 
       {/* Placed buildings */}
       {buildings.map((b) => (
-        <group key={b.id} onContextMenu={(e) => removeBuilding(b.id, e)}>
+        <group key={b.id} onContextMenu={(e) => handleRemoveBuilding(b.id, e)}>
           <BuildingMesh {...b} wireframe={showWireframe} materials={materials} />
         </group>
       ))}
 
       {/* Socket debug visualization */}
-      {showSocketDebug && <SocketDebugVisualizer buildings={buildings} />}
+      {showSocketDebug && <SocketDebugVisualizer />}
 
       {/* Snap Colliders (Invisible) */}
-      <SnapColliders buildings={buildings} activeType={activeType} />
+      <SnapColliders />
 
       {/* Ghost preview */}
       <BuildingMesh
@@ -1061,7 +1040,16 @@ const AxisLabels = ({ is2DMode }: { is2DMode: boolean }) => {
 // Main Scene Export
 // =============================================================================
 
-export const GameScene = (props: Omit<SceneProps, 'materials'>) => {
+export interface GameSceneProps {
+  debugRecorder?: {
+    isRecording: boolean;
+    addFrame: (frame: any) => void;
+  };
+}
+
+export const GameScene = ({ debugRecorder }: GameSceneProps) => {
+  const { is2DMode } = useGameStore();
+
   const materials = useMemo(
     () => ({
       ghost: new THREE.MeshBasicMaterial({ color: '#4ade80', transparent: true, opacity: 0.5 }),
@@ -1073,25 +1061,25 @@ export const GameScene = (props: Omit<SceneProps, 'materials'>) => {
   const controlsRef = useRef<any>(null);
 
   return (
-    <Canvas shadows camera={{ position: props.is2DMode ? [0, 30, 0.001] : [10, 15, 10], fov: 50 }}>
-      <color attach="background" args={[props.is2DMode ? '#1a1a2e' : '#87CEEB']} />
-      {!props.is2DMode && <fog attach="fog" args={['#E6C288', 20, 100]} />}
-      <ambientLight intensity={props.is2DMode ? 1.0 : 0.6} />
-      <directionalLight position={[10, 20, 10]} intensity={props.is2DMode ? 0.5 : 1} castShadow />
-      {!props.is2DMode && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />}
-      <CameraController is2DMode={props.is2DMode} controlsRef={controlsRef} />
+    <Canvas shadows camera={{ position: is2DMode ? [0, 30, 0.001] : [10, 15, 10], fov: 50 }}>
+      <color attach="background" args={[is2DMode ? '#1a1a2e' : '#87CEEB']} />
+      {!is2DMode && <fog attach="fog" args={['#E6C288', 20, 100]} />}
+      <ambientLight intensity={is2DMode ? 1.0 : 0.6} />
+      <directionalLight position={[10, 20, 10]} intensity={is2DMode ? 0.5 : 1} castShadow />
+      {!is2DMode && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />}
+      <CameraController is2DMode={is2DMode} controlsRef={controlsRef} />
       <Compass />
-      <AxisLabels is2DMode={props.is2DMode} />
-      <Planner {...props} showSocketDebug={props.showSocketDebug} is2DMode={props.is2DMode} debugRecorder={props.debugRecorder} materials={materials} />
+      <AxisLabels is2DMode={is2DMode} />
+      <Planner materials={materials} debugRecorder={debugRecorder} />
       <OrbitControls
         ref={controlsRef}
         makeDefault
-        enableRotate={!props.is2DMode}
-        maxPolarAngle={props.is2DMode ? 0 : Math.PI / 2 - 0.1}
-        minPolarAngle={props.is2DMode ? 0 : 0}
+        enableRotate={!is2DMode}
+        maxPolarAngle={is2DMode ? 0 : Math.PI / 2 - 0.1}
+        minPolarAngle={is2DMode ? 0 : 0}
         mouseButtons={{
           LEFT: undefined,
-          MIDDLE: props.is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE,
+          MIDDLE: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE,
           RIGHT: THREE.MOUSE.PAN,
         }}
       />
