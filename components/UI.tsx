@@ -212,14 +212,14 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 };
 
 // Build version - increment this with each deployment
-export const BUILD_VERSION = 'v1.7.5';
+export const BUILD_VERSION = 'v1.7.6';
 
 export const Instructions = () => (
   <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">
     <h3 className="text-dune-gold font-bold mb-2 uppercase">Protocol</h3>
     <ul className="space-y-1 list-disc pl-4">
       <li><strong className="text-white">Left Click</strong>: Place Structure</li>
-      <li><strong className="text-white">Right Click</strong>: Demolish</li>
+      <li><strong className="text-white">Shift + Click</strong>: Demolish</li>
       <li><strong className="text-white">R</strong>: Rotate Preview</li>
       <li><strong className="text-white">Arrow Up/Down</strong>: Stack Height</li>
       <li><strong className="text-white">Drag</strong>: Orbit Camera</li>

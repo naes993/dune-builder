@@ -31,7 +31,7 @@ export const useGameStore = create<GameState>((set) => ({
     showSocketDebug: false,
     is2DMode: false,
     autoHeight: true,
-    manualHeight: true,
+    manualHeight: false,
 
     // Actions
     setBuildings: (buildings) => set((state) => ({
@@ -50,6 +50,12 @@ export const useGameStore = create<GameState>((set) => ({
     toggleWireframe: () => set((state) => ({ showWireframe: !state.showWireframe })),
     toggleSocketDebug: () => set((state) => ({ showSocketDebug: !state.showSocketDebug })),
     toggle2DMode: () => set((state) => ({ is2DMode: !state.is2DMode })),
-    toggleAutoHeight: () => set((state) => ({ autoHeight: !state.autoHeight })),
-    toggleManualHeight: () => set((state) => ({ manualHeight: !state.manualHeight })),
+    toggleAutoHeight: () => set((state) => ({
+        autoHeight: !state.autoHeight,
+        manualHeight: state.autoHeight ? true : false  // Turn on manual when turning off auto
+    })),
+    toggleManualHeight: () => set((state) => ({
+        manualHeight: !state.manualHeight,
+        autoHeight: state.manualHeight ? true : false  // Turn on auto when turning off manual
+    })),
 }));

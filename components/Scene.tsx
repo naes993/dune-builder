@@ -778,11 +778,31 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
     }
   });
 
-  // Handle building placement
+  // Handle building placement or demolition (Shift+Click)
   const handlePlace = (e: ThreeEvent<MouseEvent>) => {
     if (e.delta > 5) return; // Ignore if dragging
-    if (e.button === 0 && ghostIsValid) {
-      e.stopPropagation();
+    if (e.button !== 0) return; // Only left click
+
+    e.stopPropagation();
+
+    // Shift+Click = Demolish mode
+    if (e.nativeEvent.shiftKey) {
+      // Find the building that was clicked by checking intersection
+      const clickedObject = e.object;
+      // Traverse up to find the building group with userData.buildingId
+      let current: THREE.Object3D | null = clickedObject;
+      while (current) {
+        if (current.userData?.buildingId) {
+          handleRemoveBuilding(current.userData.buildingId, e);
+          return;
+        }
+        current = current.parent;
+      }
+      return;
+    }
+
+    // Normal placement
+    if (ghostIsValid) {
       const newBuilding: BuildingData = {
         id: crypto.randomUUID(),
         type: activeType,
@@ -849,7 +869,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
 
       {/* Placed buildings */}
       {buildings.map((b) => (
-        <group key={b.id} onContextMenu={(e) => handleRemoveBuilding(b.id, e)}>
+        <group key={b.id} userData={{ buildingId: b.id }}>
           <BuildingMesh {...b} wireframe={showWireframe} materials={materials} />
         </group>
       ))}

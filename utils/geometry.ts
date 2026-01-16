@@ -475,10 +475,19 @@ export const getWorldEdgeSockets = (building: BuildingData): EdgeSocket[] => {
 import { getBuildingDef } from '../data/BuildingRegistry';
 
 /**
- * Check if a building type uses edge sockets (foundations) vs point sockets (walls/roofs)
+ * Check if a building type PROVIDES edge sockets (for other things to snap to).
+ * This is different from whether it USES edge snapping for its own placement.
  */
 export const usesEdgeSockets = (type: BuildingType): boolean => {
   return getBuildingDef(type).usesEdgeSockets;
+};
+
+/**
+ * Check if a building type should use edge-based snapping for placement.
+ * Only foundations use edge-to-edge snapping. Walls/roofs use point-based snapping.
+ */
+export const usesEdgeSnapping = (type: BuildingType): boolean => {
+  return getBuildingDef(type).category === 'foundation';
 };
 
 /**
@@ -575,8 +584,9 @@ export const calculateSnap = (
 
   // ==========================================================================
   // FOUNDATION SNAPPING - Edge-based system
+  // Only foundations use edge-to-edge snapping. Walls/roofs use point snapping.
   // ==========================================================================
-  if (usesEdgeSockets(activeType)) {
+  if (usesEdgeSnapping(activeType)) {
     // Collect all world edge sockets from existing foundations
     const allEdges: EdgeSocket[] = [];
     buildings.forEach(b => {
@@ -676,6 +686,7 @@ export const calculateSnap = (
 
     const compatibleTypes = getCompatibleSocketTypes(activeType);
     const compatibleSockets = allSockets.filter(s => compatibleTypes.includes(s.socketType));
+
     const ghostLocals = getLocalSockets(activeType);
 
     interface PointSnapCandidate {
@@ -771,10 +782,10 @@ export const calculateSnap = (
 
   // Global collision check (even if snapped)
   // Prevent foundations from overlapping other foundations
-  if (usesEdgeSockets(activeType)) {
+  if (usesEdgeSnapping(activeType)) {
     for (const b of buildings) {
       // Only check against other foundations
-      if (!usesEdgeSockets(b.type)) continue;
+      if (!usesEdgeSnapping(b.type)) continue;
 
       const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
       const dist = bPos.distanceTo(finalPos);
@@ -793,13 +804,13 @@ export const calculateSnap = (
 
   // Legacy distance check for non-snapped items (prevents placing inside others when free-placing)
   if (!snappedToSocket && isValid) {
-    const isFoundation = usesEdgeSockets(activeType);
+    const isFoundation = usesEdgeSnapping(activeType);
 
     for (const b of buildings) {
       const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
       const dist = bPos.distanceTo(finalPos);
 
-      if (isFoundation && usesEdgeSockets(b.type)) {
+      if (isFoundation && usesEdgeSnapping(b.type)) {
         if (dist < 2.0) {
           isValid = false;
           break;
