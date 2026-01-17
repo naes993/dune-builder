@@ -708,34 +708,43 @@ export const calculateSnap = (
 
       if (matchingGhostSockets.length === 0) continue;
 
-      const targetNormal = targetSocket.normal.clone().negate();
-      const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
+      // For TOP sockets (FOUNDATION_TOP, WALL_TOP), let the user control rotation with R key
+      // These are horizontal surfaces where walls can face any direction
+      // For SIDE sockets (WALL_SIDE), use socket normal alignment
+      const isTopSocket = targetSocket.socketType === SocketType.FOUNDATION_TOP ||
+                          targetSocket.socketType === SocketType.WALL_TOP;
 
       for (const gSocket of matchingGhostSockets) {
-        const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
-        const rotY = targetAngle - localAngle;
+        let candidateRot: THREE.Euler;
+        let rotationPenalty = 0;
 
-        const candidateRot = new THREE.Euler(0, rotY, 0);
+        if (isTopSocket) {
+          // For top sockets: Use user's manual rotation directly
+          // Snap to 90° increments based on current rotation
+          const rotSnap = Math.PI / 2;
+          const snappedRot = Math.round(currentRotationY / rotSnap) * rotSnap;
+          candidateRot = new THREE.Euler(0, snappedRot, 0);
+        } else {
+          // For side sockets: Calculate rotation from socket normal alignment
+          const targetNormal = targetSocket.normal.clone().negate();
+          const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
+          const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
+          const rotY = targetAngle - localAngle;
+          candidateRot = new THREE.Euler(0, rotY, 0);
+
+          // Preference for rotation matching the current manual rotation
+          const normCandidateRot = (candidateRot.y % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+          const normCurrentRot = (currentRotationY % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+          const rotDiff = Math.abs(normCandidateRot - normCurrentRot);
+          const isMatch = rotDiff < 0.1 || Math.abs(rotDiff - 2 * Math.PI) < 0.1;
+          if (!isMatch) {
+            rotationPenalty = 0.5;
+          }
+        }
+
         const rotatedLocalPos = gSocket.position.clone().applyEuler(candidateRot);
         const candidatePos = targetSocket.position.clone().sub(rotatedLocalPos);
         const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
-
-        // Preference for rotation matching the current manual rotation (allows 'R' to cycle options)
-        // If rotations are different, add a small penalty to distance score.
-        // This makes the "closest" socket that matches the user's desired rotation win.
-        let rotationPenalty = 0;
-
-        // Normalize angles to 0..2PI
-        const normCandidateRot = (candidateRot.y % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-        const normCurrentRot = (currentRotationY % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-
-        const rotDiff = Math.abs(normCandidateRot - normCurrentRot);
-        // Small tolerance for float comparison, treat 2PI as 0
-        const isMatch = rotDiff < 0.1 || Math.abs(rotDiff - 2 * Math.PI) < 0.1;
-
-        if (!isMatch) {
-          rotationPenalty = 0.5; // Penalty equivalent to 0.5 units of distance
-        }
 
         const score = distToCursor + rotationPenalty;
 

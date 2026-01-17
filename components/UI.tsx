@@ -1,6 +1,6 @@
 import React from 'react';
-import { BuildingType } from '../types';
-import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload, Bug, Video, VideoOff, FilmIcon, Compass, ArrowUpFromLine, ArrowUpDown } from 'lucide-react';
+import { BuildingType, BuildingSet } from '../types';
+import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload, Bug, Video, VideoOff, FilmIcon, Compass, ArrowUpFromLine, ArrowUpDown, Palette } from 'lucide-react';
 
 interface UIProps {
   activeType: BuildingType;
@@ -20,6 +20,8 @@ interface UIProps {
   setAutoHeight: (b: boolean) => void;
   manualHeight: boolean;
   setManualHeight: (b: boolean) => void;
+  activeBuildingSet: BuildingSet;
+  setActiveBuildingSet: (set: BuildingSet) => void;
   debugRecorder: {
     isRecording: boolean;
     frameCount: number;
@@ -30,7 +32,7 @@ interface UIProps {
   };
 }
 
-const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onImport, showWireframe, setShowWireframe, showSocketDebug, setShowSocketDebug, is2DMode, setIs2DMode, autoHeight, setAutoHeight, manualHeight, setManualHeight, debugRecorder }: UIProps) => {
+const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onImport, showWireframe, setShowWireframe, showSocketDebug, setShowSocketDebug, is2DMode, setIs2DMode, autoHeight, setAutoHeight, manualHeight, setManualHeight, activeBuildingSet, setActiveBuildingSet, debugRecorder }: UIProps) => {
   const tools = [
     // Foundations
     { type: BuildingType.SQUARE_FOUNDATION, icon: Square, label: 'Square', category: 'foundation' },
@@ -199,6 +201,31 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
           <span className="text-[9px] sm:text-[10px] uppercase tracking-wider">2D</span>
         </button>
 
+        <div className="w-px bg-white/20 mx-1"></div>
+
+        {/* Building Set Toggles */}
+        <button
+          onClick={() => setActiveBuildingSet(BuildingSet.DUNE_MAN)}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
+               ${activeBuildingSet === BuildingSet.DUNE_MAN ? 'bg-amber-600/60 text-white' : 'hover:bg-white/10 text-gray-300'}`}
+          title="Dune Man Building Set (Brown)"
+        >
+          <Palette size={20} />
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider">Dune</span>
+        </button>
+
+        <button
+          onClick={() => setActiveBuildingSet(BuildingSet.HARKONNEN)}
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
+               ${activeBuildingSet === BuildingSet.HARKONNEN ? 'bg-slate-600/60 text-white' : 'hover:bg-white/10 text-gray-300'}`}
+          title="Harkonnen Building Set (Black/Silver)"
+        >
+          <Palette size={20} />
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-wider">Hark</span>
+        </button>
+
+        <div className="w-px bg-white/20 mx-1"></div>
+
         <button
           onClick={onClear}
           className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-red-900/50 text-red-300 transition-all w-16 sm:w-20"
@@ -212,7 +239,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 };
 
 // Build version - increment this with each deployment
-export const BUILD_VERSION = 'v1.7.6';
+export const BUILD_VERSION = 'v1.8.0';
 
 export const Instructions = () => (
   <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">

@@ -1,5 +1,23 @@
 import * as THREE from 'three';
 
+// Building Sets (cosmetic styles)
+export enum BuildingSet {
+  DUNE_MAN = 'DUNE_MAN',
+  HARKONNEN = 'HARKONNEN',
+}
+
+// Color palette for a building set
+export interface BuildingPalette {
+  foundation: string;
+  wallExterior: string;
+  wallInterior: string;
+  windowWall: string;
+  windowGlass: string;
+  roof: string;
+  roofTrim: string;
+  incline: string;
+}
+
 export enum BuildingType {
   // Foundations
   SQUARE_FOUNDATION = 'SQUARE_FOUNDATION',

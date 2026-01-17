@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { BuildingData, BuildingType } from '../types';
+import { BuildingData, BuildingType, BuildingSet } from '../types';
 
 interface GameState {
     // State
@@ -10,6 +10,7 @@ interface GameState {
     is2DMode: boolean;
     autoHeight: boolean;      // Auto-snap to socket height when snapping
     manualHeight: boolean;    // Allow arrow key height adjustment
+    activeBuildingSet: BuildingSet;  // Current building style/color palette
 
     // Actions
     setBuildings: (buildings: BuildingData[] | ((prev: BuildingData[]) => BuildingData[])) => void;
@@ -21,6 +22,7 @@ interface GameState {
     toggle2DMode: () => void;
     toggleAutoHeight: () => void;
     toggleManualHeight: () => void;
+    setActiveBuildingSet: (set: BuildingSet) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -32,6 +34,7 @@ export const useGameStore = create<GameState>((set) => ({
     is2DMode: false,
     autoHeight: true,
     manualHeight: false,
+    activeBuildingSet: BuildingSet.DUNE_MAN,
 
     // Actions
     setBuildings: (buildings) => set((state) => ({
@@ -58,4 +61,5 @@ export const useGameStore = create<GameState>((set) => ({
         manualHeight: !state.manualHeight,
         autoHeight: state.manualHeight ? true : false  // Turn on auto when turning off manual
     })),
+    setActiveBuildingSet: (buildingSet) => set({ activeBuildingSet: buildingSet }),
 }));

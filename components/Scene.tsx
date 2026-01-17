@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import {
   BuildingType,
   BuildingData,
+  BuildingPalette,
   EdgeRole,
   UNIT_SIZE,
   FOUNDATION_HEIGHT,
@@ -29,18 +30,10 @@ import {
 } from '../utils/buildingGeometries';
 import { useGameStore } from '../store/gameStore';
 import { getYOffsetFromRegistry } from '../data/BuildingRegistry';
+import { PALETTES } from '../data/palettes';
 
-// Material colors
-const COLORS = {
-  foundation: '#7c7c7c',
-  wall: '#8a6e4b',
-  windowWall: '#5a4e3b',
-  windowGlass: '#87CEEB',
-  roof: '#5D4037',
-  roofTrim: '#4e3b2e',
-  incline: '#6d5e4d',
-  edge: 'black',
-} as const;
+// Edge color constant (not part of palette)
+const EDGE_COLOR = 'black';
 
 // Wall thickness
 const WALL_THICKNESS = 0.2;
@@ -61,6 +54,7 @@ interface BuildingMeshProps {
   id?: string;
   wireframe?: boolean;
   materials: MaterialsType;
+  palette: BuildingPalette;
 }
 
 /**
@@ -102,26 +96,27 @@ interface GeometryProps {
   isGhost?: boolean;
   isValid?: boolean;
   materials: MaterialsType;
+  palette: BuildingPalette;
 }
 
-const SquareFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => (
+const SquareFoundation = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => (
   <>
     <boxGeometry args={[UNIT_SIZE, FOUNDATION_HEIGHT, UNIT_SIZE]} />
     {isGhost ? (
       <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
     ) : (
-      <meshStandardMaterial color={COLORS.foundation} roughness={0.8} wireframe={wireframe} />
+      <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
     )}
     {!isGhost && (
       <lineSegments>
         <edgesGeometry args={[new THREE.BoxGeometry(UNIT_SIZE, FOUNDATION_HEIGHT, UNIT_SIZE)]} />
-        <meshBasicMaterial color={COLORS.edge} />
+        <meshBasicMaterial color={EDGE_COLOR} />
       </lineSegments>
     )}
   </>
 );
 
-const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
+const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
   // Custom triangle geometry with FLAT BASE at BOTTOM of screen, apex at TOP
   //
   // In 2D mode, camera looks down from Y+. On screen:
@@ -195,19 +190,19 @@ const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials }: G
       {isGhost ? (
         <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
       ) : (
-        <meshStandardMaterial color={COLORS.foundation} roughness={0.8} wireframe={wireframe} />
+        <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
       )}
       {!isGhost && (
         <lineSegments>
           <primitive object={edgeGeometry} attach="geometry" />
-          <meshBasicMaterial color={COLORS.edge} />
+          <meshBasicMaterial color={EDGE_COLOR} />
         </lineSegments>
       )}
     </>
   );
 };
 
-const CurvedFoundation = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
+const CurvedFoundation = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
   const shape = useMemo(() => createCurvedFoundationShape(), []);
   const extrudeSettings = useMemo(() => ({ depth: FOUNDATION_HEIGHT, bevelEnabled: false }), []);
 
@@ -218,55 +213,119 @@ const CurvedFoundation = ({ wireframe, isGhost, isValid = true, materials }: Geo
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={COLORS.foundation} roughness={0.8} wireframe={wireframe} />
+          <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
         )}
       </mesh>
     </group>
   );
 };
 
-const Wall = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => (
-  <>
-    <boxGeometry args={[UNIT_SIZE, WALL_HEIGHT, WALL_THICKNESS]} />
-    {isGhost ? (
-      <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
-    ) : (
-      <meshStandardMaterial color={COLORS.wall} roughness={0.9} wireframe={wireframe} />
-    )}
-  </>
-);
+const Wall = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+  // Create materials array for 6 faces to support different interior/exterior colors
+  // Box geometry faces order: +X, -X, +Y, -Y, +Z (front/exterior), -Z (back/interior)
+  const wallMaterials = useMemo(() => {
+    return [
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +X
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // -X
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +Y (top)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // -Y (bottom)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +Z (front/exterior)
+      new THREE.MeshStandardMaterial({ color: palette.wallInterior, roughness: 0.9 }), // -Z (back/interior)
+    ];
+  }, [palette.wallExterior, palette.wallInterior]);
 
-const HalfWall = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => (
-  <>
-    <boxGeometry args={[UNIT_SIZE, HALF_WALL_HEIGHT, WALL_THICKNESS]} />
-    {isGhost ? (
-      <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
-    ) : (
-      <meshStandardMaterial color={COLORS.wall} roughness={0.9} wireframe={wireframe} />
-    )}
-  </>
-);
+  // Ghost materials show interior/exterior distinction with transparency
+  // Green tint for valid, red tint for invalid placement
+  const ghostMaterials = useMemo(() => {
+    const tint = isValid ? 0x4ade80 : 0xef4444; // green or red
+    const exteriorColor = new THREE.Color(palette.wallExterior).lerp(new THREE.Color(tint), 0.5);
+    const interiorColor = new THREE.Color(palette.wallInterior).lerp(new THREE.Color(tint), 0.5);
+    return [
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // +X
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // -X
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // +Y
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // -Y
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // +Z (exterior)
+      new THREE.MeshBasicMaterial({ color: interiorColor, transparent: true, opacity: 0.6 }), // -Z (interior)
+    ];
+  }, [palette.wallExterior, palette.wallInterior, isValid]);
 
-const WindowWall = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => (
+  return (
+    <>
+      <boxGeometry args={[UNIT_SIZE, WALL_HEIGHT, WALL_THICKNESS]} />
+      {isGhost ? (
+        <primitive object={ghostMaterials} attach="material" />
+      ) : wireframe ? (
+        <meshStandardMaterial color={palette.wallExterior} roughness={0.9} wireframe />
+      ) : (
+        <primitive object={wallMaterials} attach="material" />
+      )}
+    </>
+  );
+};
+
+const HalfWall = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+  // Same dual-sided materials as Wall
+  const wallMaterials = useMemo(() => {
+    return [
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +X
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // -X
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +Y (top)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // -Y (bottom)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +Z (front/exterior)
+      new THREE.MeshStandardMaterial({ color: palette.wallInterior, roughness: 0.9 }), // -Z (back/interior)
+    ];
+  }, [palette.wallExterior, palette.wallInterior]);
+
+  // Ghost materials show interior/exterior distinction with transparency
+  const ghostMaterials = useMemo(() => {
+    const tint = isValid ? 0x4ade80 : 0xef4444;
+    const exteriorColor = new THREE.Color(palette.wallExterior).lerp(new THREE.Color(tint), 0.5);
+    const interiorColor = new THREE.Color(palette.wallInterior).lerp(new THREE.Color(tint), 0.5);
+    return [
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // +X
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // -X
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // +Y
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // -Y
+      new THREE.MeshBasicMaterial({ color: exteriorColor, transparent: true, opacity: 0.6 }), // +Z (exterior)
+      new THREE.MeshBasicMaterial({ color: interiorColor, transparent: true, opacity: 0.6 }), // -Z (interior)
+    ];
+  }, [palette.wallExterior, palette.wallInterior, isValid]);
+
+  return (
+    <>
+      <boxGeometry args={[UNIT_SIZE, HALF_WALL_HEIGHT, WALL_THICKNESS]} />
+      {isGhost ? (
+        <primitive object={ghostMaterials} attach="material" />
+      ) : wireframe ? (
+        <meshStandardMaterial color={palette.wallExterior} roughness={0.9} wireframe />
+      ) : (
+        <primitive object={wallMaterials} attach="material" />
+      )}
+    </>
+  );
+};
+
+const WindowWall = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => (
   <group>
     <mesh position={[0, 0, 0]}>
       <boxGeometry args={[UNIT_SIZE, WALL_HEIGHT, WALL_THICKNESS]} />
       {isGhost ? (
         <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
       ) : (
-        <meshStandardMaterial color={COLORS.windowWall} roughness={0.9} transparent opacity={0.9} wireframe={wireframe} />
+        <meshStandardMaterial color={palette.windowWall} roughness={0.9} transparent opacity={0.9} wireframe={wireframe} />
       )}
     </mesh>
     {!wireframe && !isGhost && (
       <mesh position={[0, 0, 0.05]}>
         <boxGeometry args={[UNIT_SIZE * WINDOW_WIDTH_RATIO, WINDOW_HEIGHT, WALL_THICKNESS + 0.02]} />
-        <meshStandardMaterial color={COLORS.windowGlass} />
+        <meshStandardMaterial color={palette.windowGlass} />
       </mesh>
     )}
   </group>
 );
 
-const Doorway = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
+const Doorway = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
   const shape = useMemo(() => createDoorwayShape(), []);
   const extrudeSettings = useMemo(() => ({ depth: WALL_THICKNESS, bevelEnabled: false }), []);
 
@@ -277,14 +336,14 @@ const Doorway = ({ wireframe, isGhost, isValid = true, materials }: GeometryProp
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={COLORS.wall} roughness={0.9} wireframe={wireframe} />
+          <meshStandardMaterial color={palette.wallExterior} roughness={0.9} wireframe={wireframe} />
         )}
       </mesh>
     </group>
   );
 };
 
-const SquareRoof = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
+const SquareRoof = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
   const roofAngle = useMemo(() => -Math.atan(ROOF_HEIGHT / UNIT_SIZE), []);
   const roofLength = useMemo(() => Math.sqrt(UNIT_SIZE * UNIT_SIZE + ROOF_HEIGHT * ROOF_HEIGHT) + 1, []);
 
@@ -295,18 +354,18 @@ const SquareRoof = ({ wireframe, isGhost, isValid = true, materials }: GeometryP
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={COLORS.roof} wireframe={wireframe} />
+          <meshStandardMaterial color={palette.roof} wireframe={wireframe} />
         )}
       </mesh>
       {!wireframe && !isGhost && (
         <>
           <mesh position={[-(UNIT_SIZE / 2 - 0.1), ROOF_HEIGHT / 4, UNIT_SIZE / 8]}>
             <boxGeometry args={[ROOF_THICKNESS, ROOF_HEIGHT / 2, UNIT_SIZE]} />
-            <meshStandardMaterial color={COLORS.roofTrim} />
+            <meshStandardMaterial color={palette.roofTrim} />
           </mesh>
           <mesh position={[(UNIT_SIZE / 2 - 0.1), ROOF_HEIGHT / 4, UNIT_SIZE / 8]}>
             <boxGeometry args={[ROOF_THICKNESS, ROOF_HEIGHT / 2, UNIT_SIZE]} />
-            <meshStandardMaterial color={COLORS.roofTrim} />
+            <meshStandardMaterial color={palette.roofTrim} />
           </mesh>
         </>
       )}
@@ -314,20 +373,20 @@ const SquareRoof = ({ wireframe, isGhost, isValid = true, materials }: GeometryP
   );
 };
 
-const TriangleRoof = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => (
+const TriangleRoof = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => (
   <group position={[0, ROOF_HEIGHT / 2, 0]}>
     <mesh>
       <coneGeometry args={[TRIANGLE_RADIUS, ROOF_HEIGHT, 3]} />
       {isGhost ? (
         <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
       ) : (
-        <meshStandardMaterial color={COLORS.roof} wireframe={wireframe} />
+        <meshStandardMaterial color={palette.roof} wireframe={wireframe} />
       )}
     </mesh>
   </group>
 );
 
-const Stairs = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
+const Stairs = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
   const steps = useMemo(() => getStairSteps(), []);
   const stepHeight = WALL_HEIGHT / 8;
   const stepDepth = UNIT_SIZE / 8;
@@ -340,7 +399,7 @@ const Stairs = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps
           {isGhost ? (
             <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
           ) : (
-            <meshStandardMaterial color={COLORS.incline} wireframe={wireframe} />
+            <meshStandardMaterial color={palette.incline} wireframe={wireframe} />
           )}
         </mesh>
       ))}
@@ -348,7 +407,7 @@ const Stairs = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps
   );
 };
 
-const Ramp = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) => {
+const Ramp = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
   const { length, angle } = useMemo(() => getRampParams(), []);
 
   return (
@@ -358,18 +417,18 @@ const Ramp = ({ wireframe, isGhost, isValid = true, materials }: GeometryProps) 
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={COLORS.incline} wireframe={wireframe} />
+          <meshStandardMaterial color={palette.incline} wireframe={wireframe} />
         )}
       </mesh>
       {!wireframe && !isGhost && (
         <>
           <mesh position={[-UNIT_SIZE / 2 + 0.1, WALL_HEIGHT / 2, 0]} rotation={[angle, 0, 0]}>
             <boxGeometry args={[RAIL_WIDTH, RAIL_HEIGHT, length]} />
-            <meshStandardMaterial color={COLORS.roofTrim} />
+            <meshStandardMaterial color={palette.roofTrim} />
           </mesh>
           <mesh position={[UNIT_SIZE / 2 - 0.1, WALL_HEIGHT / 2, 0]} rotation={[angle, 0, 0]}>
             <boxGeometry args={[RAIL_WIDTH, RAIL_HEIGHT, length]} />
-            <meshStandardMaterial color={COLORS.roofTrim} />
+            <meshStandardMaterial color={palette.roofTrim} />
           </mesh>
         </>
       )}
@@ -390,8 +449,9 @@ const BuildingMesh = ({
   id,
   wireframe = false,
   materials,
+  palette,
 }: BuildingMeshProps) => {
-  const geometryProps: GeometryProps = { wireframe, isGhost, isValid, materials };
+  const geometryProps: GeometryProps = { wireframe, isGhost, isValid, materials, palette };
 
   // Render the appropriate geometry based on type
   const renderGeometry = () => {
@@ -674,7 +734,8 @@ interface PlannerProps {
 }
 
 const Planner = ({ materials, debugRecorder }: PlannerProps) => {
-  const { buildings, addBuilding, removeBuilding, activeType, showWireframe, showSocketDebug, autoHeight, manualHeight } = useGameStore();
+  const { buildings, addBuilding, removeBuilding, activeType, showWireframe, showSocketDebug, autoHeight, manualHeight, activeBuildingSet } = useGameStore();
+  const palette = PALETTES[activeBuildingSet];
   const { camera, raycaster, mouse } = useThree();
   const [ghostPos, setGhostPos] = useState<[number, number, number]>([0, 0, 0]);
   const [ghostRot, setGhostRot] = useState<[number, number, number]>([0, 0, 0]);
@@ -870,7 +931,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
       {/* Placed buildings */}
       {buildings.map((b) => (
         <group key={b.id} userData={{ buildingId: b.id }}>
-          <BuildingMesh {...b} wireframe={showWireframe} materials={materials} />
+          <BuildingMesh {...b} wireframe={showWireframe} materials={materials} palette={palette} />
         </group>
       ))}
 
@@ -888,6 +949,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
         isGhost
         isValid={ghostIsValid}
         materials={materials}
+        palette={palette}
       />
     </group>
   );

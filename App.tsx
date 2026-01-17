@@ -28,7 +28,9 @@ export default function App() {
     autoHeight,
     toggleAutoHeight,
     manualHeight,
-    toggleManualHeight
+    toggleManualHeight,
+    activeBuildingSet,
+    setActiveBuildingSet,
   } = useGameStore();
 
   // Quick save to localStorage
@@ -205,6 +207,8 @@ export default function App() {
           setAutoHeight={(val) => toggleAutoHeight()}
           manualHeight={manualHeight}
           setManualHeight={(val) => toggleManualHeight()}
+          activeBuildingSet={activeBuildingSet}
+          setActiveBuildingSet={setActiveBuildingSet}
           debugRecorder={debugRecorder}
         />
       </div>
