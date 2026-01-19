@@ -25,7 +25,7 @@ interface GameState {
     setActiveBuildingSet: (set: BuildingSet) => void;
 }
 
-export const useGameStore = create<GameState>((set) => ({
+export const useGameStore = create<GameState>((set, get) => ({
     // Initial State
     buildings: [],
     activeType: BuildingType.SQUARE_FOUNDATION,
@@ -63,3 +63,8 @@ export const useGameStore = create<GameState>((set) => ({
     })),
     setActiveBuildingSet: (buildingSet) => set({ activeBuildingSet: buildingSet }),
 }));
+
+// Expose store for debugging in browser console
+if (typeof window !== 'undefined') {
+    (window as any).gameStore = useGameStore;
+}

@@ -39,6 +39,10 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
     { type: BuildingType.TRIANGLE_FOUNDATION, icon: Triangle, label: 'Triangle', category: 'foundation' },
     { type: BuildingType.TRIANGLE_FOUNDATION_2, icon: Triangle, label: 'Tri 2', category: 'foundation' },
     { type: BuildingType.CURVED_FOUNDATION, icon: Circle, label: 'Curved', category: 'foundation' },
+    // Structures (raised platform foundations)
+    { type: BuildingType.SQUARE_STRUCTURE, icon: Square, label: 'Sq Struct', category: 'structure' },
+    { type: BuildingType.TRIANGLE_STRUCTURE, icon: Triangle, label: 'Tri Struct', category: 'structure' },
+    { type: BuildingType.CURVED_STRUCTURE, icon: Circle, label: 'Crv Struct', category: 'structure' },
     // Walls
     { type: BuildingType.WALL, icon: BrickWall, label: 'Wall', category: 'wall' },
     { type: BuildingType.HALF_WALL, icon: Minus, label: 'Half Wall', category: 'wall' },
@@ -57,6 +61,26 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
       {/* Foundations */}
       <div className="flex gap-2">
         {tools.filter(t => t.category === 'foundation').map((t) => (
+          <button
+            key={t.type}
+            onClick={() => setActiveType(t.type)}
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 w-16 sm:w-20
+              ${activeType === t.type
+                ? 'bg-dune-gold text-black scale-105 font-bold shadow-[0_0_15px_rgba(212,160,86,0.5)]'
+                : 'hover:bg-white/10 text-gray-300'
+              }`}
+          >
+            <t.icon size={20} />
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-center leading-tight">{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="w-px bg-white/20 mx-1"></div>
+
+      {/* Structures (raised platform foundations) */}
+      <div className="flex gap-2">
+        {tools.filter(t => t.category === 'structure').map((t) => (
           <button
             key={t.type}
             onClick={() => setActiveType(t.type)}
@@ -239,7 +263,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 };
 
 // Build version - increment this with each deployment
-export const BUILD_VERSION = 'v1.8.0';
+export const BUILD_VERSION = 'v1.9.0';
 
 export const Instructions = () => (
   <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">

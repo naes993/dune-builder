@@ -71,6 +71,7 @@ function getYOffset(type: BuildingType): number {
 function usesGroupWrapper(type: BuildingType): boolean {
   return [
     BuildingType.CURVED_FOUNDATION,
+    BuildingType.CURVED_STRUCTURE,
     BuildingType.WINDOW_WALL,
     BuildingType.DOORWAY,
     BuildingType.SQUARE_ROOF,
@@ -208,6 +209,103 @@ const CurvedFoundation = ({ wireframe, isGhost, isValid = true, materials, palet
 
   return (
     <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -FOUNDATION_HEIGHT / 2, 0]}>
+      <mesh>
+        <extrudeGeometry args={[shape, extrudeSettings]} />
+        {isGhost ? (
+          <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
+        ) : (
+          <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+        )}
+      </mesh>
+    </group>
+  );
+};
+
+// =============================================================================
+// Structure Components (Raised Platform Foundations - WALL_HEIGHT tall)
+// =============================================================================
+
+const SquareStructure = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => (
+  <>
+    <boxGeometry args={[UNIT_SIZE, WALL_HEIGHT, UNIT_SIZE]} />
+    {isGhost ? (
+      <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
+    ) : (
+      <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+    )}
+    {!isGhost && (
+      <lineSegments>
+        <edgesGeometry args={[new THREE.BoxGeometry(UNIT_SIZE, WALL_HEIGHT, UNIT_SIZE)]} />
+        <meshBasicMaterial color={EDGE_COLOR} />
+      </lineSegments>
+    )}
+  </>
+);
+
+const TriangleStructure = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+  // Same triangle geometry as TriangleFoundation but with WALL_HEIGHT instead of FOUNDATION_HEIGHT
+  const geometry = useMemo(() => {
+    const halfSize = UNIT_SIZE / 2;
+    const apexZ = -TRIANGLE_RADIUS;     // -2.31 = south (TOP of screen)
+    const baseZ = TRIANGLE_APOTHEM;     // +1.15 = north (BOTTOM of screen)
+    const halfHeight = WALL_HEIGHT / 2; // Key difference: use WALL_HEIGHT
+
+    // Vertices: apex at -Z (south/top of screen), base corners at +Z (north/bottom of screen)
+    const topApex = [0, halfHeight, apexZ];
+    const topLeft = [-halfSize, halfHeight, baseZ];
+    const topRight = [halfSize, halfHeight, baseZ];
+    const botApex = [0, -halfHeight, apexZ];
+    const botLeft = [-halfSize, -halfHeight, baseZ];
+    const botRight = [halfSize, -halfHeight, baseZ];
+
+    const vertices = new Float32Array([
+      // Top face
+      ...topApex, ...topLeft, ...topRight,
+      // Bottom face
+      ...botApex, ...botRight, ...botLeft,
+      // North face (BASE edge)
+      ...topRight, ...topLeft, ...botLeft,
+      ...topRight, ...botLeft, ...botRight,
+      // Southwest face (LEFT edge)
+      ...topLeft, ...topApex, ...botApex,
+      ...topLeft, ...botApex, ...botLeft,
+      // Southeast face (RIGHT edge)
+      ...topApex, ...topRight, ...botRight,
+      ...topApex, ...botRight, ...botApex,
+    ]);
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geom.computeVertexNormals();
+    return geom;
+  }, []);
+
+  const edgeGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
+
+  return (
+    <>
+      <primitive object={geometry} attach="geometry" />
+      {isGhost ? (
+        <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
+      ) : (
+        <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+      )}
+      {!isGhost && (
+        <lineSegments>
+          <primitive object={edgeGeometry} attach="geometry" />
+          <meshBasicMaterial color={EDGE_COLOR} />
+        </lineSegments>
+      )}
+    </>
+  );
+};
+
+const CurvedStructure = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+  const shape = useMemo(() => createCurvedFoundationShape(), []);
+  const extrudeSettings = useMemo(() => ({ depth: WALL_HEIGHT, bevelEnabled: false }), []);
+
+  return (
+    <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -WALL_HEIGHT / 2, 0]}>
       <mesh>
         <extrudeGeometry args={[shape, extrudeSettings]} />
         {isGhost ? (
@@ -462,6 +560,12 @@ const BuildingMesh = ({
         return <TriangleFoundation {...geometryProps} />;
       case BuildingType.CURVED_FOUNDATION:
         return <CurvedFoundation {...geometryProps} />;
+      case BuildingType.SQUARE_STRUCTURE:
+        return <SquareStructure {...geometryProps} />;
+      case BuildingType.TRIANGLE_STRUCTURE:
+        return <TriangleStructure {...geometryProps} />;
+      case BuildingType.CURVED_STRUCTURE:
+        return <CurvedStructure {...geometryProps} />;
       case BuildingType.WALL:
         return <Wall {...geometryProps} />;
       case BuildingType.HALF_WALL:
