@@ -263,7 +263,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 };
 
 // Build version - increment dev suffix for local testing; bump release on deploy
-export const BUILD_VERSION = '1.9.0-dev.10';
+export const BUILD_VERSION = '1.9.0-dev.11';
 
 export const Instructions = () => (
   <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">
