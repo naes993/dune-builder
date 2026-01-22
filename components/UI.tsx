@@ -37,7 +37,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
     // Foundations
     { type: BuildingType.SQUARE_FOUNDATION, icon: Square, label: 'Square', category: 'foundation' },
     { type: BuildingType.TRIANGLE_FOUNDATION, icon: Triangle, label: 'Triangle', category: 'foundation' },
-    { type: BuildingType.TRIANGLE_FOUNDATION_2, icon: Triangle, label: 'Tri 2', category: 'foundation' },
+    { type: BuildingType.STAIRS_2, icon: TrendingUp, label: 'Stairs 2', category: 'foundation' },
     { type: BuildingType.CURVED_FOUNDATION, icon: Circle, label: 'Curved', category: 'foundation' },
     // Structures (raised platform foundations)
     { type: BuildingType.SQUARE_STRUCTURE, icon: Square, label: 'Sq Struct', category: 'structure' },
@@ -48,6 +48,8 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
     { type: BuildingType.HALF_WALL, icon: Minus, label: 'Half Wall', category: 'wall' },
     { type: BuildingType.WINDOW_WALL, icon: Scan, label: 'Window', category: 'wall' },
     { type: BuildingType.DOORWAY, icon: DoorOpen, label: 'Doorway', category: 'wall' },
+    { type: BuildingType.CURVED_WALL, icon: Circle, label: 'Curved', category: 'wall' },
+    { type: BuildingType.CURVED_HALF_WALL, icon: Circle, label: 'Crv Half', category: 'wall' },
     // Roofs
     { type: BuildingType.SQUARE_ROOF, icon: Tent, label: 'Roof (Sq)', category: 'roof' },
     { type: BuildingType.TRIANGLE_ROOF, icon: Tent, label: 'Roof (Tri)', category: 'roof' },
@@ -263,7 +265,7 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
 };
 
 // Build version - increment dev suffix for local testing; bump release on deploy
-export const BUILD_VERSION = '1.9.0-dev.11';
+export const BUILD_VERSION = '1.9.0-dev.27';
 
 export const Instructions = () => (
   <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">

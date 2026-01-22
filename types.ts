@@ -35,6 +35,8 @@ export enum BuildingType {
   HALF_WALL = 'HALF_WALL',
   WINDOW_WALL = 'WINDOW_WALL',
   DOORWAY = 'DOORWAY',
+  CURVED_WALL = 'CURVED_WALL',
+  CURVED_HALF_WALL = 'CURVED_HALF_WALL',
 
   // Roofs
   SQUARE_ROOF = 'SQUARE_ROOF',
@@ -42,6 +44,7 @@ export enum BuildingType {
 
   // Inclines
   STAIRS = 'STAIRS',
+  STAIRS_2 = 'STAIRS_2',
   RAMP = 'RAMP',
 }
 
@@ -120,11 +123,33 @@ export enum SocketType {
 // Each entry defines what socket types can connect to this socket type
 export const SOCKET_COMPATIBILITY: Record<SocketType, SocketType[]> = {
   [SocketType.FOUNDATION_EDGE]: [SocketType.FOUNDATION_EDGE],
-  [SocketType.FOUNDATION_TOP]: [SocketType.WALL_BOTTOM, SocketType.INCLINE_BOTTOM, SocketType.INCLINE_TOP],
-  [SocketType.WALL_BOTTOM]: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.INCLINE_TOP],
+  [SocketType.FOUNDATION_TOP]: [
+    SocketType.WALL_BOTTOM,
+    SocketType.INCLINE_BOTTOM,
+    SocketType.INCLINE_TOP,
+  ],
+  [SocketType.WALL_BOTTOM]: [
+    SocketType.FOUNDATION_TOP,
+    SocketType.WALL_TOP,
+    SocketType.INCLINE_TOP,
+  ],
   [SocketType.WALL_SIDE]: [SocketType.WALL_SIDE],
-  [SocketType.WALL_TOP]: [SocketType.WALL_BOTTOM, SocketType.ROOF_EDGE, SocketType.INCLINE_BOTTOM, SocketType.INCLINE_TOP],
+  [SocketType.WALL_TOP]: [
+    SocketType.WALL_BOTTOM,
+    SocketType.ROOF_EDGE,
+    SocketType.INCLINE_BOTTOM,
+    SocketType.INCLINE_TOP,
+  ],
   [SocketType.ROOF_EDGE]: [SocketType.ROOF_EDGE, SocketType.WALL_TOP],
-  [SocketType.INCLINE_BOTTOM]: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP],
-  [SocketType.INCLINE_TOP]: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.WALL_BOTTOM],
+  [SocketType.INCLINE_BOTTOM]: [
+    SocketType.FOUNDATION_TOP,
+    SocketType.WALL_TOP,
+    SocketType.INCLINE_TOP,
+  ],
+  [SocketType.INCLINE_TOP]: [
+    SocketType.FOUNDATION_TOP,
+    SocketType.WALL_TOP,
+    SocketType.WALL_BOTTOM,
+    SocketType.INCLINE_BOTTOM,
+  ],
 };

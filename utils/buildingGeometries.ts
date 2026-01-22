@@ -82,6 +82,25 @@ export function createCurvedFoundationShape(): THREE.Shape {
 }
 
 /**
+ * Creates a curved wall shape (quarter ring) with thickness.
+ */
+export function createCurvedWallShape(thickness: number): THREE.Shape {
+  const halfSize = UNIT_SIZE / 2;
+  const outerRadius = UNIT_SIZE;
+  const innerRadius = Math.max(UNIT_SIZE - thickness, UNIT_SIZE * 0.2);
+  const cx = -halfSize;
+  const cy = -halfSize;
+
+  const shape = new THREE.Shape();
+  shape.moveTo(cx + outerRadius, cy);
+  shape.absarc(cx, cy, outerRadius, 0, Math.PI / 2, false);
+  shape.lineTo(cx, cy + innerRadius);
+  shape.absarc(cx, cy, innerRadius, Math.PI / 2, 0, true);
+  shape.lineTo(cx + outerRadius, cy);
+  return shape;
+}
+
+/**
  * Creates the doorway wall shape with door hole cutout.
  */
 export function createDoorwayShape(): THREE.Shape {

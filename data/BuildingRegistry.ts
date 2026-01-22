@@ -210,6 +210,7 @@ const CURVED_FOUNDATION_DEF: BuildingDef = {
         // Top sockets
         { position: [0, FOUNDATION_TOP_Y, HALF_SIZE], normal: [0, 0, 1], socketType: SocketType.FOUNDATION_TOP },
         { position: [HALF_SIZE, FOUNDATION_TOP_Y, 0], normal: [1, 0, 0], socketType: SocketType.FOUNDATION_TOP },
+        { position: [UNIT_SIZE / Math.SQRT2 - HALF_SIZE, FOUNDATION_TOP_Y, UNIT_SIZE / Math.SQRT2 - HALF_SIZE], normal: [0.707, 0, 0.707], socketType: SocketType.FOUNDATION_TOP },
     ],
     edges: [
         // +Z edge
@@ -305,6 +306,7 @@ const CURVED_STRUCTURE_DEF: BuildingDef = {
         // Top sockets at structure height (straight edges only)
         { position: [0, STRUCTURE_TOP_Y, HALF_SIZE], normal: [0, 0, 1], socketType: SocketType.FOUNDATION_TOP },
         { position: [HALF_SIZE, STRUCTURE_TOP_Y, 0], normal: [1, 0, 0], socketType: SocketType.FOUNDATION_TOP },
+        { position: [UNIT_SIZE / Math.SQRT2 - HALF_SIZE, STRUCTURE_TOP_Y, UNIT_SIZE / Math.SQRT2 - HALF_SIZE], normal: [0.707, 0, 0.707], socketType: SocketType.FOUNDATION_TOP },
     ],
     edges: [
         // Edges at ground level (y=0) - straight edges only
@@ -394,6 +396,44 @@ const DOORWAY_DEF: BuildingDef = {
     compatibleWith: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.INCLINE_TOP],
 };
 
+const CURVED_WALL_DEF: BuildingDef = {
+    type: BuildingType.CURVED_WALL,
+    category: 'wall',
+    yOffset: WALL_HEIGHT / 2,
+    usesEdgeSockets: false,
+    rotationIncrement: Math.PI / 2,
+    sockets: (() => {
+        const curveMid = UNIT_SIZE / Math.SQRT2 - UNIT_SIZE / 2;
+        return [
+            { position: [curveMid, 0, curveMid], normal: [0.707, 0, 0.707], socketType: SocketType.WALL_BOTTOM },
+            { position: [curveMid, WALL_HEIGHT, curveMid], normal: [0.707, 0, 0.707], socketType: SocketType.WALL_TOP },
+            { position: [HALF_SIZE, WALL_HEIGHT / 2, -HALF_SIZE], normal: [1, 0, 0], socketType: SocketType.WALL_SIDE },
+            { position: [-HALF_SIZE, WALL_HEIGHT / 2, HALF_SIZE], normal: [0, 0, 1], socketType: SocketType.WALL_SIDE },
+        ];
+    })(),
+    edges: [],
+    compatibleWith: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.INCLINE_TOP, SocketType.WALL_SIDE],
+};
+
+const CURVED_HALF_WALL_DEF: BuildingDef = {
+    type: BuildingType.CURVED_HALF_WALL,
+    category: 'wall',
+    yOffset: HALF_WALL_HEIGHT / 2,
+    usesEdgeSockets: false,
+    rotationIncrement: Math.PI / 2,
+    sockets: (() => {
+        const curveMid = UNIT_SIZE / Math.SQRT2 - UNIT_SIZE / 2;
+        return [
+            { position: [curveMid, 0, curveMid], normal: [0.707, 0, 0.707], socketType: SocketType.WALL_BOTTOM },
+            { position: [curveMid, HALF_WALL_HEIGHT, curveMid], normal: [0.707, 0, 0.707], socketType: SocketType.WALL_TOP },
+            { position: [HALF_SIZE, HALF_WALL_HEIGHT / 2, -HALF_SIZE], normal: [1, 0, 0], socketType: SocketType.WALL_SIDE },
+            { position: [-HALF_SIZE, HALF_WALL_HEIGHT / 2, HALF_SIZE], normal: [0, 0, 1], socketType: SocketType.WALL_SIDE },
+        ];
+    })(),
+    edges: [],
+    compatibleWith: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.INCLINE_TOP, SocketType.WALL_SIDE],
+};
+
 const SQUARE_ROOF_DEF: BuildingDef = {
     type: BuildingType.SQUARE_ROOF,
     category: 'roof',
@@ -449,6 +489,20 @@ const STAIRS_DEF: BuildingDef = {
     compatibleWith: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP],
 };
 
+const STAIRS_2_DEF: BuildingDef = {
+    type: BuildingType.STAIRS_2,
+    category: 'incline',
+    yOffset: 0,
+    usesEdgeSockets: false,
+    rotationIncrement: Math.PI / 6,
+    sockets: [
+        { position: [0, 0, -HALF_SIZE], normal: [0, 0, -1], socketType: SocketType.INCLINE_BOTTOM },
+        { position: [0, WALL_HEIGHT, HALF_SIZE], normal: [0, 0, 1], socketType: SocketType.INCLINE_TOP },
+    ],
+    edges: [],
+    compatibleWith: [SocketType.FOUNDATION_TOP, SocketType.WALL_TOP, SocketType.INCLINE_BOTTOM, SocketType.INCLINE_TOP],
+};
+
 const RAMP_DEF: BuildingDef = {
     type: BuildingType.RAMP,
     category: 'incline',
@@ -486,9 +540,12 @@ export const BuildingRegistry: Record<BuildingType, BuildingDef> = {
     [BuildingType.HALF_WALL]: HALF_WALL_DEF,
     [BuildingType.WINDOW_WALL]: WINDOW_WALL_DEF,
     [BuildingType.DOORWAY]: DOORWAY_DEF,
+    [BuildingType.CURVED_WALL]: CURVED_WALL_DEF,
+    [BuildingType.CURVED_HALF_WALL]: CURVED_HALF_WALL_DEF,
     [BuildingType.SQUARE_ROOF]: SQUARE_ROOF_DEF,
     [BuildingType.TRIANGLE_ROOF]: TRIANGLE_ROOF_DEF,
     [BuildingType.STAIRS]: STAIRS_DEF,
+    [BuildingType.STAIRS_2]: STAIRS_2_DEF,
     [BuildingType.RAMP]: RAMP_DEF,
 };
 

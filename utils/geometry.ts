@@ -32,6 +32,12 @@ interface LocalEdgeSocket {
   edgeRole: EdgeRole;
 }
 
+export interface PreferredSnapTarget {
+  type: 'edge' | 'socket';
+  socketType?: SocketType;
+  position: THREE.Vector3;
+}
+
 /**
  * Calculates the local sockets (connection points) for a given building type.
  * Now includes socket types for smarter snapping.
@@ -162,6 +168,15 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     // Top sockets for walls along the straight edges
     sockets.push({ position: new THREE.Vector3(0, FOUNDATION_HEIGHT, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_TOP });
     sockets.push({ position: new THREE.Vector3(-halfSize, FOUNDATION_HEIGHT, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
+
+    // Curved edge top socket (midpoint of quarter arc)
+    const curveMid = UNIT_SIZE / Math.SQRT2 - halfSize;
+    const curveNormal = new THREE.Vector3(1, 0, 1).normalize();
+    sockets.push({
+      position: new THREE.Vector3(curveMid, FOUNDATION_HEIGHT, curveMid),
+      normal: curveNormal,
+      socketType: SocketType.FOUNDATION_TOP,
+    });
   }
 
   // ===================
@@ -221,6 +236,14 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     // Top sockets at WALL_HEIGHT
     sockets.push({ position: new THREE.Vector3(0, WALL_HEIGHT, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.FOUNDATION_TOP });
     sockets.push({ position: new THREE.Vector3(-halfSize, WALL_HEIGHT, 0), normal: new THREE.Vector3(-1, 0, 0), socketType: SocketType.FOUNDATION_TOP });
+
+    const curveMid = UNIT_SIZE / Math.SQRT2 - halfSize;
+    const curveNormal = new THREE.Vector3(1, 0, 1).normalize();
+    sockets.push({
+      position: new THREE.Vector3(curveMid, WALL_HEIGHT, curveMid),
+      normal: curveNormal,
+      socketType: SocketType.FOUNDATION_TOP,
+    });
   }
 
   // ===================
@@ -254,6 +277,19 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     sockets.push({ position: new THREE.Vector3(0, wallHeight, 0), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.WALL_TOP });
   }
 
+  else if (type === BuildingType.CURVED_WALL || type === BuildingType.CURVED_HALF_WALL) {
+    const wallHeight = (type === BuildingType.CURVED_HALF_WALL) ? HALF_WALL_HEIGHT : WALL_HEIGHT;
+    const curveMid = UNIT_SIZE / Math.SQRT2 - UNIT_SIZE / 2;
+    const diagNormal = new THREE.Vector3(1, 0, 1).normalize();
+
+    sockets.push({ position: new THREE.Vector3(curveMid, 0, curveMid), normal: diagNormal, socketType: SocketType.WALL_BOTTOM });
+    sockets.push({ position: new THREE.Vector3(curveMid, wallHeight, curveMid), normal: diagNormal, socketType: SocketType.WALL_TOP });
+
+    // End sockets for connecting straight walls.
+    sockets.push({ position: new THREE.Vector3(UNIT_SIZE / 2, wallHeight / 2, -UNIT_SIZE / 2), normal: new THREE.Vector3(1, 0, 0), socketType: SocketType.WALL_SIDE });
+    sockets.push({ position: new THREE.Vector3(-UNIT_SIZE / 2, wallHeight / 2, UNIT_SIZE / 2), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.WALL_SIDE });
+  }
+
   // ===================
   // ROOFS
   // ===================
@@ -277,6 +313,11 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   // ===================
   // INCLINES
   // ===================
+
+  else if (type === BuildingType.STAIRS_2) {
+    sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.INCLINE_BOTTOM });
+    sockets.push({ position: new THREE.Vector3(0, WALL_HEIGHT, halfSize), normal: new THREE.Vector3(0, 0, 1), socketType: SocketType.INCLINE_TOP });
+  }
 
   else if (type === BuildingType.STAIRS) {
     sockets.push({ position: new THREE.Vector3(0, 0, -halfSize), normal: new THREE.Vector3(0, 0, -1), socketType: SocketType.INCLINE_BOTTOM });
@@ -534,7 +575,7 @@ export const getLocalEdgeSockets = (type: BuildingType): LocalEdgeSocket[] => {
     ));
   }
 
-  else if (type === BuildingType.RAMP || type === BuildingType.STAIRS) {
+  else if (type === BuildingType.RAMP || type === BuildingType.STAIRS || type === BuildingType.STAIRS_2) {
     // Ramps/Stairs have two main edges for connection:
     // 1. Low Edge (Bottom) - connects to Foundation Edges or Wall Top Edges
     // 2. High Edge (Top) - connects to Wall Top Edges or upper floors
@@ -678,16 +719,31 @@ export const calculateSnap = (
   buildings: BuildingData[],
   activeType: BuildingType,
   currentRotationY: number,
-  debugCallback?: (debugInfo: any) => void
-): { position: THREE.Vector3, rotation: THREE.Euler, isValid: boolean, socketWorldY: number | null } => {
+  debugCallback?: (debugInfo: any) => void,
+  preferredTarget?: PreferredSnapTarget
+): {
+  position: THREE.Vector3;
+  rotation: THREE.Euler;
+  isValid: boolean;
+  socketWorldY: number | null;
+  snappedToSocket: boolean;
+  snapTarget?: PreferredSnapTarget;
+} => {
   if (!rayIntersectionPoint) {
-    return { position: new THREE.Vector3(), rotation: new THREE.Euler(), isValid: false, socketWorldY: null };
+    return {
+      position: new THREE.Vector3(),
+      rotation: new THREE.Euler(),
+      isValid: false,
+      socketWorldY: null,
+      snappedToSocket: false,
+    };
   }
 
   let finalPos = new THREE.Vector3(rayIntersectionPoint.x, 0, rayIntersectionPoint.z);
   let finalRot = new THREE.Euler(0, currentRotationY, 0);
   let snappedToSocket = false;
   let socketWorldY: number | null = null;
+  let snapTarget: PreferredSnapTarget | undefined;
 
   const debugCandidates: any[] = [];
   const SNAP_RADIUS = 3.5; // Slightly larger to catch edges
@@ -719,6 +775,7 @@ export const calculateSnap = (
       distToCursor: number;
       targetEdge: EdgeSocket;
       ghostEdge: LocalEdgeSocket;
+      score: number;
     }
 
     let bestCandidate: EdgeSnapCandidate | null = null;
@@ -757,6 +814,11 @@ export const calculateSnap = (
 
         // Score by distance from cursor to resulting piece center
         const distToCursor = transform.position.distanceTo(rayIntersectionPoint);
+        const isPreferred =
+          preferredTarget?.type === 'edge' &&
+          preferredTarget.socketType === targetEdge.socketType &&
+          preferredTarget.position.distanceTo(targetEdge.center) < 0.2;
+        const score = distToCursor - (isPreferred ? 0.8 : 0);
 
         debugCandidates.push({
           targetEdgeStart: [targetEdge.start.x, targetEdge.start.y, targetEdge.start.z],
@@ -768,13 +830,14 @@ export const calculateSnap = (
           distanceToCursor: distToCursor,
         });
 
-        if (!bestCandidate || distToCursor < bestCandidate.distToCursor) {
+        if (!bestCandidate || score < bestCandidate.score) {
           bestCandidate = {
             position: transform.position,
             rotation: transform.rotation,
             distToCursor,
             targetEdge,
             ghostEdge,
+            score,
           };
         }
       }
@@ -786,6 +849,11 @@ export const calculateSnap = (
       snappedToSocket = true;
       // For edge snapping, use the edge center's Y as the socket height
       socketWorldY = bestCandidate.targetEdge.center.y;
+      snapTarget = {
+        type: 'edge',
+        socketType: bestCandidate.targetEdge.socketType,
+        position: bestCandidate.targetEdge.center.clone(),
+      };
     }
   }
 
@@ -798,10 +866,31 @@ export const calculateSnap = (
     buildings.forEach(b => {
       allSockets.push(...getWorldSockets(b));
     });
+    const buildingById = new Map(buildings.map((b) => [b.id, b]));
 
     const compatibleTypes = getCompatibleSocketTypes(activeType);
     const compatibleSockets = allSockets.filter(s => compatibleTypes.includes(s.socketType));
     const ghostLocals = getLocalSockets(activeType);
+    const isCurvedWall =
+      activeType === BuildingType.CURVED_WALL ||
+      activeType === BuildingType.CURVED_HALF_WALL;
+    const isIncline =
+      activeType === BuildingType.STAIRS ||
+      activeType === BuildingType.STAIRS_2 ||
+      activeType === BuildingType.RAMP;
+    const preferInclineSockets =
+      isIncline &&
+      rayIntersectionPoint.y > 0.5 &&
+      compatibleSockets.some(
+        (s) =>
+          s.socketType === SocketType.INCLINE_TOP ||
+          s.socketType === SocketType.INCLINE_BOTTOM
+      );
+    const isDiagonalNormal = (normal: THREE.Vector3) => {
+      const ax = Math.abs(normal.x);
+      const az = Math.abs(normal.z);
+      return ax > 0.5 && az > 0.5 && Math.abs(ax - az) < 0.2;
+    };
 
     interface PointSnapCandidate {
       position: THREE.Vector3;
@@ -809,11 +898,46 @@ export const calculateSnap = (
       distToCursor: number;
       score: number;
       targetSocketY: number;
+      targetSocket: Socket;
     }
 
     let bestCandidate: PointSnapCandidate | null = null;
 
     for (const targetSocket of compatibleSockets) {
+      if (
+        preferInclineSockets &&
+        targetSocket.socketType !== SocketType.INCLINE_TOP &&
+        targetSocket.socketType !== SocketType.INCLINE_BOTTOM
+      ) {
+        continue;
+      }
+
+      if (isCurvedWall) {
+        const targetBuilding = buildingById.get(targetSocket.id);
+        if (targetBuilding) {
+          if (
+            targetBuilding.type === BuildingType.CURVED_WALL ||
+            targetBuilding.type === BuildingType.CURVED_HALF_WALL
+          ) {
+            if (
+              targetSocket.socketType !== SocketType.WALL_SIDE &&
+              targetSocket.socketType !== SocketType.WALL_TOP
+            ) {
+              continue;
+            }
+          } else if (targetBuilding.type === BuildingType.CURVED_FOUNDATION ||
+            targetBuilding.type === BuildingType.CURVED_STRUCTURE) {
+            if (targetSocket.socketType !== SocketType.FOUNDATION_TOP || !isDiagonalNormal(targetSocket.normal)) {
+              continue;
+            }
+          } else if (getBuildingDef(targetBuilding.type).category === 'wall') {
+            if (targetSocket.socketType !== SocketType.WALL_SIDE) {
+              continue;
+            }
+          }
+        }
+      }
+
       const distToSocket = targetSocket.position.distanceTo(rayIntersectionPoint);
       if (distToSocket > SNAP_RADIUS) continue;
 
@@ -826,6 +950,13 @@ export const calculateSnap = (
         const isWallStack =
           targetSocket.socketType === SocketType.WALL_TOP &&
           gSocket.socketType === SocketType.WALL_BOTTOM;
+        const targetBuilding = buildingById.get(targetSocket.id);
+        const isCurvedWallConnection =
+          isCurvedWall &&
+          targetSocket.socketType === SocketType.WALL_SIDE &&
+          targetBuilding &&
+          (targetBuilding.type === BuildingType.CURVED_WALL ||
+            targetBuilding.type === BuildingType.CURVED_HALF_WALL);
         let rotY: number;
         if (isWallStack) {
           // Align stacked walls to the existing wall's facing direction.
@@ -833,6 +964,13 @@ export const calculateSnap = (
           const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
           const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
           rotY = targetAngle - localAngle;
+        } else if (isCurvedWallConnection) {
+          const targetRotY = targetBuilding.rotation[1];
+          const xDir = new THREE.Vector3(Math.cos(targetRotY), 0, -Math.sin(targetRotY));
+          const zDir = new THREE.Vector3(Math.sin(targetRotY), 0, Math.cos(targetRotY));
+          const dotX = targetSocket.normal.dot(xDir);
+          const dotZ = targetSocket.normal.dot(zDir);
+          rotY = dotX >= dotZ ? targetRotY + Math.PI / 2 : targetRotY - Math.PI / 2;
         } else {
           const shouldAlignOutward =
             targetSocket.socketType === SocketType.FOUNDATION_TOP &&
@@ -872,6 +1010,20 @@ export const calculateSnap = (
         if (isWallLike && rayIntersectionPoint.y > 0.25 && targetSocket.socketType === SocketType.WALL_TOP) {
           score -= 1.0; // Prefer stacking when the cursor is above ground.
         }
+        const isPreferred =
+          preferredTarget?.type === 'socket' &&
+          preferredTarget.socketType === targetSocket.socketType &&
+          preferredTarget.position.distanceTo(targetSocket.position) < 0.2;
+        if (isPreferred) {
+          score -= 0.8;
+        }
+        if (
+          rayIntersectionPoint.y > 0.5 &&
+          (targetSocket.socketType === SocketType.INCLINE_TOP ||
+            targetSocket.socketType === SocketType.INCLINE_BOTTOM)
+        ) {
+          score -= 0.6; // Bias toward incline snapping when above ground.
+        }
 
         if (!bestCandidate || score < bestCandidate.score) {
           bestCandidate = {
@@ -880,6 +1032,7 @@ export const calculateSnap = (
             distToCursor,
             score,
             targetSocketY: targetSocket.position.y,
+            targetSocket,
           };
         }
       }
@@ -890,6 +1043,11 @@ export const calculateSnap = (
       finalRot = bestCandidate.rotation;
       snappedToSocket = true;
       socketWorldY = bestCandidate.targetSocketY;
+      snapTarget = {
+        type: 'socket',
+        socketType: bestCandidate.targetSocket.socketType,
+        position: bestCandidate.targetSocket.position.clone(),
+      };
     }
   }
 
@@ -987,5 +1145,5 @@ export const calculateSnap = (
     });
   }
 
-  return { position: finalPos, rotation: finalRot, isValid, socketWorldY };
+  return { position: finalPos, rotation: finalRot, isValid, socketWorldY, snappedToSocket, snapTarget };
 };

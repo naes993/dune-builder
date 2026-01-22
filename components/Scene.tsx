@@ -22,8 +22,10 @@ import {
   getCompatibleSocketTypes,
   usesEdgeSockets as utilUsesEdgeSockets,
 } from '../utils/geometry';
+import type { PreferredSnapTarget } from '../utils/geometry';
 import {
   createCurvedFoundationShape,
+  createCurvedWallShape,
   createDoorwayShape,
   getStairSteps,
   getRampParams,
@@ -36,7 +38,7 @@ import {
   WINDOW_WIDTH_RATIO,
 } from '../utils/buildingGeometries';
 import { useGameStore } from '../store/gameStore';
-import { getYOffsetFromRegistry } from '../data/BuildingRegistry';
+import { getRotationIncrement, getYOffsetFromRegistry } from '../data/BuildingRegistry';
 import { PALETTES } from '../data/palettes';
 
 // Edge color constant (not part of palette)
@@ -81,9 +83,12 @@ function usesGroupWrapper(type: BuildingType): boolean {
     BuildingType.CURVED_STRUCTURE,
     BuildingType.WINDOW_WALL,
     BuildingType.DOORWAY,
+    BuildingType.CURVED_WALL,
+    BuildingType.CURVED_HALF_WALL,
     BuildingType.SQUARE_ROOF,
     BuildingType.TRIANGLE_ROOF,
     BuildingType.STAIRS,
+    BuildingType.STAIRS_2,
     BuildingType.RAMP,
   ].includes(type);
 }
@@ -222,6 +227,31 @@ const CurvedFoundation = ({ wireframe, isGhost, isValid = true, materials, palet
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
           <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+        )}
+      </mesh>
+    </group>
+  );
+};
+
+const CurvedWall = ({
+  wireframe,
+  isGhost,
+  isValid = true,
+  materials,
+  palette,
+  height,
+}: GeometryProps & { height: number }) => {
+  const shape = useMemo(() => createCurvedWallShape(WALL_THICKNESS), []);
+  const extrudeSettings = useMemo(() => ({ depth: height, bevelEnabled: false }), [height]);
+
+  return (
+    <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -height / 2, 0]}>
+      <mesh>
+        <extrudeGeometry args={[shape, extrudeSettings]} />
+        {isGhost ? (
+          <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
+        ) : (
+          <meshStandardMaterial color={palette.wallExterior} roughness={0.9} wireframe={wireframe} />
         )}
       </mesh>
     </group>
@@ -581,11 +611,17 @@ const BuildingMesh = ({
         return <WindowWall {...geometryProps} />;
       case BuildingType.DOORWAY:
         return <Doorway {...geometryProps} />;
+      case BuildingType.CURVED_WALL:
+        return <CurvedWall {...geometryProps} height={WALL_HEIGHT} />;
+      case BuildingType.CURVED_HALF_WALL:
+        return <CurvedWall {...geometryProps} height={HALF_WALL_HEIGHT} />;
       case BuildingType.SQUARE_ROOF:
         return <SquareRoof {...geometryProps} />;
       case BuildingType.TRIANGLE_ROOF:
         return <TriangleRoof {...geometryProps} />;
       case BuildingType.STAIRS:
+        return <Stairs {...geometryProps} />;
+      case BuildingType.STAIRS_2:
         return <Stairs {...geometryProps} />;
       case BuildingType.RAMP:
         return <Ramp {...geometryProps} />;
@@ -852,6 +888,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
 
   const groupRef = useRef<THREE.Group>(null);
   const lastMousePos = useRef<[number, number]>([0, 0]);
+  const lastSnapTargetRef = useRef<PreferredSnapTarget | null>(null);
 
   // Reset vertical offset when changing building type
   useEffect(() => {
@@ -865,9 +902,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
 
       // Rotation
       if (key === 'r') {
-        const isTriangle = activeType === BuildingType.TRIANGLE_FOUNDATION ||
-          activeType === BuildingType.TRIANGLE_ROOF;
-        const rotIncrement = isTriangle ? Math.PI / 3 : Math.PI / 2;
+        const rotIncrement = getRotationIncrement(activeType);
         const newRot = manualRot + rotIncrement;
         setManualRot(newRot);
 
@@ -926,8 +961,29 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
         }
         : undefined;
 
-      const snap = calculateSnap(targetPoint, buildings, activeType, manualRot, debugCallback);
+      const distanceToLastTarget = lastSnapTargetRef.current
+        ? targetPoint.distanceTo(lastSnapTargetRef.current.position)
+        : Infinity;
+      const preferredTarget =
+        distanceToLastTarget < 4.5 ? lastSnapTargetRef.current : null;
+      if (!preferredTarget) {
+        lastSnapTargetRef.current = null;
+      }
+
+      const snap = calculateSnap(
+        targetPoint,
+        buildings,
+        activeType,
+        manualRot,
+        debugCallback,
+        preferredTarget || undefined
+      );
       if (snap) {
+        if (snap.snappedToSocket && snap.snapTarget) {
+          lastSnapTargetRef.current = snap.snapTarget;
+        } else if (!snap.snappedToSocket) {
+          lastSnapTargetRef.current = null;
+        }
         // Calculate base Y position
         // If autoHeight is ON and we snapped to a socket, use socket's world Y
         // Otherwise use snap.position.y (which is 0 for grid fallback)
