@@ -73,27 +73,27 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
     //   - Edge V1→V2: midpoint at 270°, normal points 270° (down, -Z)
     //   - Edge V2→V0: midpoint at 30°, normal points 30° (upper-right, NE-ish)
 
-    const edgeAngles = [
-      (5 * Math.PI) / 6,  // 150° - upper-left edge
-      (3 * Math.PI) / 2,  // 270° - bottom edge (points down toward -Z)
-      Math.PI / 6,        // 30°  - upper-right edge
+    const apexZ = -TRIANGLE_RADIUS;
+    const baseZ = TRIANGLE_APOTHEM;
+    const vApex = new THREE.Vector3(0, 0, apexZ);
+    const vLeft = new THREE.Vector3(-halfSize, 0, baseZ);
+    const vRight = new THREE.Vector3(halfSize, 0, baseZ);
+    const edges: Array<[THREE.Vector3, THREE.Vector3]> = [
+      [vLeft, vRight],
+      [vRight, vApex],
+      [vApex, vLeft],
     ];
 
-    for (const angle of edgeAngles) {
-      // Normal vector pointing outward from edge
-      const normal = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+    for (const [start, end] of edges) {
+      const position = start.clone().add(end).multiplyScalar(0.5);
+      const normal = new THREE.Vector3(position.x, 0, position.z).normalize();
 
-      // Edge midpoint position at TRIANGLE_APOTHEM distance from center
-      const position = normal.clone().multiplyScalar(TRIANGLE_APOTHEM);
-
-      // Foundation edge socket (for connecting to other foundations)
       sockets.push({
         position: position.clone(),
         normal: normal.clone(),
         socketType: SocketType.FOUNDATION_EDGE
       });
 
-      // Foundation top socket (for walls to snap onto)
       sockets.push({
         position: new THREE.Vector3(position.x, FOUNDATION_HEIGHT, position.z),
         normal: normal.clone(),
@@ -184,24 +184,27 @@ export const getLocalSockets = (type: BuildingType): LocalSocket[] => {
   }
 
   else if (type === BuildingType.TRIANGLE_STRUCTURE) {
-    const edgeAngles = [
-      (5 * Math.PI) / 6,  // 150° - upper-left edge
-      (3 * Math.PI) / 2,  // 270° - bottom edge
-      Math.PI / 6,        // 30°  - upper-right edge
+    const apexZ = -TRIANGLE_RADIUS;
+    const baseZ = TRIANGLE_APOTHEM;
+    const vApex = new THREE.Vector3(0, 0, apexZ);
+    const vLeft = new THREE.Vector3(-halfSize, 0, baseZ);
+    const vRight = new THREE.Vector3(halfSize, 0, baseZ);
+    const edges: Array<[THREE.Vector3, THREE.Vector3]> = [
+      [vLeft, vRight],
+      [vRight, vApex],
+      [vApex, vLeft],
     ];
 
-    for (const angle of edgeAngles) {
-      const normal = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
-      const position = normal.clone().multiplyScalar(TRIANGLE_APOTHEM);
+    for (const [start, end] of edges) {
+      const position = start.clone().add(end).multiplyScalar(0.5);
+      const normal = new THREE.Vector3(position.x, 0, position.z).normalize();
 
-      // Edge socket at ground level
       sockets.push({
         position: position.clone(),
         normal: normal.clone(),
         socketType: SocketType.FOUNDATION_EDGE
       });
 
-      // Top socket at WALL_HEIGHT for walls
       sockets.push({
         position: new THREE.Vector3(position.x, WALL_HEIGHT, position.z),
         normal: normal.clone(),
@@ -825,10 +828,19 @@ export const calculateSnap = (
           gSocket.socketType === SocketType.WALL_BOTTOM;
         let rotY: number;
         if (isWallStack) {
-          // Allow stacking walls by honoring the user's current rotation.
-          rotY = currentRotationY;
+          // Align stacked walls to the existing wall's facing direction.
+          const targetNormal = targetSocket.normal.clone();
+          const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
+          const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
+          rotY = targetAngle - localAngle;
         } else {
-          const targetNormal = targetSocket.normal.clone().negate();
+          const shouldAlignOutward =
+            targetSocket.socketType === SocketType.FOUNDATION_TOP &&
+            gSocket.socketType === SocketType.WALL_BOTTOM;
+          // Align wall outward on foundation edges; keep opposite-facing for other snaps.
+          const targetNormal = shouldAlignOutward
+            ? targetSocket.normal.clone()
+            : targetSocket.normal.clone().negate();
           const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
           const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
           rotY = targetAngle - localAngle;
