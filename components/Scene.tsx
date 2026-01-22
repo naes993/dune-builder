@@ -14,7 +14,14 @@ import {
   WALL_HEIGHT,
   HALF_WALL_HEIGHT,
 } from '../types';
-import { calculateSnap, getWorldSockets, getLocalSockets, getWorldEdgeSockets } from '../utils/geometry';
+import {
+  calculateSnap,
+  getWorldSockets,
+  getLocalSockets,
+  getWorldEdgeSockets,
+  getCompatibleSocketTypes,
+  usesEdgeSockets as utilUsesEdgeSockets,
+} from '../utils/geometry';
 import {
   createCurvedFoundationShape,
   createDoorwayShape,
@@ -597,6 +604,7 @@ const BuildingMesh = ({
         position={[position[0], position[1] + offsetY, position[2]]}
         rotation={rotation}
         userData={{ isBuilding: true, id }}
+        raycast={isGhost ? () => null : undefined} // Revert if you want ghost previews to be raycast targets.
       >
         {renderGeometry()}
       </group>
@@ -622,14 +630,6 @@ const BuildingMesh = ({
 
 const SocketDebugVisualizer = () => {
   const { buildings } = useGameStore();
-  // Check if building type uses edge sockets (foundations)
-  const usesEdgeSockets = (type: BuildingType): boolean => {
-    return [
-      BuildingType.SQUARE_FOUNDATION,
-      BuildingType.TRIANGLE_FOUNDATION,
-      BuildingType.CURVED_FOUNDATION
-    ].includes(type);
-  };
 
   // Edge role colors: BASE=red, RIGHT=blue, LEFT=gray, SIDE=gold
   const getEdgeColor = (edgeRole: EdgeRole): string => {
@@ -646,7 +646,12 @@ const SocketDebugVisualizer = () => {
     <group>
       {buildings.map((building) => {
         // FOUNDATIONS: Show 3 points per edge (start, center, end)
-        if (usesEdgeSockets(building.type)) {
+        const isWallLike =
+          building.type === BuildingType.WALL ||
+          building.type === BuildingType.HALF_WALL ||
+          building.type === BuildingType.WINDOW_WALL ||
+          building.type === BuildingType.DOORWAY;
+        if (utilUsesEdgeSockets(building.type) && !isWallLike) { // Revert to hard-coded list if you want to limit debug output.
           const edges = getWorldEdgeSockets(building);
           return (
             <group key={`edges-${building.id}`}>
@@ -760,8 +765,6 @@ const SocketDebugVisualizer = () => {
 // =============================================================================
 // Snap Collider System
 // =============================================================================
-
-import { getCompatibleSocketTypes, usesEdgeSockets as utilUsesEdgeSockets } from '../utils/geometry';
 
 /**
  * Invisible colliders placed at socket locations to catch raycasts.

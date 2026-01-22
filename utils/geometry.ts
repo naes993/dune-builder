@@ -689,10 +689,16 @@ export const calculateSnap = (
   const debugCandidates: any[] = [];
   const SNAP_RADIUS = 3.5; // Slightly larger to catch edges
 
+  const isWallLike =
+    activeType === BuildingType.WALL ||
+    activeType === BuildingType.HALF_WALL ||
+    activeType === BuildingType.WINDOW_WALL ||
+    activeType === BuildingType.DOORWAY;
+
   // ==========================================================================
   // FOUNDATION SNAPPING - Edge-based system
   // ==========================================================================
-  if (usesEdgeSockets(activeType)) {
+  if (usesEdgeSockets(activeType) && !isWallLike) {
     // Collect all world edge sockets from existing foundations
     const allEdges: EdgeSocket[] = [];
     buildings.forEach(b => {
@@ -813,12 +819,20 @@ export const calculateSnap = (
 
       if (matchingGhostSockets.length === 0) continue;
 
-      const targetNormal = targetSocket.normal.clone().negate();
-      const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
-
       for (const gSocket of matchingGhostSockets) {
-        const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
-        const rotY = targetAngle - localAngle;
+        const isWallStack =
+          targetSocket.socketType === SocketType.WALL_TOP &&
+          gSocket.socketType === SocketType.WALL_BOTTOM;
+        let rotY: number;
+        if (isWallStack) {
+          // Allow stacking walls by honoring the user's current rotation.
+          rotY = currentRotationY;
+        } else {
+          const targetNormal = targetSocket.normal.clone().negate();
+          const targetAngle = Math.atan2(targetNormal.x, targetNormal.z);
+          const localAngle = Math.atan2(gSocket.normal.x, gSocket.normal.z);
+          rotY = targetAngle - localAngle;
+        }
 
         const candidateRot = new THREE.Euler(0, rotY, 0);
         const rotatedLocalPos = gSocket.position.clone().applyEuler(candidateRot);
@@ -838,11 +852,14 @@ export const calculateSnap = (
         // Small tolerance for float comparison, treat 2PI as 0
         const isMatch = rotDiff < 0.1 || Math.abs(rotDiff - 2 * Math.PI) < 0.1;
 
-        if (!isMatch) {
+        if (!isWallStack && !isMatch) {
           rotationPenalty = 0.5; // Penalty equivalent to 0.5 units of distance
         }
 
-        const score = distToCursor + rotationPenalty;
+        let score = distToCursor + rotationPenalty;
+        if (isWallLike && rayIntersectionPoint.y > 0.25 && targetSocket.socketType === SocketType.WALL_TOP) {
+          score -= 1.0; // Prefer stacking when the cursor is above ground.
+        }
 
         if (!bestCandidate || score < bestCandidate.score) {
           bestCandidate = {
@@ -883,14 +900,15 @@ export const calculateSnap = (
   // ==========================================================================
   // VALIDATION
   // ==========================================================================
+  const isFoundationLike = getBuildingDef(activeType).category === 'foundation';
   let isValid = true;
 
   // Global collision check (even if snapped)
   // Prevent foundations from overlapping other foundations
-  if (usesEdgeSockets(activeType)) {
+  if (usesEdgeSockets(activeType) && isFoundationLike) {
     for (const b of buildings) {
-      // Only check against other foundations
-      if (!usesEdgeSockets(b.type)) continue;
+      // Only check against other foundation-like pieces
+      if (!usesEdgeSockets(b.type) || getBuildingDef(b.type).category !== 'foundation') continue;
 
       const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
       const dist = bPos.distanceTo(finalPos);
@@ -915,11 +933,11 @@ export const calculateSnap = (
       const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
       const dist = bPos.distanceTo(finalPos);
 
-      if (isFoundation && usesEdgeSockets(b.type)) {
-        if (dist < 2.0) {
-          isValid = false;
-          break;
-        }
+    if (isFoundation && usesEdgeSockets(b.type) && getBuildingDef(b.type).category === 'foundation') {
+      if (dist < 2.0) {
+        isValid = false;
+        break;
+      }
       } else if (dist < 0.2) {
         isValid = false;
         break;
@@ -930,6 +948,18 @@ export const calculateSnap = (
   // Roofs require snapping (use category from registry)
   if (!snappedToSocket && getBuildingDef(activeType).category === 'roof') {
     isValid = false;
+  }
+
+  // Prevent exact overlap for non-foundation stacking and snapped placements.
+  if (isValid) {
+    for (const b of buildings) {
+      const bPos = new THREE.Vector3(b.position[0], b.position[1], b.position[2]);
+      const dist = bPos.distanceTo(finalPos);
+      if (dist < 0.2) {
+        isValid = false;
+        break;
+      }
+    }
   }
 
   // Debug callback
