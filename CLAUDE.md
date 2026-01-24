@@ -160,3 +160,47 @@ All curved pieces maintain the same grid spacing as standard squares/triangles.
 - Socket positions/normals: `getLocalSockets()` in `geometry.ts`
 - Compatibility rules: `SOCKET_COMPATIBILITY` in `types.ts`
 - Snap radius/grid: `calculateSnap()` in `geometry.ts`
+
+
+## Deployment & Build Process
+
+### Production Deployment
+
+The app is deployed on **Cloudflare Pages** with automatic builds from the GitHub repository.
+
+- **Live URL**: https://dune-builder.pages.dev/
+- - **Deployment**: Automatic on push to `main` branch
+  - - **Build command**: `npm run build`
+    - - **Build output**: `dist/` directory
+     
+      - ### Important: No Import Maps
+     
+      - As of January 2026, this project migrated from browser-based import maps (aistudiocdn.com) to a standard Vite bundler setup.
+     
+      - **What this means:**
+      - - All dependencies are now managed through npm (`package.json`)
+        - - Imports in TypeScript files use standard npm package names (e.g., `@react-three/fiber`)
+          - - Vite bundles everything during `npm run build`
+            - - The built assets are deployed to Cloudflare Pages
+              - - No manual CSS or import map configuration needed in `index.html`
+               
+                - ### Local Development
+               
+                - ```bash
+                  npm install
+                  npm run dev
+                  ```
+
+                  ### Production Build
+
+                  ```bash
+                  npm run build
+                  # Output goes to dist/ directory
+                  ```
+
+                  The build process automatically:
+                  - Compiles TypeScript to JavaScript
+                  - - Bundles all React Three Fiber and Three.js dependencies
+                    - - Processes and optimizes CSS (via Tailwind CDN in HTML)
+                      - - Generates hashed filenames for cache busting
+                        - - Creates a production-ready `dist/` directory
