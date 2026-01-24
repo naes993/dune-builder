@@ -196,7 +196,37 @@ The app is deployed on **Cloudflare Pages** with automatic builds from the GitHu
                   ```bash
                   npm run build
                   # Output goes to dist/ directory
-                  ```
+
+                  
+
+
+
+
+
+
+
+                  ### Critical Configuration Notes (Updated Jan 23, 2026)
+
+                  **Entry Point:**
+                  - Main file is `/index.tsx` in the ROOT directory
+                  - There is NO `src/` folder in this project
+                  - `index.html` must reference: `<script type="module" src="/index.tsx"></script>`
+                  - **Common mistake**: Using `/src/main.tsx` will cause build failures
+
+                  **Vite Configuration:**
+                  - `vite.config.ts` must have `base: '/'` for Cloudflare Pages
+                  - DO NOT use `base: '/dune-builder/'` (that's for GitHub Pages only)
+                  - This is why assets load from root path instead of subdirectory
+
+                  **Troubleshooting Build Failures:**
+                  - Error: "Failed to resolve /src/main.tsx" → Check that `index.html` points to `/index.tsx`
+                  - Black screen on Cloudflare deployment → Verify `vite.config.ts` has `base: '/'`
+                  - Assets 404 errors → Confirm base path is set correctly for deployment target
+
+                  **Deployment History:**
+                  - GitHub Pages deployment was abandoned (requires base: '/dune-builder/')
+                  - Cloudflare Pages is now the primary deployment (requires base: '/')
+                  - Both fixes applied Jan 23, 2026 to enable Cloudflare deployment```
 
                   The build process automatically:
                   - Compiles TypeScript to JavaScript
