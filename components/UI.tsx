@@ -1,6 +1,7 @@
 import React from 'react';
 import { BuildingType, BuildingSet } from '../types';
 import { Square, Triangle, BrickWall, Scan, Tent, TrendingUp, Grid3X3, Save, FolderOpen, Circle, DoorOpen, Minus, Download, Upload, Bug, Video, VideoOff, FilmIcon, Compass, ArrowUpFromLine, ArrowUpDown, Palette } from 'lucide-react';
+import { BUILD_VERSION } from '../data/version';
 
 interface UIProps {
   activeType: BuildingType;
@@ -264,18 +265,17 @@ const UI = ({ activeType, setActiveType, onClear, onSave, onLoad, onExport, onIm
   );
 };
 
-// Build version - increment dev suffix for local testing; bump release on deploy
-export const BUILD_VERSION = '1.9.0-dev.27';
-
 export const Instructions = () => (
   <div className="absolute top-4 left-4 bg-dune-ui/80 p-4 rounded-lg text-white/80 font-mono text-sm border-l-2 border-dune-gold max-w-xs pointer-events-auto">
     <h3 className="text-dune-gold font-bold mb-2 uppercase">Protocol</h3>
     <ul className="space-y-1 list-disc pl-4">
       <li><strong className="text-white">Left Click</strong>: Place Structure</li>
-      <li><strong className="text-white">Shift + Click</strong>: Demolish</li>
+      <li><strong className="text-white">Cmd/Ctrl + Click</strong>: Demolish</li>
+      <li><strong className="text-white">Drag</strong>: Pan Camera</li>
+      <li><strong className="text-white">Shift + Drag</strong>: Orbit Camera</li>
+      <li><strong className="text-white">V / A</strong>: Toggle Select Mode</li>
       <li><strong className="text-white">R</strong>: Rotate Preview</li>
       <li><strong className="text-white">Arrow Up/Down</strong>: Stack Height</li>
-      <li><strong className="text-white">Drag</strong>: Orbit Camera</li>
     </ul>
     <div className="mt-3 pt-2 border-t border-white/20 text-[10px] text-white/50">
       Build: {BUILD_VERSION}

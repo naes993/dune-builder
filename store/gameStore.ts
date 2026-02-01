@@ -8,6 +8,7 @@ interface GameState {
     showWireframe: boolean;
     showSocketDebug: boolean;
     is2DMode: boolean;
+    interactionMode: 'build' | 'select';
     autoHeight: boolean;      // Auto-snap to socket height when snapping
     manualHeight: boolean;    // Allow arrow key height adjustment
     activeBuildingSet: BuildingSet;  // Current building style/color palette
@@ -20,6 +21,7 @@ interface GameState {
     toggleWireframe: () => void;
     toggleSocketDebug: () => void;
     toggle2DMode: () => void;
+    toggleInteractionMode: () => void;
     toggleAutoHeight: () => void;
     toggleManualHeight: () => void;
     setActiveBuildingSet: (set: BuildingSet) => void;
@@ -32,6 +34,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     showWireframe: false,
     showSocketDebug: false,
     is2DMode: false,
+    interactionMode: 'build',
     autoHeight: true,
     manualHeight: false,
     activeBuildingSet: BuildingSet.DUNE_MAN,
@@ -53,6 +56,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     toggleWireframe: () => set((state) => ({ showWireframe: !state.showWireframe })),
     toggleSocketDebug: () => set((state) => ({ showSocketDebug: !state.showSocketDebug })),
     toggle2DMode: () => set((state) => ({ is2DMode: !state.is2DMode })),
+    toggleInteractionMode: () => set((state) => ({
+        interactionMode: state.interactionMode === 'build' ? 'select' : 'build'
+    })),
     toggleAutoHeight: () => set((state) => ({
         autoHeight: !state.autoHeight,
         manualHeight: state.autoHeight ? true : false  // Turn on manual when turning off auto

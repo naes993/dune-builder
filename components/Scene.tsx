@@ -62,6 +62,7 @@ interface BuildingMeshProps {
   isValid?: boolean;
   id?: string;
   wireframe?: boolean;
+  highlight?: boolean;
   materials: MaterialsType;
   palette: BuildingPalette;
 }
@@ -100,6 +101,22 @@ function getGhostMaterial(materials: MaterialsType, isValid: boolean): THREE.Mes
   return isValid ? materials.ghost : materials.error;
 }
 
+function getHighlightProps(highlight?: boolean) {
+  return highlight
+    ? { emissive: '#FFD54A', emissiveIntensity: 0.6 }
+    : {};
+}
+
+function getBuildingRootFromObject(object: THREE.Object3D | null): THREE.Object3D | null {
+  let current: THREE.Object3D | null = object;
+  while (current) {
+    const data = current.userData as { buildingId?: string; id?: string; isBuilding?: boolean } | undefined;
+    if (data?.buildingId || data?.isBuilding) return current;
+    current = current.parent;
+  }
+  return null;
+}
+
 // =============================================================================
 // Individual Building Geometry Components
 // =============================================================================
@@ -108,17 +125,23 @@ interface GeometryProps {
   wireframe?: boolean;
   isGhost?: boolean;
   isValid?: boolean;
+  highlight?: boolean;
   materials: MaterialsType;
   palette: BuildingPalette;
 }
 
-const SquareFoundation = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => (
+const SquareFoundation = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => (
   <>
     <boxGeometry args={[UNIT_SIZE, FOUNDATION_HEIGHT, UNIT_SIZE]} />
     {isGhost ? (
       <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
     ) : (
-      <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+      <meshStandardMaterial
+        color={palette.foundation}
+        roughness={0.8}
+        wireframe={wireframe}
+        {...getHighlightProps(highlight)}
+      />
     )}
     {!isGhost && (
       <lineSegments>
@@ -129,7 +152,7 @@ const SquareFoundation = ({ wireframe, isGhost, isValid = true, materials, palet
   </>
 );
 
-const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const TriangleFoundation = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   // Custom triangle geometry with FLAT BASE at BOTTOM of screen, apex at TOP
   //
   // In 2D mode, camera looks down from Y+. On screen:
@@ -203,7 +226,12 @@ const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials, pal
       {isGhost ? (
         <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
       ) : (
-        <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+        <meshStandardMaterial
+          color={palette.foundation}
+          roughness={0.8}
+          wireframe={wireframe}
+          {...getHighlightProps(highlight)}
+        />
       )}
       {!isGhost && (
         <lineSegments>
@@ -215,7 +243,7 @@ const TriangleFoundation = ({ wireframe, isGhost, isValid = true, materials, pal
   );
 };
 
-const CurvedFoundation = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const CurvedFoundation = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   const shape = useMemo(() => createCurvedFoundationShape(), []);
   const extrudeSettings = useMemo(() => ({ depth: FOUNDATION_HEIGHT, bevelEnabled: false }), []);
 
@@ -226,7 +254,12 @@ const CurvedFoundation = ({ wireframe, isGhost, isValid = true, materials, palet
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+          <meshStandardMaterial
+            color={palette.foundation}
+            roughness={0.8}
+            wireframe={wireframe}
+            {...getHighlightProps(highlight)}
+          />
         )}
       </mesh>
     </group>
@@ -237,6 +270,7 @@ const CurvedWall = ({
   wireframe,
   isGhost,
   isValid = true,
+  highlight,
   materials,
   palette,
   height,
@@ -251,7 +285,12 @@ const CurvedWall = ({
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={palette.wallExterior} roughness={0.9} wireframe={wireframe} />
+          <meshStandardMaterial
+            color={palette.wallExterior}
+            roughness={0.9}
+            wireframe={wireframe}
+            {...getHighlightProps(highlight)}
+          />
         )}
       </mesh>
     </group>
@@ -262,13 +301,18 @@ const CurvedWall = ({
 // Structure Components (Raised Platform Foundations - WALL_HEIGHT tall)
 // =============================================================================
 
-const SquareStructure = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => (
+const SquareStructure = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => (
   <>
     <boxGeometry args={[UNIT_SIZE, WALL_HEIGHT, UNIT_SIZE]} />
     {isGhost ? (
       <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
     ) : (
-      <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+      <meshStandardMaterial
+        color={palette.foundation}
+        roughness={0.8}
+        wireframe={wireframe}
+        {...getHighlightProps(highlight)}
+      />
     )}
     {!isGhost && (
       <lineSegments>
@@ -279,7 +323,7 @@ const SquareStructure = ({ wireframe, isGhost, isValid = true, materials, palett
   </>
 );
 
-const TriangleStructure = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const TriangleStructure = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   // Same triangle geometry as TriangleFoundation but with WALL_HEIGHT instead of FOUNDATION_HEIGHT
   const geometry = useMemo(() => {
     const halfSize = UNIT_SIZE / 2;
@@ -325,7 +369,12 @@ const TriangleStructure = ({ wireframe, isGhost, isValid = true, materials, pale
       {isGhost ? (
         <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
       ) : (
-        <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+        <meshStandardMaterial
+          color={palette.foundation}
+          roughness={0.8}
+          wireframe={wireframe}
+          {...getHighlightProps(highlight)}
+        />
       )}
       {!isGhost && (
         <lineSegments>
@@ -337,7 +386,7 @@ const TriangleStructure = ({ wireframe, isGhost, isValid = true, materials, pale
   );
 };
 
-const CurvedStructure = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const CurvedStructure = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   const shape = useMemo(() => createCurvedFoundationShape(), []);
   const extrudeSettings = useMemo(() => ({ depth: WALL_HEIGHT, bevelEnabled: false }), []);
 
@@ -348,26 +397,33 @@ const CurvedStructure = ({ wireframe, isGhost, isValid = true, materials, palett
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={palette.foundation} roughness={0.8} wireframe={wireframe} />
+          <meshStandardMaterial
+            color={palette.foundation}
+            roughness={0.8}
+            wireframe={wireframe}
+            {...getHighlightProps(highlight)}
+          />
         )}
       </mesh>
     </group>
   );
 };
 
-const Wall = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const Wall = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   // Create materials array for 6 faces to support different interior/exterior colors
   // Box geometry faces order: +X, -X, +Y, -Y, +Z (front/exterior), -Z (back/interior)
   const wallMaterials = useMemo(() => {
+    const emissive = highlight ? new THREE.Color('#FFD54A') : undefined;
+    const emissiveIntensity = highlight ? 0.6 : 0;
     return [
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +X
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // -X
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +Y (top)
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // -Y (bottom)
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +Z (front/exterior)
-      new THREE.MeshStandardMaterial({ color: palette.wallInterior, roughness: 0.9 }), // -Z (back/interior)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // +X
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // -X
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // +Y (top)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // -Y (bottom)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // +Z (front/exterior)
+      new THREE.MeshStandardMaterial({ color: palette.wallInterior, roughness: 0.9, emissive, emissiveIntensity }), // -Z (back/interior)
     ];
-  }, [palette.wallExterior, palette.wallInterior]);
+  }, [palette.wallExterior, palette.wallInterior, highlight]);
 
   // Ghost materials show interior/exterior distinction with transparency
   // Green tint for valid, red tint for invalid placement
@@ -391,7 +447,12 @@ const Wall = ({ wireframe, isGhost, isValid = true, materials, palette }: Geomet
       {isGhost ? (
         <primitive object={ghostMaterials} attach="material" />
       ) : wireframe ? (
-        <meshStandardMaterial color={palette.wallExterior} roughness={0.9} wireframe />
+        <meshStandardMaterial
+          color={palette.wallExterior}
+          roughness={0.9}
+          wireframe
+          {...getHighlightProps(highlight)}
+        />
       ) : (
         <primitive object={wallMaterials} attach="material" />
       )}
@@ -399,18 +460,20 @@ const Wall = ({ wireframe, isGhost, isValid = true, materials, palette }: Geomet
   );
 };
 
-const HalfWall = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const HalfWall = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   // Same dual-sided materials as Wall
   const wallMaterials = useMemo(() => {
+    const emissive = highlight ? new THREE.Color('#FFD54A') : undefined;
+    const emissiveIntensity = highlight ? 0.6 : 0;
     return [
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +X
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // -X
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +Y (top)
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // -Y (bottom)
-      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9 }), // +Z (front/exterior)
-      new THREE.MeshStandardMaterial({ color: palette.wallInterior, roughness: 0.9 }), // -Z (back/interior)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // +X
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // -X
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // +Y (top)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // -Y (bottom)
+      new THREE.MeshStandardMaterial({ color: palette.wallExterior, roughness: 0.9, emissive, emissiveIntensity }), // +Z (front/exterior)
+      new THREE.MeshStandardMaterial({ color: palette.wallInterior, roughness: 0.9, emissive, emissiveIntensity }), // -Z (back/interior)
     ];
-  }, [palette.wallExterior, palette.wallInterior]);
+  }, [palette.wallExterior, palette.wallInterior, highlight]);
 
   // Ghost materials show interior/exterior distinction with transparency
   const ghostMaterials = useMemo(() => {
@@ -433,7 +496,12 @@ const HalfWall = ({ wireframe, isGhost, isValid = true, materials, palette }: Ge
       {isGhost ? (
         <primitive object={ghostMaterials} attach="material" />
       ) : wireframe ? (
-        <meshStandardMaterial color={palette.wallExterior} roughness={0.9} wireframe />
+        <meshStandardMaterial
+          color={palette.wallExterior}
+          roughness={0.9}
+          wireframe
+          {...getHighlightProps(highlight)}
+        />
       ) : (
         <primitive object={wallMaterials} attach="material" />
       )}
@@ -441,26 +509,33 @@ const HalfWall = ({ wireframe, isGhost, isValid = true, materials, palette }: Ge
   );
 };
 
-const WindowWall = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => (
+const WindowWall = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => (
   <group>
     <mesh position={[0, 0, 0]}>
       <boxGeometry args={[UNIT_SIZE, WALL_HEIGHT, WALL_THICKNESS]} />
       {isGhost ? (
         <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
       ) : (
-        <meshStandardMaterial color={palette.windowWall} roughness={0.9} transparent opacity={0.9} wireframe={wireframe} />
+        <meshStandardMaterial
+          color={palette.windowWall}
+          roughness={0.9}
+          transparent
+          opacity={0.9}
+          wireframe={wireframe}
+          {...getHighlightProps(highlight)}
+        />
       )}
     </mesh>
     {!wireframe && !isGhost && (
       <mesh position={[0, 0, 0.05]}>
         <boxGeometry args={[UNIT_SIZE * WINDOW_WIDTH_RATIO, WINDOW_HEIGHT, WALL_THICKNESS + 0.02]} />
-        <meshStandardMaterial color={palette.windowGlass} />
+        <meshStandardMaterial color={palette.windowGlass} {...getHighlightProps(highlight)} />
       </mesh>
     )}
   </group>
 );
 
-const Doorway = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const Doorway = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   const shape = useMemo(() => createDoorwayShape(), []);
   const extrudeSettings = useMemo(() => ({ depth: WALL_THICKNESS, bevelEnabled: false }), []);
 
@@ -471,14 +546,19 @@ const Doorway = ({ wireframe, isGhost, isValid = true, materials, palette }: Geo
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={palette.wallExterior} roughness={0.9} wireframe={wireframe} />
+          <meshStandardMaterial
+            color={palette.wallExterior}
+            roughness={0.9}
+            wireframe={wireframe}
+            {...getHighlightProps(highlight)}
+          />
         )}
       </mesh>
     </group>
   );
 };
 
-const SquareRoof = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const SquareRoof = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   const roofAngle = useMemo(() => -Math.atan(ROOF_HEIGHT / UNIT_SIZE), []);
   const roofLength = useMemo(() => Math.sqrt(UNIT_SIZE * UNIT_SIZE + ROOF_HEIGHT * ROOF_HEIGHT) + 1, []);
 
@@ -489,18 +569,18 @@ const SquareRoof = ({ wireframe, isGhost, isValid = true, materials, palette }: 
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={palette.roof} wireframe={wireframe} />
+          <meshStandardMaterial color={palette.roof} wireframe={wireframe} {...getHighlightProps(highlight)} />
         )}
       </mesh>
       {!wireframe && !isGhost && (
         <>
           <mesh position={[-(UNIT_SIZE / 2 - 0.1), ROOF_HEIGHT / 4, UNIT_SIZE / 8]}>
             <boxGeometry args={[ROOF_THICKNESS, ROOF_HEIGHT / 2, UNIT_SIZE]} />
-            <meshStandardMaterial color={palette.roofTrim} />
+            <meshStandardMaterial color={palette.roofTrim} {...getHighlightProps(highlight)} />
           </mesh>
           <mesh position={[(UNIT_SIZE / 2 - 0.1), ROOF_HEIGHT / 4, UNIT_SIZE / 8]}>
             <boxGeometry args={[ROOF_THICKNESS, ROOF_HEIGHT / 2, UNIT_SIZE]} />
-            <meshStandardMaterial color={palette.roofTrim} />
+            <meshStandardMaterial color={palette.roofTrim} {...getHighlightProps(highlight)} />
           </mesh>
         </>
       )}
@@ -508,20 +588,20 @@ const SquareRoof = ({ wireframe, isGhost, isValid = true, materials, palette }: 
   );
 };
 
-const TriangleRoof = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => (
+const TriangleRoof = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => (
   <group position={[0, ROOF_HEIGHT / 2, 0]}>
     <mesh>
       <coneGeometry args={[TRIANGLE_RADIUS, ROOF_HEIGHT, 3]} />
       {isGhost ? (
         <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
       ) : (
-        <meshStandardMaterial color={palette.roof} wireframe={wireframe} />
+        <meshStandardMaterial color={palette.roof} wireframe={wireframe} {...getHighlightProps(highlight)} />
       )}
     </mesh>
   </group>
 );
 
-const Stairs = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const Stairs = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   const steps = useMemo(() => getStairSteps(), []);
   const stepHeight = WALL_HEIGHT / 8;
   const stepDepth = UNIT_SIZE / 8;
@@ -534,7 +614,7 @@ const Stairs = ({ wireframe, isGhost, isValid = true, materials, palette }: Geom
           {isGhost ? (
             <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
           ) : (
-            <meshStandardMaterial color={palette.incline} wireframe={wireframe} />
+            <meshStandardMaterial color={palette.incline} wireframe={wireframe} {...getHighlightProps(highlight)} />
           )}
         </mesh>
       ))}
@@ -542,7 +622,7 @@ const Stairs = ({ wireframe, isGhost, isValid = true, materials, palette }: Geom
   );
 };
 
-const Ramp = ({ wireframe, isGhost, isValid = true, materials, palette }: GeometryProps) => {
+const Ramp = ({ wireframe, isGhost, isValid = true, highlight, materials, palette }: GeometryProps) => {
   const { length, angle } = useMemo(() => getRampParams(), []);
 
   return (
@@ -552,18 +632,18 @@ const Ramp = ({ wireframe, isGhost, isValid = true, materials, palette }: Geomet
         {isGhost ? (
           <primitive object={getGhostMaterial(materials, isValid)} attach="material" />
         ) : (
-          <meshStandardMaterial color={palette.incline} wireframe={wireframe} />
+          <meshStandardMaterial color={palette.incline} wireframe={wireframe} {...getHighlightProps(highlight)} />
         )}
       </mesh>
       {!wireframe && !isGhost && (
         <>
           <mesh position={[-UNIT_SIZE / 2 + 0.1, WALL_HEIGHT / 2, 0]} rotation={[angle, 0, 0]}>
             <boxGeometry args={[RAIL_WIDTH, RAIL_HEIGHT, length]} />
-            <meshStandardMaterial color={palette.roofTrim} />
+            <meshStandardMaterial color={palette.roofTrim} {...getHighlightProps(highlight)} />
           </mesh>
           <mesh position={[UNIT_SIZE / 2 - 0.1, WALL_HEIGHT / 2, 0]} rotation={[angle, 0, 0]}>
             <boxGeometry args={[RAIL_WIDTH, RAIL_HEIGHT, length]} />
-            <meshStandardMaterial color={palette.roofTrim} />
+            <meshStandardMaterial color={palette.roofTrim} {...getHighlightProps(highlight)} />
           </mesh>
         </>
       )}
@@ -575,7 +655,7 @@ const Ramp = ({ wireframe, isGhost, isValid = true, materials, palette }: Geomet
 // Building Mesh Component
 // =============================================================================
 
-const BuildingMesh = ({
+const BuildingMesh = React.forwardRef<THREE.Object3D, BuildingMeshProps>(({
   type,
   position,
   rotation,
@@ -583,10 +663,11 @@ const BuildingMesh = ({
   isValid = true,
   id,
   wireframe = false,
+  highlight = false,
   materials,
   palette,
-}: BuildingMeshProps) => {
-  const geometryProps: GeometryProps = { wireframe, isGhost, isValid, materials, palette };
+}: BuildingMeshProps, ref) => {
+  const geometryProps: GeometryProps = { wireframe, isGhost, isValid, highlight, materials, palette };
 
   // Render the appropriate geometry based on type
   const renderGeometry = () => {
@@ -637,6 +718,7 @@ const BuildingMesh = ({
   if (usesGroup) {
     return (
       <group
+        ref={ref as React.Ref<THREE.Group>}
         position={[position[0], position[1] + offsetY, position[2]]}
         rotation={rotation}
         userData={{ isBuilding: true, id }}
@@ -650,6 +732,7 @@ const BuildingMesh = ({
   // Simple mesh types
   return (
     <mesh
+      ref={ref as React.Ref<THREE.Mesh>}
       position={[position[0], position[1] + offsetY, position[2]]}
       rotation={rotation}
       userData={{ isBuilding: true, id }}
@@ -658,7 +741,9 @@ const BuildingMesh = ({
       {renderGeometry()}
     </mesh>
   );
-};
+});
+
+BuildingMesh.displayName = 'BuildingMesh';
 
 // =============================================================================
 // Socket Debug Visualizer
@@ -877,28 +962,64 @@ interface PlannerProps {
 }
 
 const Planner = ({ materials, debugRecorder }: PlannerProps) => {
-  const { buildings, addBuilding, removeBuilding, activeType, showWireframe, showSocketDebug, autoHeight, manualHeight, activeBuildingSet } = useGameStore();
+  const {
+    buildings,
+    addBuilding,
+    removeBuilding,
+    activeType,
+    showWireframe,
+    showSocketDebug,
+    autoHeight,
+    manualHeight,
+    activeBuildingSet,
+    interactionMode,
+    toggleInteractionMode,
+  } = useGameStore();
   const palette = PALETTES[activeBuildingSet];
   const { camera, raycaster, mouse } = useThree();
-  const [ghostPos, setGhostPos] = useState<[number, number, number]>([0, 0, 0]);
-  const [ghostRot, setGhostRot] = useState<[number, number, number]>([0, 0, 0]);
   const [ghostIsValid, setGhostIsValid] = useState(true);
   const [manualRot, setManualRot] = useState(0);
   const [verticalOffset, setVerticalOffset] = useState(0);
 
   const groupRef = useRef<THREE.Group>(null);
+  const ghostRef = useRef<THREE.Object3D | null>(null);
+  const hoveredObjectRef = useRef<THREE.Object3D | null>(null);
+  const hoverPointRef = useRef(new THREE.Vector3());
+  const hoverNormalRef = useRef(new THREE.Vector3(0, 1, 0));
+  const hoverBoxRef = useRef(new THREE.Box3());
+  const hoverCenterRef = useRef(new THREE.Vector3());
+  const hoverPlaneRef = useRef(new THREE.Plane());
+  const ghostPosRef = useRef<[number, number, number]>([0, 0, 0]);
+  const ghostRotRef = useRef<[number, number, number]>([0, 0, 0]);
+  const ghostIsValidRef = useRef(true);
   const lastMousePos = useRef<[number, number]>([0, 0]);
   const lastSnapTargetRef = useRef<PreferredSnapTarget | null>(null);
+  const ghostOffsetY = useMemo(() => getYOffset(activeType), [activeType]);
 
   // Reset vertical offset when changing building type
   useEffect(() => {
     setVerticalOffset(0);
   }, [activeType]);
 
+  useEffect(() => {
+    if (interactionMode === 'build') {
+      hoveredObjectRef.current = null;
+      hoverPointRef.current.set(0, 0, 0);
+      hoverNormalRef.current.set(0, 1, 0);
+    }
+  }, [interactionMode]);
+
   // Handle keyboard controls (Rotation and Vertical Stacking)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+
+      if (key === 'v' || key === 'a') {
+        toggleInteractionMode();
+        return;
+      }
 
       // Rotation
       if (key === 'r') {
@@ -933,7 +1054,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [manualRot, activeType, debugRecorder, manualHeight]);
+  }, [manualRot, activeType, debugRecorder, manualHeight, toggleInteractionMode]);
 
   // Update ghost position based on mouse
   useFrame(() => {
@@ -943,6 +1064,28 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
 
     // Track mouse position for recording
     lastMousePos.current = [mouse.x, mouse.y];
+
+    if (interactionMode === 'select') {
+      let nextHovered: THREE.Object3D | null = null;
+      for (const hit of intersects) {
+        const root = getBuildingRootFromObject(hit.object);
+        if (root) {
+          nextHovered = root;
+          if (hit.face) {
+            hoverNormalRef.current.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).normalize();
+          } else {
+            hoverNormalRef.current.set(0, 1, 0);
+          }
+          hoverBoxRef.current.setFromObject(root);
+          hoverBoxRef.current.getCenter(hoverCenterRef.current);
+          hoverPlaneRef.current.setFromNormalAndCoplanarPoint(hoverNormalRef.current, hit.point);
+          hoverPlaneRef.current.projectPoint(hoverCenterRef.current, hoverPointRef.current);
+          break;
+        }
+      }
+      hoveredObjectRef.current = nextHovered;
+      return;
+    }
 
     if (intersects.length > 0) {
       const targetPoint = intersects[0].point;
@@ -995,9 +1138,16 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
         // Apply manual offset only if manualHeight is enabled
         const finalY = manualHeight ? baseY + verticalOffset : baseY;
 
-        setGhostPos([snap.position.x, finalY, snap.position.z]);
-        setGhostRot([snap.rotation.x, snap.rotation.y, snap.rotation.z]);
-        setGhostIsValid(snap.isValid);
+        ghostPosRef.current = [snap.position.x, finalY, snap.position.z];
+        ghostRotRef.current = [snap.rotation.x, snap.rotation.y, snap.rotation.z];
+        if (ghostRef.current) {
+          ghostRef.current.position.set(snap.position.x, finalY + ghostOffsetY, snap.position.z);
+          ghostRef.current.rotation.set(snap.rotation.x, snap.rotation.y, snap.rotation.z);
+        }
+        if (ghostIsValidRef.current !== snap.isValid) {
+          ghostIsValidRef.current = snap.isValid;
+          setGhostIsValid(snap.isValid);
+        }
       }
     }
   });
@@ -1009,8 +1159,10 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
 
     e.stopPropagation();
 
-    // Shift+Click = Demolish mode
-    if (e.nativeEvent.shiftKey) {
+    const isSelectMode = interactionMode === 'select';
+
+    // Cmd/Ctrl + Click = Demolish mode
+    if (e.nativeEvent.metaKey || e.nativeEvent.ctrlKey) {
       // Find the building that was clicked by checking intersection
       const clickedObject = e.object;
       // Traverse up to find the building group with userData.buildingId
@@ -1025,13 +1177,20 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
       return;
     }
 
+    // Avoid accidental placement while using navigation modifiers
+    if (e.nativeEvent.shiftKey || e.nativeEvent.altKey) return;
+
+    if (isSelectMode) return;
+
     // Normal placement
-    if (ghostIsValid) {
+    if (ghostIsValidRef.current) {
+      const [ghostX, ghostY, ghostZ] = ghostPosRef.current;
+      const [ghostRotX, ghostRotY, ghostRotZ] = ghostRotRef.current;
       const newBuilding: BuildingData = {
         id: crypto.randomUUID(),
         type: activeType,
-        position: [...ghostPos],
-        rotation: [...ghostRot],
+        position: [ghostX, ghostY, ghostZ],
+        rotation: [ghostRotX, ghostRotY, ghostRotZ],
       };
       addBuilding(newBuilding);
 
@@ -1039,7 +1198,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
       if (debugRecorder?.isRecording) {
         debugRecorder.addFrame({
           timestamp: Date.now(),
-          cursorPosition: ghostPos,
+          cursorPosition: [ghostX, ghostY, ghostZ],
           cursorScreen: lastMousePos.current,
           activeType,
           rotation: manualRot,
@@ -1101,19 +1260,24 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
       {/* Socket debug visualization */}
       {showSocketDebug && <SocketDebugVisualizer />}
 
+      <HoverMarkerHelper targetRef={hoveredObjectRef} pointRef={hoverPointRef} normalRef={hoverNormalRef} />
+
       {/* Snap Colliders (Invisible) */}
-      <SnapColliders />
+      {interactionMode === 'build' && <SnapColliders />}
 
       {/* Ghost preview */}
-      <BuildingMesh
-        type={activeType}
-        position={ghostPos}
-        rotation={ghostRot}
-        isGhost
-        isValid={ghostIsValid}
-        materials={materials}
-        palette={palette}
-      />
+      {interactionMode === 'build' && (
+        <BuildingMesh
+          ref={ghostRef}
+          type={activeType}
+          position={ghostPosRef.current}
+          rotation={ghostRotRef.current}
+          isGhost
+          isValid={ghostIsValid}
+          materials={materials}
+          palette={palette}
+        />
+      )}
     </group>
   );
 };
@@ -1151,6 +1315,149 @@ const CameraController = ({ is2DMode, controlsRef }: CameraControllerProps) => {
   }, [is2DMode, camera, controlsRef]);
 
   return null;
+};
+
+const OrbitShiftBindings = ({
+  controlsRef,
+  is2DMode,
+}: {
+  controlsRef: React.RefObject<any>;
+  is2DMode: boolean;
+}) => {
+  const { gl } = useThree();
+  const shiftDownRef = useRef(false);
+
+  useEffect(() => {
+    const applyLeftAction = (shiftKey: boolean) => {
+      if (!controlsRef.current) return;
+      const leftAction = !is2DMode && shiftKey ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
+      controlsRef.current.mouseButtons = {
+        ...controlsRef.current.mouseButtons,
+        LEFT: leftAction,
+      };
+      controlsRef.current.update?.();
+    };
+
+    const syncLeftAction = () => applyLeftAction(shiftDownRef.current);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Shift') return;
+      if (shiftDownRef.current) return;
+      shiftDownRef.current = true;
+      syncLeftAction();
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key !== 'Shift') return;
+      if (!shiftDownRef.current) return;
+      shiftDownRef.current = false;
+      syncLeftAction();
+    };
+    const handleBlur = () => {
+      if (!shiftDownRef.current) return;
+      shiftDownRef.current = false;
+      syncLeftAction();
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (shiftDownRef.current !== e.shiftKey) {
+        shiftDownRef.current = e.shiftKey;
+      }
+      applyLeftAction(shiftDownRef.current);
+    };
+    const handlePointerUp = () => syncLeftAction();
+
+    gl.domElement.addEventListener('pointerdown', handlePointerDown, true);
+    gl.domElement.addEventListener('pointerup', handlePointerUp, true);
+    gl.domElement.addEventListener('pointerleave', handlePointerUp, true);
+    gl.domElement.addEventListener('pointercancel', handlePointerUp, true);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+
+    syncLeftAction();
+    return () => {
+      gl.domElement.removeEventListener('pointerdown', handlePointerDown, true);
+      gl.domElement.removeEventListener('pointerup', handlePointerUp, true);
+      gl.domElement.removeEventListener('pointerleave', handlePointerUp, true);
+      gl.domElement.removeEventListener('pointercancel', handlePointerUp, true);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [gl, controlsRef, is2DMode]);
+
+  return null;
+};
+
+const HoverMarkerHelper = ({
+  targetRef,
+  pointRef,
+  normalRef,
+  color = '#FFD54A',
+  ringInner = 0.16,
+  ringOuter = 0.24,
+  dotRadius = 0.12,
+  stemRadius = 0.035,
+  stemLength = 0.14,
+}: {
+  targetRef: React.RefObject<THREE.Object3D | null>;
+  pointRef: React.RefObject<THREE.Vector3>;
+  normalRef: React.RefObject<THREE.Vector3>;
+  color?: string;
+  ringInner?: number;
+  ringOuter?: number;
+  dotRadius?: number;
+  stemRadius?: number;
+  stemLength?: number;
+}) => {
+  const groupRef = useRef<THREE.Group | null>(null);
+  const quatRef = useRef(new THREE.Quaternion());
+  const normalTmpRef = useRef(new THREE.Vector3());
+  const zAxisRef = useRef(new THREE.Vector3(0, 0, 1));
+
+  const ringGeometry = useMemo(() => new THREE.RingGeometry(ringInner, ringOuter, 24), [ringInner, ringOuter]);
+  const dotGeometry = useMemo(() => new THREE.SphereGeometry(dotRadius, 12, 12), [dotRadius]);
+  const stemGeometry = useMemo(() => new THREE.CylinderGeometry(stemRadius, stemRadius, stemLength, 10), [stemRadius, stemLength]);
+  const material = useMemo(() => new THREE.MeshBasicMaterial({
+    color,
+    depthTest: true,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
+  }), [color]);
+
+  useEffect(() => {
+    return () => {
+      ringGeometry.dispose();
+      dotGeometry.dispose();
+      stemGeometry.dispose();
+      material.dispose();
+    };
+  }, [ringGeometry, dotGeometry, stemGeometry, material]);
+
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group) return;
+    const target = targetRef.current;
+    if (!target) {
+      group.visible = false;
+      return;
+    }
+    group.visible = true;
+    group.position.copy(pointRef.current);
+    const normal = normalTmpRef.current.copy(normalRef.current).normalize();
+    quatRef.current.setFromUnitVectors(zAxisRef.current, normal);
+    group.quaternion.copy(quatRef.current);
+  });
+
+  return (
+    <group ref={groupRef} visible={false} renderOrder={999}>
+      <mesh geometry={ringGeometry} material={material} position={[0, 0, 0.01]} />
+      <mesh geometry={stemGeometry} material={material} position={[0, 0, 0.01 + stemLength / 2]} rotation={[Math.PI / 2, 0, 0]} />
+      <mesh geometry={dotGeometry} material={material} position={[0, 0, 0.01 + stemLength + dotRadius]} />
+    </group>
+  );
 };
 
 // =============================================================================
@@ -1321,11 +1628,13 @@ export const GameScene = ({ debugRecorder }: GameSceneProps) => {
   return (
     <Canvas shadows camera={{ position: is2DMode ? [0, 30, 0.001] : [10, 15, 10], fov: 50 }}>
       <color attach="background" args={[is2DMode ? '#1a1a2e' : '#87CEEB']} />
-      {!is2DMode && <fog attach="fog" args={['#E6C288', 20, 100]} />}
+      {/* Fog disabled for now; re-enable if we want atmospheric depth */}
+      {/* {!is2DMode && <fog attach="fog" args={['#E6C288', 20, 100]} />} */}
       <ambientLight intensity={is2DMode ? 1.0 : 0.6} />
       <directionalLight position={[10, 20, 10]} intensity={is2DMode ? 0.5 : 1} castShadow />
       {!is2DMode && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />}
       <CameraController is2DMode={is2DMode} controlsRef={controlsRef} />
+      <OrbitShiftBindings is2DMode={is2DMode} controlsRef={controlsRef} />
       <Compass />
       <AxisLabels is2DMode={is2DMode} />
       <Planner materials={materials} debugRecorder={debugRecorder} />
@@ -1336,9 +1645,9 @@ export const GameScene = ({ debugRecorder }: GameSceneProps) => {
         maxPolarAngle={is2DMode ? 0 : Math.PI / 2 - 0.1}
         minPolarAngle={is2DMode ? 0 : 0}
         mouseButtons={{
-          LEFT: undefined,
-          MIDDLE: is2DMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE,
-          RIGHT: THREE.MOUSE.PAN,
+          LEFT: THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: undefined,
         }}
       />
     </Canvas>
