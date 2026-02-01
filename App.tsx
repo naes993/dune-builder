@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GameScene } from './components/Scene';
 import UI, { Instructions, DebugRecorderUI } from './components/UI';
 import { BuildingType, BuildingData, SavedBlueprint } from './types';
@@ -25,13 +25,44 @@ export default function App() {
     toggleSocketDebug,
     is2DMode,
     toggle2DMode,
+    isDevMode,
+    toggleDevMode,
     autoHeight,
-    toggleAutoHeight,
-    manualHeight,
-    toggleManualHeight,
     activeBuildingSet,
     setActiveBuildingSet,
+    controlScheme,
+    toggleControlScheme,
   } = useGameStore();
+
+  const [heightToast, setHeightToast] = useState<string | null>(null);
+  const didMountRef = useRef(false);
+  const heightToastTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isDevMode && debugRecorder.isRecording) {
+      debugRecorder.stopRecording();
+    }
+  }, [isDevMode, debugRecorder.isRecording, debugRecorder.stopRecording]);
+
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    if (heightToastTimeoutRef.current) {
+      window.clearTimeout(heightToastTimeoutRef.current);
+    }
+    setHeightToast(autoHeight ? 'Height: Auto' : 'Height: Manual');
+    heightToastTimeoutRef.current = window.setTimeout(() => {
+      setHeightToast(null);
+      heightToastTimeoutRef.current = null;
+    }, 1200);
+    return () => {
+      if (heightToastTimeoutRef.current) {
+        window.clearTimeout(heightToastTimeoutRef.current);
+      }
+    };
+  }, [autoHeight]);
 
   // Quick save to localStorage
   const handleSave = () => {
@@ -181,14 +212,19 @@ export default function App() {
       {/* 3D Canvas Layer */}
       <div className="absolute inset-0 z-0">
         <GameScene
-          debugRecorder={debugRecorder}
+          debugRecorder={isDevMode ? debugRecorder : undefined}
         />
       </div>
 
       {/* UI Overlay Layer - pointer-events-none allows clicks to pass through to canvas */}
       <div className="absolute inset-0 z-10 pointer-events-none">
-        <Instructions />
-        <DebugRecorderUI debugRecorder={debugRecorder} />
+        <Instructions
+          controlScheme={controlScheme}
+          isDevMode={isDevMode}
+          toggleDevMode={toggleDevMode}
+          heightToast={heightToast}
+        />
+        {isDevMode && <DebugRecorderUI debugRecorder={debugRecorder} />}
         <UI
           activeType={activeType}
           setActiveType={setActiveType}
@@ -203,13 +239,11 @@ export default function App() {
           setShowSocketDebug={(val) => toggleSocketDebug()}
           is2DMode={is2DMode}
           setIs2DMode={(val) => toggle2DMode()}
-          autoHeight={autoHeight}
-          setAutoHeight={(val) => toggleAutoHeight()}
-          manualHeight={manualHeight}
-          setManualHeight={(val) => toggleManualHeight()}
+          isDevMode={isDevMode}
+          controlScheme={controlScheme}
+          toggleControlScheme={toggleControlScheme}
           activeBuildingSet={activeBuildingSet}
           setActiveBuildingSet={setActiveBuildingSet}
-          debugRecorder={debugRecorder}
         />
       </div>
     </div>

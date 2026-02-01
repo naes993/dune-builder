@@ -972,8 +972,11 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
     autoHeight,
     manualHeight,
     activeBuildingSet,
+    setActiveType,
     interactionMode,
     toggleInteractionMode,
+    isDevMode,
+    toggleAutoHeight,
   } = useGameStore();
   const palette = PALETTES[activeBuildingSet];
   const { camera, raycaster, mouse } = useThree();
@@ -1021,6 +1024,11 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
         return;
       }
 
+      if (key === 'h') {
+        toggleAutoHeight();
+        return;
+      }
+
       // Rotation
       if (key === 'r') {
         const rotIncrement = getRotationIncrement(activeType);
@@ -1054,7 +1062,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [manualRot, activeType, debugRecorder, manualHeight, toggleInteractionMode]);
+  }, [manualRot, activeType, debugRecorder, manualHeight, toggleInteractionMode, toggleAutoHeight]);
 
   // Update ghost position based on mouse
   useFrame(() => {
@@ -1239,8 +1247,37 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
     }
   };
 
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    if (e.button !== 1) return; // Middle click only
+    e.stopPropagation();
+    const nativeEvent = e.nativeEvent as PointerEvent;
+    nativeEvent.preventDefault?.();
+
+    let current: THREE.Object3D | null = e.object;
+    let buildingId: string | null = null;
+    while (current) {
+      if (current.userData?.buildingId) {
+        buildingId = current.userData.buildingId;
+        break;
+      }
+      if (current.userData?.isBuilding && current.userData?.id) {
+        buildingId = current.userData.id;
+        break;
+      }
+      current = current.parent;
+    }
+    if (!buildingId) return;
+    const building = buildings.find((b) => b.id === buildingId);
+    if (!building) return;
+
+    setActiveType(building.type);
+    if (interactionMode === 'select') {
+      toggleInteractionMode();
+    }
+  };
+
   return (
-    <group ref={groupRef} onClick={handlePlace}>
+    <group ref={groupRef} onClick={handlePlace} onPointerDown={handlePointerDown}>
       {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[1000, 1000]} />
@@ -1258,7 +1295,7 @@ const Planner = ({ materials, debugRecorder }: PlannerProps) => {
       ))}
 
       {/* Socket debug visualization */}
-      {showSocketDebug && <SocketDebugVisualizer />}
+      {isDevMode && showSocketDebug && <SocketDebugVisualizer />}
 
       <HoverMarkerHelper targetRef={hoveredObjectRef} pointRef={hoverPointRef} normalRef={hoverNormalRef} />
 
@@ -1313,78 +1350,6 @@ const CameraController = ({ is2DMode, controlsRef }: CameraControllerProps) => {
       }
     }
   }, [is2DMode, camera, controlsRef]);
-
-  return null;
-};
-
-const OrbitShiftBindings = ({
-  controlsRef,
-  is2DMode,
-}: {
-  controlsRef: React.RefObject<any>;
-  is2DMode: boolean;
-}) => {
-  const { gl } = useThree();
-  const shiftDownRef = useRef(false);
-
-  useEffect(() => {
-    const applyLeftAction = (shiftKey: boolean) => {
-      if (!controlsRef.current) return;
-      const leftAction = !is2DMode && shiftKey ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
-      controlsRef.current.mouseButtons = {
-        ...controlsRef.current.mouseButtons,
-        LEFT: leftAction,
-      };
-      controlsRef.current.update?.();
-    };
-
-    const syncLeftAction = () => applyLeftAction(shiftDownRef.current);
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Shift') return;
-      if (shiftDownRef.current) return;
-      shiftDownRef.current = true;
-      syncLeftAction();
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key !== 'Shift') return;
-      if (!shiftDownRef.current) return;
-      shiftDownRef.current = false;
-      syncLeftAction();
-    };
-    const handleBlur = () => {
-      if (!shiftDownRef.current) return;
-      shiftDownRef.current = false;
-      syncLeftAction();
-    };
-
-    const handlePointerDown = (e: PointerEvent) => {
-      if (shiftDownRef.current !== e.shiftKey) {
-        shiftDownRef.current = e.shiftKey;
-      }
-      applyLeftAction(shiftDownRef.current);
-    };
-    const handlePointerUp = () => syncLeftAction();
-
-    gl.domElement.addEventListener('pointerdown', handlePointerDown, true);
-    gl.domElement.addEventListener('pointerup', handlePointerUp, true);
-    gl.domElement.addEventListener('pointerleave', handlePointerUp, true);
-    gl.domElement.addEventListener('pointercancel', handlePointerUp, true);
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', handleBlur);
-
-    syncLeftAction();
-    return () => {
-      gl.domElement.removeEventListener('pointerdown', handlePointerDown, true);
-      gl.domElement.removeEventListener('pointerup', handlePointerUp, true);
-      gl.domElement.removeEventListener('pointerleave', handlePointerUp, true);
-      gl.domElement.removeEventListener('pointercancel', handlePointerUp, true);
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, [gl, controlsRef, is2DMode]);
 
   return null;
 };
@@ -1458,6 +1423,62 @@ const HoverMarkerHelper = ({
       <mesh geometry={dotGeometry} material={material} position={[0, 0, 0.01 + stemLength + dotRadius]} />
     </group>
   );
+};
+
+const OrbitDragThreshold = ({
+  threshold = 6,
+}: {
+  threshold?: number;
+}) => {
+  const { gl } = useThree();
+  const activeRef = useRef(false);
+  const pointerIdRef = useRef<number | null>(null);
+  const startRef = useRef(new THREE.Vector2());
+
+  useEffect(() => {
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      if (e.shiftKey) return; // Allow shift+drag orbit immediately.
+      activeRef.current = true;
+      pointerIdRef.current = e.pointerId;
+      startRef.current.set(e.clientX, e.clientY);
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!activeRef.current) return;
+      if (pointerIdRef.current !== e.pointerId) return;
+      const dx = e.clientX - startRef.current.x;
+      const dy = e.clientY - startRef.current.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < threshold * threshold) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      } else {
+        activeRef.current = false;
+      }
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (pointerIdRef.current === e.pointerId) {
+        activeRef.current = false;
+        pointerIdRef.current = null;
+      }
+    };
+
+    gl.domElement.addEventListener('pointerdown', handlePointerDown, true);
+    const doc = gl.domElement.ownerDocument;
+    doc.addEventListener('pointermove', handlePointerMove, true);
+    doc.addEventListener('pointerup', handlePointerUp, true);
+    doc.addEventListener('pointercancel', handlePointerUp, true);
+    return () => {
+      gl.domElement.removeEventListener('pointerdown', handlePointerDown, true);
+      doc.removeEventListener('pointermove', handlePointerMove, true);
+      doc.removeEventListener('pointerup', handlePointerUp, true);
+      doc.removeEventListener('pointercancel', handlePointerUp, true);
+    };
+  }, [gl, threshold]);
+
+  return null;
 };
 
 // =============================================================================
@@ -1613,7 +1634,7 @@ export interface GameSceneProps {
 }
 
 export const GameScene = ({ debugRecorder }: GameSceneProps) => {
-  const { is2DMode } = useGameStore();
+  const { is2DMode, controlScheme } = useGameStore();
 
   const materials = useMemo(
     () => ({
@@ -1634,7 +1655,7 @@ export const GameScene = ({ debugRecorder }: GameSceneProps) => {
       <directionalLight position={[10, 20, 10]} intensity={is2DMode ? 0.5 : 1} castShadow />
       {!is2DMode && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />}
       <CameraController is2DMode={is2DMode} controlsRef={controlsRef} />
-      <OrbitShiftBindings is2DMode={is2DMode} controlsRef={controlsRef} />
+      <OrbitDragThreshold threshold={8} />
       <Compass />
       <AxisLabels is2DMode={is2DMode} />
       <Planner materials={materials} debugRecorder={debugRecorder} />
@@ -1646,8 +1667,8 @@ export const GameScene = ({ debugRecorder }: GameSceneProps) => {
         minPolarAngle={is2DMode ? 0 : 0}
         mouseButtons={{
           LEFT: THREE.MOUSE.PAN,
-          MIDDLE: THREE.MOUSE.DOLLY,
-          RIGHT: undefined,
+          MIDDLE: undefined,
+          RIGHT: controlScheme === 'right-orbit' ? THREE.MOUSE.ROTATE : undefined,
         }}
       />
     </Canvas>

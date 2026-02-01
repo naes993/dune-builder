@@ -8,10 +8,12 @@ interface GameState {
     showWireframe: boolean;
     showSocketDebug: boolean;
     is2DMode: boolean;
+    isDevMode: boolean;
     interactionMode: 'build' | 'select';
     autoHeight: boolean;      // Auto-snap to socket height when snapping
     manualHeight: boolean;    // Allow arrow key height adjustment
     activeBuildingSet: BuildingSet;  // Current building style/color palette
+    controlScheme: 'left-pan' | 'right-orbit';
 
     // Actions
     setBuildings: (buildings: BuildingData[] | ((prev: BuildingData[]) => BuildingData[])) => void;
@@ -21,11 +23,28 @@ interface GameState {
     toggleWireframe: () => void;
     toggleSocketDebug: () => void;
     toggle2DMode: () => void;
+    setDevMode: (enabled: boolean) => void;
+    toggleDevMode: () => void;
+    setControlScheme: (scheme: 'left-pan' | 'right-orbit') => void;
+    toggleControlScheme: () => void;
     toggleInteractionMode: () => void;
     toggleAutoHeight: () => void;
     toggleManualHeight: () => void;
     setActiveBuildingSet: (set: BuildingSet) => void;
 }
+
+const getInitialDevMode = () => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dev') === '1' || params.get('dev') === 'true') return true;
+    return localStorage.getItem('devMode') === 'true';
+};
+
+const getInitialControlScheme = () => {
+    if (typeof window === 'undefined') return 'left-pan';
+    const saved = localStorage.getItem('controlScheme');
+    return saved === 'right-orbit' ? 'right-orbit' : 'left-pan';
+};
 
 export const useGameStore = create<GameState>((set, get) => ({
     // Initial State
@@ -34,10 +53,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     showWireframe: false,
     showSocketDebug: false,
     is2DMode: false,
+    isDevMode: getInitialDevMode(),
     interactionMode: 'build',
     autoHeight: true,
     manualHeight: false,
     activeBuildingSet: BuildingSet.DUNE_MAN,
+    controlScheme: getInitialControlScheme(),
 
     // Actions
     setBuildings: (buildings) => set((state) => ({
@@ -56,6 +77,40 @@ export const useGameStore = create<GameState>((set, get) => ({
     toggleWireframe: () => set((state) => ({ showWireframe: !state.showWireframe })),
     toggleSocketDebug: () => set((state) => ({ showSocketDebug: !state.showSocketDebug })),
     toggle2DMode: () => set((state) => ({ is2DMode: !state.is2DMode })),
+    setDevMode: (enabled) => {
+        set({ isDevMode: enabled });
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('devMode', String(enabled));
+        }
+        if (!enabled) {
+            set({ showSocketDebug: false, showWireframe: false, is2DMode: false });
+        }
+    },
+    toggleDevMode: () => {
+        const next = !get().isDevMode;
+        set((state) => ({
+            isDevMode: next,
+            showSocketDebug: next ? state.showSocketDebug : false,
+            showWireframe: next ? state.showWireframe : false,
+            is2DMode: next ? state.is2DMode : false,
+        }));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('devMode', String(next));
+        }
+    },
+    setControlScheme: (scheme) => {
+        set({ controlScheme: scheme });
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('controlScheme', scheme);
+        }
+    },
+    toggleControlScheme: () => {
+        const next = get().controlScheme === 'left-pan' ? 'right-orbit' : 'left-pan';
+        set({ controlScheme: next });
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('controlScheme', next);
+        }
+    },
     toggleInteractionMode: () => set((state) => ({
         interactionMode: state.interactionMode === 'build' ? 'select' : 'build'
     })),
