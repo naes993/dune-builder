@@ -748,6 +748,8 @@ export const calculateSnap = (
   const debugCandidates: any[] = [];
   const SNAP_RADIUS = 3.5; // Slightly larger to catch edges
 
+  const activeCategory = getBuildingDef(activeType).category;
+  const isAnyWallType = activeCategory === 'wall';
   const isWallLike =
     activeType === BuildingType.WALL ||
     activeType === BuildingType.HALF_WALL ||
@@ -951,6 +953,7 @@ export const calculateSnap = (
           targetSocket.socketType === SocketType.WALL_TOP &&
           gSocket.socketType === SocketType.WALL_BOTTOM;
         const targetBuilding = buildingById.get(targetSocket.id);
+        const targetBuildingDef = targetBuilding ? getBuildingDef(targetBuilding.type) : null;
         const isCurvedWallConnection =
           isCurvedWall &&
           targetSocket.socketType === SocketType.WALL_SIDE &&
@@ -986,7 +989,20 @@ export const calculateSnap = (
 
         const candidateRot = new THREE.Euler(0, rotY, 0);
         const rotatedLocalPos = gSocket.position.clone().applyEuler(candidateRot);
-        const candidatePos = targetSocket.position.clone().sub(rotatedLocalPos);
+        const isThinFoundationTarget =
+          targetBuildingDef?.category === 'foundation' &&
+          targetBuildingDef.yOffset <= (FOUNDATION_HEIGHT / 2 + 0.001);
+        const shouldUseFoundationBaseY =
+          isAnyWallType &&
+          gSocket.socketType === SocketType.WALL_BOTTOM &&
+          targetSocket.socketType === SocketType.FOUNDATION_TOP &&
+          isThinFoundationTarget;
+        const anchorPosition = targetSocket.position.clone();
+        if (shouldUseFoundationBaseY) {
+          // Keep wall bottoms flush with floor bottoms (not slab tops) for thin foundation pieces.
+          anchorPosition.y -= FOUNDATION_HEIGHT;
+        }
+        const candidatePos = anchorPosition.sub(rotatedLocalPos);
         const distToCursor = candidatePos.distanceTo(rayIntersectionPoint);
 
         // Preference for rotation matching the current manual rotation (allows 'R' to cycle options)
@@ -1031,7 +1047,9 @@ export const calculateSnap = (
             rotation: candidateRot,
             distToCursor,
             score,
-            targetSocketY: targetSocket.position.y,
+            targetSocketY: shouldUseFoundationBaseY
+              ? targetSocket.position.y - FOUNDATION_HEIGHT
+              : targetSocket.position.y,
             targetSocket,
           };
         }
