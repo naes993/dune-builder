@@ -4,10 +4,24 @@ import UI, { Instructions, DebugRecorderUI } from './components/UI';
 import { BuildingType, BuildingData, SavedBlueprint } from './types';
 import { useDebugRecorder } from './hooks/useDebugRecorder';
 import { useGameStore } from './store/gameStore';
+import { BuilderCanvas } from './v2/scene/BuilderCanvas';
 
 const BLUEPRINT_VERSION = 1;
 
 export default function App() {
+  const isV2Prototype =
+    typeof window !== 'undefined' &&
+    (window.location.pathname.replace(/\/$/, '') === '/v2' ||
+      new URLSearchParams(window.location.search).get('v2') === '1');
+
+  if (isV2Prototype) {
+    return <BuilderCanvas />;
+  }
+
+  return <LegacyApp />;
+}
+
+function LegacyApp() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Debug recorder

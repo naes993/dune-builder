@@ -1,0 +1,3473 @@
+{
+  "generatedAt": "2026-05-26T16:36:06.119Z",
+  "sourceDirectory": "public/assets/parts/harkonnen",
+  "referenceDirectory": "public/assets/reference",
+  "notes": [
+    "Inventory only. Do not use GLB bounds, pivots, centers, or _COL files as placement truth.",
+    "_COL files are collision/reference assets only and must not be registered as selectable visual parts."
+  ],
+  "assets": [
+    {
+      "fileName": "SK_Env_PB_Hark_Level3_Door_Tall.glb",
+      "path": "public/assets/parts/harkonnen/SK_Env_PB_Hark_Level3_Door_Tall.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SK_Env_PB_Hark_Level3_Door_Tall",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.9187,
+          0,
+          -0.5156
+        ],
+        "max": [
+          1.9137,
+          6.3863,
+          0.5156
+        ],
+        "size": [
+          3.8324,
+          6.3863,
+          1.0311
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_DoorTall_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 32,
+      "family": "Env_PB_Hark_Level3",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SK_Env_PB_Hark_Level3_Door.glb",
+      "path": "public/assets/parts/harkonnen/SK_Env_PB_Hark_Level3_Door.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SK_Env_PB_Hark_Level3_Door",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.5386,
+          0,
+          -0.3115
+        ],
+        "max": [
+          1.5385,
+          3.1113,
+          0.3115
+        ],
+        "size": [
+          3.0771,
+          3.1113,
+          0.623
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Door_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 30,
+      "family": "Env_PB_Hark_Level3",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SK_Env_PB_Hark_Level3_GarageDoor.glb",
+      "path": "public/assets/parts/harkonnen/SK_Env_PB_Hark_Level3_GarageDoor.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SK_Env_PB_Hark_Level3_GarageDoor",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -4.129,
+          0,
+          -0.3013
+        ],
+        "max": [
+          4.129,
+          3.1113,
+          0.3013
+        ],
+        "size": [
+          8.258,
+          3.1113,
+          0.6026
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_GarageDoor_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 28,
+      "family": "Env_PB_Hark_Level3_GarageDoor",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SK_Env_PB_Hark_Level3_HatchDoor.glb",
+      "path": "public/assets/parts/harkonnen/SK_Env_PB_Hark_Level3_HatchDoor.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SK_Env_PB_Hark_Level3_HatchDoor",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.9689,
+          -0.0692,
+          -1.9689
+        ],
+        "max": [
+          1.969,
+          0.0776,
+          1.969
+        ],
+        "size": [
+          3.9379,
+          0.1468,
+          3.9379
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_HatchDoor_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 12,
+      "family": "Env_PB_Hark_Level3_HatchDoor",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_Hark_PruDoorPanes_Level3_Village.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_Hark_PruDoorPanes_Level3_Village.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_Hark_PruDoorPanes_Level3_Village",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.3652,
+          0.0662,
+          0
+        ],
+        "max": [
+          1.3652,
+          2.9532,
+          0
+        ],
+        "size": [
+          2.7304,
+          2.887,
+          0
+        ]
+      },
+      "materialNames": [
+        "MI_PruDoor_Hark_Level3_Red"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_Hark_PruDoorPanes_Level3",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_Hark_PruDoorPanes_Level3_Wide_Village.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_Hark_PruDoorPanes_Level3_Wide_Village.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_Hark_PruDoorPanes_Level3_Wide_Village",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -3.8652,
+          0.0662,
+          0
+        ],
+        "max": [
+          3.8652,
+          2.9532,
+          0
+        ],
+        "size": [
+          7.7304,
+          2.887,
+          0
+        ]
+      },
+      "materialNames": [
+        "MI_PruDoor_Hark_Level3_Red"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_Hark_PruDoorPanes_Level3_Wide",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_Hark_PruDoorPanes_Level3.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_Hark_PruDoorPanes_Level3.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_Hark_PruDoorPanes_Level3",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.3652,
+          0.0662,
+          -0.0623
+        ],
+        "max": [
+          1.3652,
+          2.9532,
+          0.0619
+        ],
+        "size": [
+          2.7304,
+          2.887,
+          0.1242
+        ]
+      },
+      "materialNames": [
+        "MI_VFX_Pentashield_Base"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_Hark_PruDoorPanes_Level3",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Column.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Column.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Column",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -0.8045,
+          -0.0102,
+          -0.8046
+        ],
+        "max": [
+          0.8045,
+          3.8453,
+          0.8046
+        ],
+        "size": [
+          1.609,
+          3.8555,
+          1.6092
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Column_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Column",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Door_Tall.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Door_Tall.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Door_Tall",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.9178,
+          -0.0002,
+          -0.5391
+        ],
+        "max": [
+          1.9178,
+          6.3864,
+          0.5444
+        ],
+        "size": [
+          3.8356,
+          6.3866,
+          1.0835
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_DoorTall_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Door.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Door.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Door",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.537,
+          0,
+          -0.3169
+        ],
+        "max": [
+          1.5368,
+          3.1113,
+          0.3168
+        ],
+        "size": [
+          3.0739,
+          3.1113,
+          0.6338
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Door_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_DoorFrame_Tall.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_DoorFrame_Tall.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_DoorFrame_Tall",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7393,
+          -0.0755,
+          -1.2398
+        ],
+        "max": [
+          2.7372,
+          7.6961,
+          1.2825
+        ],
+        "size": [
+          5.4764,
+          7.7716,
+          2.5223
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_DoorFrame_Tall_Ext",
+        "ML_Env_PB_Hark_Level3_DoorFrame_Tall_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_DoorFrame",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_DoorFrame.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_DoorFrame.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_DoorFrame",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7117,
+          -0.0267,
+          -0.9154
+        ],
+        "max": [
+          2.71,
+          3.8551,
+          0.9203
+        ],
+        "size": [
+          5.4217,
+          3.8819,
+          1.8357
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_DoorFrame_Ext",
+        "ML_Env_PB_Hark_Level3_DoorFrame_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_DoorFrame",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Floor.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Floor.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Floor",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6586,
+          -0.3535,
+          -2.6586
+        ],
+        "max": [
+          2.6586,
+          0.02,
+          2.6586
+        ],
+        "size": [
+          5.3173,
+          0.3735,
+          5.3173
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Floor_Ext",
+        "ML_Env_PB_Hark_Level3_Floor",
+        "ML_Env_PB_Hark_Level3_Floor_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Floor",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "square",
+      "goodCanonicalSizeCandidate": true
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_FloorRoundCorner_In.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FloorRoundCorner_In.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_FloorRoundCorner_In",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5623,
+          -0.3551,
+          -2.562
+        ],
+        "max": [
+          2.6671,
+          0.0209,
+          2.6687
+        ],
+        "size": [
+          5.2294,
+          0.3761,
+          5.2307
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_FloorRoundCorner_In_Ext",
+        "ML_Env_PB_Hark_Level3_FloorRoundCorner_In_Floor",
+        "ML_Env_PB_Hark_Level3_FloorRoundCorner_In_Floor_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_FloorRoundCorner",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_FloorRoundCorner.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FloorRoundCorner.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_FloorRoundCorner",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6688,
+          -0.3506,
+          -2.669
+        ],
+        "max": [
+          2.6745,
+          0.02,
+          2.6733
+        ],
+        "size": [
+          5.3433,
+          0.3706,
+          5.3423
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_FloorRoundCorner_Ext",
+        "ML_Env_PB_Hark_Level3_FloorRoundCorner_Floor_Int",
+        "ML_Env_PB_Hark_Level3_FloorRoundCorner_Floor"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_FloorRoundCorner",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_FloorWedge.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FloorWedge.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_FloorWedge",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6994,
+          -0.3525,
+          -3.0415
+        ],
+        "max": [
+          2.6994,
+          0.019,
+          1.6376
+        ],
+        "size": [
+          5.3988,
+          0.3714,
+          4.6792
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_FloorWedge_Floor",
+        "ML_Env_PB_Hark_Level3_RoofTop_RoofTopWedge_Int",
+        "ML_Env_PB_Hark_Level3_FloorWedge_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_FloorWedge",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "triangular/wedge",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Foundation.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Foundation.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Foundation",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7858,
+          -0.0368,
+          -2.7949
+        ],
+        "max": [
+          2.7843,
+          3.86,
+          2.7957
+        ],
+        "size": [
+          5.57,
+          3.8968,
+          5.5905
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Foundation_Ext",
+        "ML_Env_PB_Hark_Level3_Foundation_Floor"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Foundation",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "square",
+      "goodCanonicalSizeCandidate": true
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_FoundationRoundCorner.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FoundationRoundCorner.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_FoundationRoundCorner",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7706,
+          -0.0208,
+          -2.7707
+        ],
+        "max": [
+          2.7731,
+          3.8655,
+          2.7695
+        ],
+        "size": [
+          5.5437,
+          3.8863,
+          5.5403
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_FoundationRoundCorner_Floor",
+        "ML_Env_PB_Hark_Level3_FoundationRoundCorner_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_FoundationRoundCorner",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_FoundationWedge.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FoundationWedge.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_FoundationWedge",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7817,
+          -0.0127,
+          -3.1105
+        ],
+        "max": [
+          2.7819,
+          3.86,
+          1.7644
+        ],
+        "size": [
+          5.5636,
+          3.8727,
+          4.8749
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_FoundationWedge_Ext",
+        "ML_Env_PB_Hark_Level3_FoundationWedge_Floor"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_FoundationWedge",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "triangular/wedge",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_GarageDoor.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_GarageDoor.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_GarageDoor",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -4.129,
+          -0.0037,
+          -0.3197
+        ],
+        "max": [
+          4.1303,
+          3.1119,
+          0.3263
+        ],
+        "size": [
+          8.2593,
+          3.1156,
+          0.646
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_GarageDoor_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_GarageDoor",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_GarageDoorFrame.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_GarageDoorFrame.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_GarageDoorFrame",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -5.271,
+          -0.0271,
+          -0.9197
+        ],
+        "max": [
+          5.2706,
+          3.8552,
+          0.9185
+        ],
+        "size": [
+          10.5416,
+          3.8824,
+          1.8382
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_GarageDoorFrame_Int",
+        "ML_Env_PB_Hark_Level3_GarageDoorFrame_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_GarageDoorFrame",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Gate_Big.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Gate_Big.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Gate_Big",
+      "likelyCollisionPair": "SM_Env_PB_Hark_Level3_Gate_Big_COL.glb",
+      "bounds": {
+        "min": [
+          -7.8629,
+          -0.0792,
+          -1.913
+        ],
+        "max": [
+          7.8685,
+          19.2465,
+          3.9224
+        ],
+        "size": [
+          15.7314,
+          19.3257,
+          5.8353
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Gate_Big_Int",
+        "ML_Env_PB_Hark_Level3_Gate_Big_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Gate_Big",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Hatch.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Hatch.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Hatch",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6679,
+          -0.6065,
+          -2.668
+        ],
+        "max": [
+          2.6679,
+          0.3156,
+          2.6679
+        ],
+        "size": [
+          5.3358,
+          0.9222,
+          5.3359
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Hatch_Ext",
+        "ML_Env_PB_Hark_Level3_Hatch_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Hatch",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_HatchDoor.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_HatchDoor.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_HatchDoor",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.9689,
+          -0.0692,
+          -1.9689
+        ],
+        "max": [
+          1.969,
+          0.0776,
+          1.969
+        ],
+        "size": [
+          3.9379,
+          0.1468,
+          3.9379
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_HatchDoor_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_HatchDoor",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Ladder.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Ladder.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Ladder",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -0.9017,
+          -0.066,
+          0.0007
+        ],
+        "max": [
+          0.9015,
+          3.7923,
+          1.599
+        ],
+        "size": [
+          1.8032,
+          3.8583,
+          1.5983
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Ladder_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Ladder",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Passageway.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Passageway.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Passageway",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7105,
+          -0.0268,
+          -0.9959
+        ],
+        "max": [
+          2.711,
+          3.8551,
+          1.0029
+        ],
+        "size": [
+          5.4216,
+          3.8819,
+          1.9988
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Passageway_Int",
+        "ML_Env_PB_Hark_Level3_Passageway_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Passageway",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_PillarBottom.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_PillarBottom.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_PillarBottom",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.969,
+          -0.0012,
+          -0.837
+        ],
+        "max": [
+          2.969,
+          3.8444,
+          0.837
+        ],
+        "size": [
+          5.9381,
+          3.8457,
+          1.6739
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_PillarBottom_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_PillarBottom",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_PillarMiddle.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_PillarMiddle.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_PillarMiddle",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -0.8415,
+          -0.0045,
+          -0.8371
+        ],
+        "max": [
+          0.8415,
+          3.8453,
+          0.8371
+        ],
+        "size": [
+          1.683,
+          3.8498,
+          1.6742
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_PillarMiddle_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_PillarMiddle",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_PillarTop.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_PillarTop.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_PillarTop",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.9688,
+          -0.0001,
+          -0.837
+        ],
+        "max": [
+          2.9688,
+          3.8447,
+          0.837
+        ],
+        "size": [
+          5.9376,
+          3.8447,
+          1.6739
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_PillarTop_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_PillarTop",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_PrudenceDoor_MD.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_PrudenceDoor_MD.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_PrudenceDoor_MD",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.3102,
+          0.0084,
+          -0.2642
+        ],
+        "max": [
+          1.3102,
+          3.0735,
+          0.2769
+        ],
+        "size": [
+          2.6204,
+          3.0651,
+          0.5411
+        ]
+      },
+      "materialNames": [
+        "ML_SM_Env_PB_Hark_Level3_PrudenceDoor_MD_DM"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_PrudenceDoor",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_PrudenceDoor.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_PrudenceDoor.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_PrudenceDoor",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.3861,
+          0.0075,
+          -0.264
+        ],
+        "max": [
+          1.3859,
+          3.0729,
+          0.2765
+        ],
+        "size": [
+          2.772,
+          3.0655,
+          0.5405
+        ]
+      },
+      "materialNames": [
+        "ML_SM_Env_PB_Hark_Level3_PrudenceDoor"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_PrudenceDoor",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Railing.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Railing.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Railing",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.635,
+          -0.2823,
+          -0.3591
+        ],
+        "max": [
+          2.6366,
+          1.1199,
+          0.3593
+        ],
+        "size": [
+          5.2717,
+          1.4022,
+          0.7184
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Railing_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Railing",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RailingGate.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RailingGate.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RailingGate",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.635,
+          -0.2822,
+          -0.3582
+        ],
+        "max": [
+          2.635,
+          1.1201,
+          0.3582
+        ],
+        "size": [
+          5.27,
+          1.4023,
+          0.7163
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RailingGate_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RailingGate",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RailingInclined_Half.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RailingInclined_Half.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RailingInclined_Half",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6365,
+          -0.2762,
+          -0.3594
+        ],
+        "max": [
+          2.6364,
+          2.9874,
+          0.3601
+        ],
+        "size": [
+          5.2729,
+          3.2636,
+          0.7195
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RailingInclined_Half_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RailingInclined",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RailingInclined.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RailingInclined.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RailingInclined",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6366,
+          -0.2634,
+          -0.3584
+        ],
+        "max": [
+          2.6394,
+          4.9067,
+          0.3608
+        ],
+        "size": [
+          5.276,
+          5.1701,
+          0.7192
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RailingInclined_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RailingInclined",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RailingRoundCorner.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RailingRoundCorner.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RailingRoundCorner",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6465,
+          -0.2833,
+          -2.6369
+        ],
+        "max": [
+          2.9203,
+          1.1328,
+          2.9217
+        ],
+        "size": [
+          5.5668,
+          1.4161,
+          5.5586
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RailingRoundCorner_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RailingRoundCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Ramp_Half.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Ramp_Half.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Ramp_Half",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5718,
+          -0.6521,
+          -2.7254
+        ],
+        "max": [
+          2.5714,
+          1.9173,
+          2.7254
+        ],
+        "size": [
+          5.1432,
+          2.5694,
+          5.4507
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Ramp_Half_Ext",
+        "ML_Env_PB_Hark_Level3_Ramp_Half_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Ramp",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Ramp.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Ramp.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Ramp",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5691,
+          -0.6531,
+          -2.7094
+        ],
+        "max": [
+          2.5688,
+          3.8464,
+          2.7094
+        ],
+        "size": [
+          5.1379,
+          4.4994,
+          5.4187
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Ramp_Ext",
+        "ML_Env_PB_Hark_Level3_Ramp_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Ramp",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RampCorner_Half_In.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RampCorner_Half_In.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RampCorner_Half_In",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7254,
+          -0.4112,
+          -2.7254
+        ],
+        "max": [
+          2.5695,
+          1.9171,
+          2.5652
+        ],
+        "size": [
+          5.2949,
+          2.3283,
+          5.2906
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RampCorner_Half_In_Ext",
+        "ML_Env_PB_Hark_Level3_RampCorner_Half_In_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RampCorner_Half",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RampCorner_Half.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RampCorner_Half.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RampCorner_Half",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5696,
+          -0.6534,
+          -2.5653
+        ],
+        "max": [
+          2.7249,
+          1.9098,
+          2.7256
+        ],
+        "size": [
+          5.2946,
+          2.5632,
+          5.2909
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RampCorner_Half_Ext",
+        "ML_Env_PB_Hark_Level3_RampCorner_Half_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RampCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RampCorner_In.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RampCorner_In.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RampCorner_In",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.726,
+          -0.4097,
+          -2.726
+        ],
+        "max": [
+          2.5692,
+          3.8451,
+          2.5652
+        ],
+        "size": [
+          5.2952,
+          4.2548,
+          5.2912
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RampCorner_In_Ext",
+        "ML_Env_PB_Hark_Level3_RampCorner_In_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RampCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RampCorner.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RampCorner.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RampCorner",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5694,
+          -0.6649,
+          -2.5698
+        ],
+        "max": [
+          2.7153,
+          3.8229,
+          2.7152
+        ],
+        "size": [
+          5.2847,
+          4.4877,
+          5.2851
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RampCorner_Ext",
+        "ML_Env_PB_Hark_Level3_RampCorner_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RampCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Roof_01.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Roof_01.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Roof_01",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.711,
+          -0.0143,
+          -2.5956
+        ],
+        "max": [
+          2.7135,
+          4.1526,
+          2.8799
+        ],
+        "size": [
+          5.4245,
+          4.1669,
+          5.4755
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Roof_01_Ext",
+        "ML_Env_PB_Hark_Level3_Roof_01_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Roof",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Roof_02.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Roof_02.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Roof_02",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7114,
+          -0.2942,
+          -2.8221
+        ],
+        "max": [
+          2.7104,
+          4.6481,
+          3.4576
+        ],
+        "size": [
+          5.4218,
+          4.9423,
+          6.2797
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Roof_02_Int",
+        "ML_Env_PB_Hark_Level3_Roof_02_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Roof",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofCap_L.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofCap_L.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofCap_L",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6555,
+          -0.0016,
+          -0.3222
+        ],
+        "max": [
+          2.8799,
+          3.8508,
+          0.3206
+        ],
+        "size": [
+          5.5354,
+          3.8523,
+          0.6427
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofCap_Ext",
+        "ML_Env_PB_Hark_Level3_RoofCap_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofCap",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofCap_R.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofCap_R.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofCap_R",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.8808,
+          -0.0016,
+          -0.3083
+        ],
+        "max": [
+          2.6552,
+          3.8508,
+          0.3116
+        ],
+        "size": [
+          5.536,
+          3.8524,
+          0.6199
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofCap_Ext",
+        "ML_Env_PB_Hark_Level3_RoofCap_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofCap",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofCorner_Inv.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofCorner_Inv.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofCorner_Inv",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.598,
+          -0.0074,
+          -2.5955
+        ],
+        "max": [
+          2.7346,
+          4.1534,
+          2.7375
+        ],
+        "size": [
+          5.3326,
+          4.1608,
+          5.3331
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofCorner_Inv_Ext",
+        "ML_Env_PB_Hark_Level3_RoofCorner_Inv_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofCorner.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofCorner.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofCorner",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7124,
+          -0.0184,
+          -2.7124
+        ],
+        "max": [
+          2.8799,
+          3.8383,
+          2.8804
+        ],
+        "size": [
+          5.5923,
+          3.8566,
+          5.5928
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofCorner_Ext",
+        "ML_Env_PB_Hark_Level3_RoofCorner_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofRoundCorner.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofRoundCorner.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofRoundCorner",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7196,
+          -0.0196,
+          -2.7125
+        ],
+        "max": [
+          2.8874,
+          3.8423,
+          2.8797
+        ],
+        "size": [
+          5.607,
+          3.862,
+          5.5922
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofRoundCorner_Ext",
+        "ML_Env_PB_Hark_Level3_RoofRoundCorner_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofRoundCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofTop_02.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofTop_02.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofTop_02",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6589,
+          -0.3535,
+          -2.6589
+        ],
+        "max": [
+          2.6589,
+          0.02,
+          2.6589
+        ],
+        "size": [
+          5.3178,
+          0.3735,
+          5.3178
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofTop_02_Ext",
+        "ML_Env_PB_Hark_Level3_RoofTop_02_Int",
+        "ML_Env_PB_Hark_Level3_RoofTop_02_Roof"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofTop",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "square",
+      "goodCanonicalSizeCandidate": true
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofTop.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofTop.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofTop",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.8805,
+          -0.085,
+          -2.8809
+        ],
+        "max": [
+          2.8807,
+          2.7477,
+          2.8803
+        ],
+        "size": [
+          5.7612,
+          2.8327,
+          5.7613
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofTop_Ext",
+        "ML_Env_PB_Hark_Level3_RoofTop_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofTop",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "square",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofTopRoundCorner_In.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofTopRoundCorner_In.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofTopRoundCorner_In",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5623,
+          -0.3547,
+          -2.562
+        ],
+        "max": [
+          2.6671,
+          0.021,
+          2.6687
+        ],
+        "size": [
+          5.2294,
+          0.3757,
+          5.2307
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofTop_RoofTopRoundCorner_In_Ext",
+        "ML_Env_PB_Hark_Level3_RoofTop_RoofTopRoundCorner_In_Int",
+        "ML_Env_PB_Hark_Level3_RoofTop_RoofTopRoundCorner_In_Ext_Roof"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofTopRoundCorner",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofTopRoundCorner.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofTopRoundCorner.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofTopRoundCorner",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6688,
+          -0.3535,
+          -2.669
+        ],
+        "max": [
+          2.6745,
+          0.02,
+          2.6733
+        ],
+        "size": [
+          5.3433,
+          0.3735,
+          5.3423
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofTop_RoundCorner_Ext",
+        "ML_Env_PB_Hark_Level3_RoofTop_RoundCorner_Ext_Roof",
+        "ML_Env_PB_Hark_Level3_RoofTop_RoundCorner_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofTopRoundCorner",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofTopWedge.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofTopWedge.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofTopWedge",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6994,
+          -0.3535,
+          -3.0415
+        ],
+        "max": [
+          2.6994,
+          0.02,
+          1.6376
+        ],
+        "size": [
+          5.3988,
+          0.3735,
+          4.6792
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofTop_RoofTopWedge_Ext_Roof",
+        "ML_Env_PB_Hark_Level3_RoofTop_RoofTopWedge_Int",
+        "ML_Env_PB_Hark_Level3_RoofTop_RoofTopWedge_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofTopWedge",
+      "scaleCalibrationCandidate": true,
+      "apparentPlanShape": "triangular/wedge",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofWedgeBottom.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofWedgeBottom.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofWedgeBottom",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7113,
+          -0.0139,
+          -2.9873
+        ],
+        "max": [
+          2.7167,
+          3.8391,
+          1.7566
+        ],
+        "size": [
+          5.4281,
+          3.8529,
+          4.7439
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofWedgeBottom",
+        "ML_Env_PB_Hark_Level3_RoofWedgeBottom_Int"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofWedgeBottom",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "triangular/wedge",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_RoofWedgeTop.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_RoofWedgeTop.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_RoofWedgeTop",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6658,
+          -0.0044,
+          -2.9883
+        ],
+        "max": [
+          2.6656,
+          3.8433,
+          1.5211
+        ],
+        "size": [
+          5.3314,
+          3.8477,
+          4.5094
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_RoofWedgeTop_Ext",
+        "ML_Env_PB_Hark_Level3_RoofWedgeTop_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_RoofWedgeTop",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "triangular/wedge",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Stairs_Half.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Stairs_Half.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Stairs_Half",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.696,
+          -0.6505,
+          -2.7142
+        ],
+        "max": [
+          2.692,
+          1.9235,
+          2.7139
+        ],
+        "size": [
+          5.388,
+          2.5739,
+          5.4281
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Stairs_Half_Ext",
+        "ML_Env_PB_Hark_Level3_Stairs_Half_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Stairs",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Stairs.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Stairs.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Stairs",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7075,
+          -0.6529,
+          -2.7124
+        ],
+        "max": [
+          2.6928,
+          3.8437,
+          2.7126
+        ],
+        "size": [
+          5.4003,
+          4.4967,
+          5.425
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Stairs_Ext",
+        "ML_Env_PB_Hark_Level3_Stairs_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Stairs",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_StairsCorner_Half_In.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_StairsCorner_Half_In.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_StairsCorner_Half_In",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7153,
+          -0.4112,
+          -2.7153
+        ],
+        "max": [
+          2.7146,
+          1.9236,
+          2.7148
+        ],
+        "size": [
+          5.4299,
+          2.3348,
+          5.43
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_StairsCorner_Half_In_Ext",
+        "ML_Env_PB_Hark_Level3_StairsCorner_Half_In_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_StairsCorner_Half",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_StairsCorner_Half.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_StairsCorner_Half.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_StairsCorner_Half",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6708,
+          -0.6534,
+          -2.6695
+        ],
+        "max": [
+          2.7139,
+          1.9275,
+          2.715
+        ],
+        "size": [
+          5.3847,
+          2.5809,
+          5.3845
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_StairsCorner_Half_Ext",
+        "ML_Env_PB_Hark_Level3_StairsCorner_Half_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_StairsCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_StairsCorner_In.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_StairsCorner_In.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_StairsCorner_In",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6995,
+          -0.4095,
+          -2.7148
+        ],
+        "max": [
+          2.7158,
+          3.8436,
+          2.7191
+        ],
+        "size": [
+          5.4153,
+          4.2531,
+          5.4339
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_StairsCorner_In_Ext",
+        "ML_Env_PB_Hark_Level3_StairsCorner_In_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_StairsCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_StairsCorner.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_StairsCorner.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_StairsCorner",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6914,
+          -0.6688,
+          -2.6905
+        ],
+        "max": [
+          2.7203,
+          3.8451,
+          2.712
+        ],
+        "size": [
+          5.4117,
+          4.5139,
+          5.4024
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_StairsCorner_Ext",
+        "ML_Env_PB_Hark_Level3_StairsCorner_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_StairsCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Wall_01.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Wall_01.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Wall_01",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7186,
+          -0.0265,
+          -0.3202
+        ],
+        "max": [
+          2.7192,
+          3.8553,
+          0.32
+        ],
+        "size": [
+          5.4378,
+          3.8819,
+          0.6402
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Wall_01_Ext",
+        "ML_Env_PB_Hark_Level3_Wall_01_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Wall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Wall_02.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Wall_02.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Wall_02",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7182,
+          -0.0267,
+          -0.9484
+        ],
+        "max": [
+          2.7174,
+          3.8553,
+          0.8508
+        ],
+        "size": [
+          5.4356,
+          3.8821,
+          1.7993
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Wall_02_Ext",
+        "ML_Env_PB_Hark_Level3_Wall_02_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Wall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Wall_03.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Wall_03.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Wall_03",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7179,
+          -0.0266,
+          -1.51
+        ],
+        "max": [
+          2.7174,
+          3.8588,
+          0.7361
+        ],
+        "size": [
+          5.4352,
+          3.8853,
+          2.246
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Wall_03_Ext",
+        "ML_Env_PB_Hark_Level3_Wall_03_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Wall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Wall_04.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Wall_04.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Wall_04",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7126,
+          -0.0265,
+          -0.9484
+        ],
+        "max": [
+          2.7122,
+          3.8553,
+          0.8571
+        ],
+        "size": [
+          5.4248,
+          3.8818,
+          1.8055
+        ]
+      },
+      "materialNames": [
+        "MI_Env_PB_Hark_Level3_Light_Blue_01",
+        "ML_Env_PB_Hark_Level3_Wall_04_Int",
+        "ML_Env_PB_Hark_Level3_Wall_04_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Wall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Wall_05.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Wall_05.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Wall_05",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7068,
+          -0.0267,
+          -0.3202
+        ],
+        "max": [
+          2.7068,
+          3.8554,
+          0.3202
+        ],
+        "size": [
+          5.4135,
+          3.8821,
+          0.6404
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Wall_01_Ext",
+        "ML_Env_PB_Hark_Level3_Wall_01_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Wall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Wall_Half.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Wall_Half.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Wall_Half",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7094,
+          -0.0263,
+          -0.32
+        ],
+        "max": [
+          2.7081,
+          1.9355,
+          0.32
+        ],
+        "size": [
+          5.4175,
+          1.9618,
+          0.64
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Wall_Half_Ext",
+        "ML_Env_PB_Hark_Level3_Wall_Half_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Wall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallCorner_Tall.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallCorner_Tall.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallCorner_Tall",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7232,
+          -0.1291,
+          -2.7202
+        ],
+        "max": [
+          3.4057,
+          11.5488,
+          3.4089
+        ],
+        "size": [
+          6.129,
+          11.6779,
+          6.1291
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallCorner_Tall_Ext",
+        "ML_Env_PB_Hark_Level3_WallCorner_Tall_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallInclined_Tall_Glass.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallInclined_Tall_Glass.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallInclined_Tall_Glass",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -0.2706,
+          2.7828,
+          -4.2029
+        ],
+        "max": [
+          0.2648,
+          9.4876,
+          -1.0397
+        ],
+        "size": [
+          0.5354,
+          6.7048,
+          3.1633
+        ]
+      },
+      "materialNames": [
+        "MI_Env_PB_Hark_Level3_Window_Glass_Translucent"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallInclined_Tall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallInclined_Tall.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallInclined_Tall.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallInclined_Tall",
+      "likelyCollisionPair": "SM_Env_PB_Hark_Level3_WallInclined_Tall_COL.glb",
+      "bounds": {
+        "min": [
+          -2.7339,
+          -0.1301,
+          -5.6122
+        ],
+        "max": [
+          2.7337,
+          11.5418,
+          0.8473
+        ],
+        "size": [
+          5.4675,
+          11.6719,
+          6.4595
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallInclined_Tall",
+        "ML_Env_PB_Hark_Level3_WallInclined_Tall_Int"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallInclined",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallRoundCorner_01.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallRoundCorner_01.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallRoundCorner_01",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7041,
+          -0.037,
+          -2.702
+        ],
+        "max": [
+          2.8846,
+          3.8604,
+          2.8853
+        ],
+        "size": [
+          5.5888,
+          3.8974,
+          5.5873
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_01_Ext",
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_01_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallRoundCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallRoundCorner_02.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallRoundCorner_02.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallRoundCorner_02",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7368,
+          -0.0357,
+          -2.7156
+        ],
+        "max": [
+          3.4061,
+          3.8639,
+          3.4216
+        ],
+        "size": [
+          6.1428,
+          3.8996,
+          6.1372
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_02_Ext",
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_02_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallRoundCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallRoundCorner_03.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallRoundCorner_03.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallRoundCorner_03",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.728,
+          -0.0347,
+          -2.7314
+        ],
+        "max": [
+          3.4137,
+          3.8661,
+          3.407
+        ],
+        "size": [
+          6.1417,
+          3.9008,
+          6.1383
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_03_Int",
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_03_Ext",
+        "MI_Env_PB_Hark_Level3_Light_Blue_01"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallRoundCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallRoundCorner_04.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallRoundCorner_04.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallRoundCorner_04",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7297,
+          -0.0466,
+          -2.73
+        ],
+        "max": [
+          2.8813,
+          3.8637,
+          2.8832
+        ],
+        "size": [
+          5.611,
+          3.9103,
+          5.6132
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_04_Ext",
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_04_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallRoundCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallRoundCorner_Half.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallRoundCorner_Half.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallRoundCorner_Half",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7068,
+          -0.0338,
+          -2.706
+        ],
+        "max": [
+          2.8848,
+          1.9513,
+          2.8837
+        ],
+        "size": [
+          5.5915,
+          1.9851,
+          5.5897
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_Half_Ext",
+        "ML_Env_PB_Hark_Level3_WallRoundCorner_Half_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallRoundCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_Half_L.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleBottom_Half_L.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_Half_L",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7081,
+          -0.0263,
+          -0.3307
+        ],
+        "max": [
+          2.6346,
+          1.9324,
+          0.32
+        ],
+        "size": [
+          5.3428,
+          1.9587,
+          0.6507
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleBottom_Half_L_Int",
+        "ML_Env_PB_Hark_Level3_WallTriangleBottom_Half_L_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleBottom_Half",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_Half_R.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleBottom_Half_R.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_Half_R",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6346,
+          -0.0263,
+          -0.3209
+        ],
+        "max": [
+          2.7081,
+          1.9324,
+          0.32
+        ],
+        "size": [
+          5.3428,
+          1.9587,
+          0.6409
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleBottom_Half_L_Int",
+        "ML_Env_PB_Hark_Level3_WallTriangleBottom_Half_L_Ext"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleBottom_Half",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_L.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleBottom_L.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_L",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7106,
+          -0.0263,
+          -0.3203
+        ],
+        "max": [
+          2.5965,
+          3.8531,
+          0.32
+        ],
+        "size": [
+          5.3072,
+          3.8794,
+          0.6403
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleBottom_L_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleBottom_L_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleBottom",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_R.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleBottom_R.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_R",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5965,
+          -0.0263,
+          -0.3203
+        ],
+        "max": [
+          2.7106,
+          3.8531,
+          0.32
+        ],
+        "size": [
+          5.3072,
+          3.8794,
+          0.6403
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleBottom_L_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleBottom_L_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleBottom",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_Tall_L.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleBottom_Tall_L.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_Tall_L",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7383,
+          -0.0263,
+          -0.3326
+        ],
+        "max": [
+          2.5893,
+          11.5474,
+          0.3221
+        ],
+        "size": [
+          5.3275,
+          11.5736,
+          0.6547
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleBottomTall_LR_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleBottomTall_LR_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleBottom_Tall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_Tall_R.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleBottom_Tall_R.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleBottom_Tall_R",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5891,
+          -0.0255,
+          -0.3326
+        ],
+        "max": [
+          2.7386,
+          11.5474,
+          0.3221
+        ],
+        "size": [
+          5.3277,
+          11.5729,
+          0.6547
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleBottomTall_LR_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleBottomTall_LR_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleBottom_Tall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleTop_Half_L.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleTop_Half_L.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleTop_Half_L",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7131,
+          -0.0252,
+          -0.32
+        ],
+        "max": [
+          2.6131,
+          1.9352,
+          0.32
+        ],
+        "size": [
+          5.3262,
+          1.9604,
+          0.64
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleTop_Half_L_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleTop_Half_L_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleTop_Half",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleTop_Half_R.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleTop_Half_R.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleTop_Half_R",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.6131,
+          -0.0252,
+          -0.3315
+        ],
+        "max": [
+          2.7131,
+          1.9352,
+          0.32
+        ],
+        "size": [
+          5.3262,
+          1.9605,
+          0.6515
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleTop_Half_L_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleTop_Half_L_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleTop_Half",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleTop_L.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleTop_L.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleTop_L",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7275,
+          -0.0271,
+          -0.3205
+        ],
+        "max": [
+          2.5899,
+          3.8552,
+          0.32
+        ],
+        "size": [
+          5.3173,
+          3.8823,
+          0.6405
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleTop_L_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleTop_L_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleTop",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleTop_R.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleTop_R.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleTop_R",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.5899,
+          -0.0271,
+          -0.3205
+        ],
+        "max": [
+          2.7274,
+          3.8552,
+          0.32
+        ],
+        "size": [
+          5.3173,
+          3.8823,
+          0.6405
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleTop_L_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleTop_L_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleTop",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleTop_Tall_L.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleTop_Tall_L.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleTop_Tall_L",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7384,
+          -0.0267,
+          -0.3203
+        ],
+        "max": [
+          2.59,
+          11.5351,
+          0.3217
+        ],
+        "size": [
+          5.3284,
+          11.5619,
+          0.6419
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleTopTall_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleTopTall_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleTop_Tall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallTriangleTop_Tall_R.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallTriangleTop_Tall_R.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallTriangleTop_Tall_R",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.59,
+          -0.0264,
+          -0.3203
+        ],
+        "max": [
+          2.7359,
+          11.5353,
+          0.3217
+        ],
+        "size": [
+          5.3258,
+          11.5618,
+          0.6419
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WallTriangleTopTall_Ext",
+        "ML_Env_PB_Hark_Level3_WallTriangleTopTall_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallTriangleTop_Tall",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Window.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Window.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Window",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7144,
+          -0.0265,
+          -0.9484
+        ],
+        "max": [
+          2.7107,
+          3.8553,
+          0.8469
+        ],
+        "size": [
+          5.4251,
+          3.8818,
+          1.7953
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_Window_Ext",
+        "ML_Env_PB_Hark_Level3_Window_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Window",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WindowGlass.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WindowGlass.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WindowGlass",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.8924,
+          1.4535,
+          -0.2544
+        ],
+        "max": [
+          2.0284,
+          2.236,
+          -0.2258
+        ],
+        "size": [
+          3.9208,
+          0.7824,
+          0.0286
+        ]
+      },
+      "materialNames": [
+        "MI_Env_PB_Hark_Level3_Window_Glass_Translucent"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WindowGlass",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WindowRoundCorner_01_Glass.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WindowRoundCorner_01_Glass.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WindowRoundCorner_01_Glass",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -1.9611,
+          1.4624,
+          -1.9249
+        ],
+        "max": [
+          2.3041,
+          2.2449,
+          2.3022
+        ],
+        "size": [
+          4.2652,
+          0.7825,
+          4.2271
+        ]
+      },
+      "materialNames": [
+        "MI_Env_PB_Hark_Level3_Window_Glass_Translucent"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WindowRoundCorner_01",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WindowRoundCorner_01.glb",
+      "path": "public/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WindowRoundCorner_01.glb",
+      "classification": "visual",
+      "containsCOL": false,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WindowRoundCorner_01",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.7282,
+          -0.0354,
+          -2.7641
+        ],
+        "max": [
+          3.406,
+          3.8635,
+          3.4136
+        ],
+        "size": [
+          6.1342,
+          3.8989,
+          6.1777
+        ]
+      },
+      "materialNames": [
+        "ML_Env_PB_Hark_Level3_WindowRoundCorner_01_Ext",
+        "ML_Env_PB_Hark_Level3_WindowRoundCorner_01_Int"
+      ],
+      "hasExtMaterial": true,
+      "hasIntMaterial": true,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WindowRoundCorner",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "corner",
+      "goodCanonicalSizeCandidate": false
+    }
+  ],
+  "referenceAssets": [
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_Gate_Big_COL.glb",
+      "path": "public/assets/reference/SM_Env_PB_Hark_Level3_Gate_Big_COL.glb",
+      "classification": "collision-reference",
+      "containsCOL": true,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_Gate_Big",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -7.8453,
+          -0.0413,
+          -1.9004
+        ],
+        "max": [
+          7.8453,
+          19.2004,
+          3.9144
+        ],
+        "size": [
+          15.6907,
+          19.2417,
+          5.8148
+        ]
+      },
+      "materialNames": [
+        "MI_Blockout"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_Gate_Big_COL",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    },
+    {
+      "fileName": "SM_Env_PB_Hark_Level3_WallInclined_Tall_COL.glb",
+      "path": "public/assets/reference/SM_Env_PB_Hark_Level3_WallInclined_Tall_COL.glb",
+      "classification": "collision-reference",
+      "containsCOL": true,
+      "likelyBaseAssetName": "SM_Env_PB_Hark_Level3_WallInclined_Tall",
+      "likelyCollisionPair": null,
+      "bounds": {
+        "min": [
+          -2.569,
+          -0.1283,
+          -5.5908
+        ],
+        "max": [
+          2.5644,
+          11.5156,
+          0.8457
+        ],
+        "size": [
+          5.1334,
+          11.6439,
+          6.4365
+        ]
+      },
+      "materialNames": [
+        "MI_Blockout"
+      ],
+      "hasExtMaterial": false,
+      "hasIntMaterial": false,
+      "meshCount": 1,
+      "childCount": 1,
+      "family": "Env_PB_Hark_Level3_WallInclined_Tall_COL",
+      "scaleCalibrationCandidate": false,
+      "apparentPlanShape": "unknown",
+      "goodCanonicalSizeCandidate": false
+    }
+  ]
+}

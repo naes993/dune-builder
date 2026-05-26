@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Game-provided local assets are referenced by V2 but must not be redistributed.
+public/assets/**/*.glb
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
