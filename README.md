@@ -1,35 +1,46 @@
-# Dune: Awakening Base Building Planner
+# Dune Builder
 
-A 3D base building planner for Funcom's "Dune: Awakening" game, built with Three.js, React Three Fiber, and TypeScript.
+This repository currently contains the original legacy builder and an isolated V2 builder prototype.
 
-## Features
+The V2 prototype is available at `/v2`. The current active development branch is `v2-builder-engine-prototype`, and the current safe checkpoint is `b2cbda9`.
 
-- **Foundation pieces**: Square, triangle, and curved corners for flexible base layouts
-- **Walls**: Full walls, half walls, windows, and doorways
-- **Roofs & Inclines**: Square/triangle roofs, stairs, and ramps
-- **Smart snapping**: Socket-based system for precise piece placement
-- **Save/Load**: Quick save to browser storage
-- **Export/Import**: Share blueprints as JSON files
+## V2 Builder Prototype
 
-## Quick Start
+V2 is being built as a data-driven placement engine:
+
+- Logical footprints define occupied space.
+- Edge anchors define alignment.
+- Placement rules define allowed placement.
+- Occupancy validation rejects overlaps.
+- GLB files are visual wrappers only.
+
+The V2 code is intentionally isolated under `v2/` so it can evolve without depending on the legacy builder implementation.
+
+## Local Assets
+
+Game-provided GLB files are not included in this repository and must not be committed or redistributed.
+
+The app may reference local asset URLs under `public/assets/...`, such as `/assets/parts/harkonnen/...`, but `.glb` files are ignored by git via:
+
+```gitignore
+public/assets/**/*.glb
+```
+
+Keep those assets local-only.
+
+## Run Locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Controls
+Open `/v2` to test the V2 prototype.
 
-- **Left Click**: Place structure
-- **Right Click**: Demolish structure
-- **R**: Rotate preview (45° increments)
-- **Middle Mouse Drag**: Orbit camera
-- **Right Mouse Drag**: Pan camera
+## Validate
 
-## Building System
+```bash
+npm run build
+npx tsc --noEmit
+```
 
-The building system uses tessellating geometric shapes based on squares and 60° triangles, allowing for structures ranging from simple rectangular bases to complex rounded, pyramidal, or organic shapes.
-
-## License
-
-MIT
