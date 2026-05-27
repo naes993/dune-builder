@@ -1,5 +1,58 @@
 # V2 Changelog
 
+## v2-dev-0008 - 2026-05-26
+
+Foundation edge snapping uses explicit structural, floor, and wall channels.
+
+- Added V2 snap channel metadata for source and target parts.
+- Added a small snap relationship helper so generic edge candidates are filtered before scoring.
+- Foundation parts use the `foundation-structure` channel for foundation-to-foundation side adjacency.
+- Floor calibration parts use the `floor-support` channel for floor/foundation footprint-level snapping.
+- Wall parts use the `wall-support` channel for foundation side snapping.
+- Wall-support snaps attach wall endpoints to foundation side endpoints and project outward from the foundation face.
+- Foundation target edges expose `foundation-structure`, `floor-support`, and `wall-support` channels.
+- Debug output now shows the selected support-edge channel for the current preview.
+- No `V2_UNIT_SIZE`, GLB scale, visual offset, material, mesh transform, or wedge/triangle geometry values were changed.
+- No top-surface or vertical building system was added.
+
+## v2-dev-0007 - 2026-05-26
+
+Global grid snapping is optional; placement is connection-first.
+
+- Added V2 store `snapToGrid`, defaulting to `false`.
+- Added a separate `Snap Grid` toolbar checkbox for global V2 grid snapping.
+- Kept the existing `Grid` checkbox scoped to visual grid display only.
+- Placement now prioritizes connection targets before ground fallback.
+- Ground fallback uses exact cursor placement when `snapToGrid` is off and global V2 grid centers when `snapToGrid` is on.
+- Connection snap results are not forced back onto the global grid.
+- Documented the checkpoint placement priority and in-app browser placement-testing path.
+- No `V2_UNIT_SIZE`, GLB scale, visual offset, material, mesh transform, or wedge/triangle geometry values were changed.
+
+## v2-dev-0006 - 2026-05-26
+
+Wall placement supports support edges and wall-run continuation.
+
+- Added wall endpoint targets for placed wall-like parts.
+- Added wall-run placement mode so walls and doors can continue from existing wall endpoints.
+- Wall-run previews align a selected source wall endpoint to the selected target wall endpoint.
+- Added normalized wall segment occupancy keys in the format `wall-segment:{normalizedStart}:{normalizedEnd}`.
+- Duplicate wall segments are invalid regardless of placement direction.
+- Support-edge placement remains backed by `{supportInstanceId}:{supportEdgeId}` keys and also reserves the physical wall segment key.
+- Added Debug wall placement diagnostics for mode, target edge or wall endpoint, occupancy key, occupancy status, endpoint markers, and preview segment lines.
+- No `V2_UNIT_SIZE`, wall GLB scale, visual offset, material, mesh transform, Grid behavior, or wedge/triangle geometry values were changed.
+
+## v2-dev-0005 - 2026-05-26
+
+Wall-edge placement uses support edge slots with aligned wall transforms.
+
+- Persisted snap bindings on placed V2 instances so wall-like parts reserve the exact support edge used for their preview transform.
+- Added edge-slot occupancy keys in the format `{supportInstanceId}:{supportEdgeId}`.
+- Snapped wall and door parts use edge-slot occupancy instead of broad rectangular footprint overlap as the main blocker.
+- Adjacent wall-edge slots can be occupied so walls can meet at square and triangle corners.
+- A second wall or door on the same support edge is invalid.
+- Kept conservative footprint overlap behavior for unsnapped wall-edge placement.
+- No `V2_UNIT_SIZE`, wall GLB scale, visual offset, material, mesh transform, Grid behavior, or wedge/triangle geometry values were changed.
+
 ## v2-dev-0004 - 2026-05-26
 
 Ground grid helper is optional and off by default.

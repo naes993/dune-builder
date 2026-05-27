@@ -16,6 +16,8 @@ export type PartCategory = 'foundation' | 'calibration-foundation' | 'wall' | 'w
 export type OccupancyLayer = 'foundation' | 'wall-edge';
 export type AnchorKind = 'edge';
 export type AnchorRole = 'foundation-edge';
+export type PlacementMode = 'support-edge' | 'wall-run' | 'free-ground' | 'grid-ground';
+export type SnapChannel = 'foundation-structure' | 'floor-support' | 'wall-support';
 
 export interface EdgeAnchorDef {
   id: string;
@@ -55,6 +57,8 @@ export interface PartDefinition {
   name: string;
   category: PartCategory;
   occupancyLayer: OccupancyLayer;
+  snapSourceChannels: SnapChannel[];
+  snapTargetChannels: SnapChannel[];
   height: number;
   yOffset: number;
   allowedRotations: number[];
@@ -74,6 +78,7 @@ export interface PartInstance {
   id: string;
   partId: PartId;
   transform: Transform2D;
+  binding?: AnchorBinding;
 }
 
 export interface WorldEdgeAnchor extends EdgeAnchorDef {
@@ -87,9 +92,17 @@ export interface WorldEdgeAnchor extends EdgeAnchorDef {
 }
 
 export interface AnchorBinding {
-  sourceAnchorId: string;
-  targetInstanceId: string;
-  targetAnchorId: string;
+  placementMode: PlacementMode;
+  snapChannel?: SnapChannel;
+  sourceAnchorId?: string;
+  sourceEndpointId?: string;
+  targetInstanceId?: string;
+  targetAnchorId?: string;
+  targetWallInstanceId?: string;
+  targetWallEndpointId?: string;
+  occupancyKey?: string;
+  occupancyKeys?: string[];
+  targetOccupied?: boolean;
 }
 
 export interface PlacementCandidate {
@@ -97,6 +110,7 @@ export interface PlacementCandidate {
   isValid: boolean;
   reasons: string[];
   snapped: boolean;
+  placementMode: PlacementMode;
   binding?: AnchorBinding;
 }
 
@@ -105,6 +119,7 @@ export interface SnapSolverInput {
   activePartId: PartId;
   rotationY: number;
   instances: PartInstance[];
+  snapToGrid?: boolean;
   snapRadius?: number;
 }
 

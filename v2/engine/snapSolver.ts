@@ -1,9 +1,12 @@
 import * as THREE from 'three';
 import {
+  EdgeAnchorDef,
   PartInstance,
   PlacementCandidate,
+  PlacementMode,
   SnapSolverInput,
   Transform2D,
+  Vec3,
   WorldEdgeAnchor,
 } from '../types';
 import { PARTS } from '../registry/parts';
@@ -12,11 +15,20 @@ import {
   getEdgeLength,
   getWorldEdgeAnchors,
   nearestAllowedRotation,
+  transformPoint,
 } from './anchors';
-import { validatePlacement } from './rules';
+import {
+  getOccupiedPlacementKeys,
+  getSupportEdgeSlotKey,
+  getWallSegmentKey,
+  isWallEdgePart,
+  validatePlacement,
+} from './rules';
+import { getSnapRelationship } from './snapRelationships';
 import { V2_UNIT_SIZE } from '../constants';
 
 const DEFAULT_SNAP_RADIUS = 3.5;
+const WALL_ENDPOINT_SNAP_RADIUS = 1.35;
 const GRID_SIZE = V2_UNIT_SIZE;
 
 const distance = (a: [number, number, number], b: [number, number, number]) => {
@@ -26,14 +38,79 @@ const distance = (a: [number, number, number], b: [number, number, number]) => {
 const getTargetAnchors = (instances: PartInstance[]): WorldEdgeAnchor[] => {
   return instances.flatMap((instance) => {
     const part = PARTS[instance.partId];
-    if (part.category !== 'foundation' && part.category !== 'calibration-foundation') return [];
+    if (part.snapTargetChannels.length === 0) return [];
     return getWorldEdgeAnchors(part, instance.transform, instance.id);
   });
 };
 
-const snapToGrid = (value: number) => {
+type WallEndpointTarget = {
+  instanceId: string;
+  anchorId: string;
+  endpointId: string;
+  point: Vec3;
+};
+
+const getWallEndpointTargets = (instances: PartInstance[]): WallEndpointTarget[] => {
+  return instances.flatMap((instance) => {
+    const part = PARTS[instance.partId];
+    if (!isWallEdgePart(part)) return [];
+
+    return getWorldEdgeAnchors(part, instance.transform, instance.id).flatMap((anchor) => [
+      {
+        instanceId: instance.id,
+        anchorId: anchor.id,
+        endpointId: `${anchor.id}.start`,
+        point: anchor.startWorld,
+      },
+      {
+        instanceId: instance.id,
+        anchorId: anchor.id,
+        endpointId: `${anchor.id}.end`,
+        point: anchor.endWorld,
+      },
+    ]);
+  });
+};
+
+const snapCoordinateToGrid = (value: number) => {
   const offset = GRID_SIZE / 2;
   return Math.round((value - offset) / GRID_SIZE) * GRID_SIZE + offset;
+};
+
+const angleFromDirection = ([x, , z]: Vec3) => Math.atan2(x, z);
+
+const calculateWallSupportTransform = (
+  target: WorldEdgeAnchor,
+  source: EdgeAnchorDef,
+  targetEndpoint: 'start' | 'end',
+  sourceEndpoint: 'start' | 'end',
+  allowedRotations: number[]
+): Transform2D => {
+  const sourceDirection = new THREE.Vector3(...source.end)
+    .sub(new THREE.Vector3(...source.start))
+    .normalize();
+  const desiredDirection = new THREE.Vector3(...target.normalWorld).normalize();
+  if (sourceEndpoint === 'end') {
+    desiredDirection.negate();
+  }
+
+  const rotationY = nearestAllowedRotation(
+    angleFromDirection([desiredDirection.x, desiredDirection.y, desiredDirection.z]) -
+      angleFromDirection([sourceDirection.x, sourceDirection.y, sourceDirection.z]),
+    allowedRotations
+  );
+  const localEndpoint = sourceEndpoint === 'start' ? source.start : source.end;
+  const targetPoint = targetEndpoint === 'start' ? target.startWorld : target.endWorld;
+  const rotatedEndpoint = transformPoint(localEndpoint, { position: [0, 0, 0], rotationY });
+
+  return {
+    position: [
+      targetPoint[0] - rotatedEndpoint[0],
+      0,
+      targetPoint[2] - rotatedEndpoint[2],
+    ],
+    rotationY,
+  };
 };
 
 const validateCandidate = (
@@ -41,65 +118,180 @@ const validateCandidate = (
   transform: Transform2D,
   instances: PartInstance[],
   snapped: boolean,
+  placementMode: PlacementMode,
   binding?: PlacementCandidate['binding']
 ): PlacementCandidate => {
-  const validation = validatePlacement(PARTS[activePartId], transform, instances, PARTS);
+  const occupiedPlacementKeys = getOccupiedPlacementKeys(instances, PARTS);
+  const slotAwareBinding = binding?.occupancyKeys?.length || binding?.occupancyKey
+    ? {
+        ...binding,
+        targetOccupied: (binding.occupancyKeys ?? [binding.occupancyKey]).some((key) => {
+          return key ? occupiedPlacementKeys.has(key) : false;
+        }),
+      }
+    : binding;
+  const validation = validatePlacement(PARTS[activePartId], transform, instances, PARTS, slotAwareBinding);
   return {
     transform,
     isValid: validation.isValid,
     reasons: validation.reasons,
     snapped,
-    binding,
+    placementMode,
+    binding: slotAwareBinding,
   };
 };
+
+const rankCandidate = (candidate: PlacementCandidate, score: number) => ({
+  candidate,
+  score: candidate.isValid ? score : score + 1000,
+});
 
 export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
   const activePart = PARTS[input.activePartId];
   const snapRadius = input.snapRadius ?? DEFAULT_SNAP_RADIUS;
   const targetAnchors = getTargetAnchors(input.instances);
+  const wallEndpointTargets = getWallEndpointTargets(input.instances);
+
+  if (isWallEdgePart(activePart)) {
+    let bestWallRun:
+      | {
+          candidate: PlacementCandidate;
+          score: number;
+        }
+      | null = null;
+    const rotationY = nearestAllowedRotation(input.rotationY, activePart.allowedRotations);
+
+    for (const target of wallEndpointTargets) {
+      const targetDistance = distance(target.point, input.cursor);
+      if (targetDistance > WALL_ENDPOINT_SNAP_RADIUS) continue;
+
+      for (const sourceAnchor of activePart.anchors) {
+        for (const sourceEndpoint of [
+          { id: `${sourceAnchor.id}.start`, point: sourceAnchor.start },
+          { id: `${sourceAnchor.id}.end`, point: sourceAnchor.end },
+        ]) {
+          const sourceWorld = transformPoint(sourceEndpoint.point, { position: [0, 0, 0], rotationY });
+          const transform: Transform2D = {
+            position: [
+              target.point[0] - sourceWorld[0],
+              0,
+              target.point[2] - sourceWorld[2],
+            ],
+            rotationY,
+          };
+          const wallSegmentKey = getWallSegmentKey(activePart, transform, sourceAnchor.id);
+          if (!wallSegmentKey) continue;
+
+          const candidate = validateCandidate(
+            input.activePartId,
+            transform,
+            input.instances,
+            true,
+            'wall-run',
+            {
+              placementMode: 'wall-run',
+              snapChannel: 'wall-support',
+              sourceAnchorId: sourceAnchor.id,
+              sourceEndpointId: sourceEndpoint.id,
+              targetWallInstanceId: target.instanceId,
+              targetWallEndpointId: target.endpointId,
+              occupancyKey: wallSegmentKey,
+              occupancyKeys: [wallSegmentKey],
+            }
+          );
+          const ranked = rankCandidate(candidate, targetDistance);
+          if (!bestWallRun || ranked.score < bestWallRun.score) {
+            bestWallRun = ranked;
+          }
+        }
+      }
+    }
+
+    if (bestWallRun) {
+      return bestWallRun.candidate;
+    }
+  }
 
   let bestSnap:
     | {
-        transform: Transform2D;
+        candidate: PlacementCandidate;
         score: number;
-        binding: NonNullable<PlacementCandidate['binding']>;
       }
     | null = null;
 
   for (const target of targetAnchors) {
     if (!target.instanceId) continue;
+    const targetPart = PARTS[target.partId];
+    const snapChannel = getSnapRelationship(activePart, targetPart);
+    if (!snapChannel) continue;
     if (distance(target.centerWorld, input.cursor) > snapRadius) continue;
 
     for (const source of activePart.anchors) {
       if (Math.abs(getEdgeLength(source) - target.length) > 0.01) continue;
 
-      const transform = calculateEdgeSnapTransform(target, source);
-      if (!transform) continue;
+      const transforms =
+        snapChannel === 'wall-support' && isWallEdgePart(activePart)
+          ? [
+              calculateWallSupportTransform(target, source, 'start', 'start', activePart.allowedRotations),
+              calculateWallSupportTransform(target, source, 'start', 'end', activePart.allowedRotations),
+              calculateWallSupportTransform(target, source, 'end', 'start', activePart.allowedRotations),
+              calculateWallSupportTransform(target, source, 'end', 'end', activePart.allowedRotations),
+            ]
+          : [calculateEdgeSnapTransform(target, source)].filter((transform): transform is Transform2D => Boolean(transform));
 
-      const score = distance(transform.position, input.cursor);
-      if (!bestSnap || score < bestSnap.score) {
-        bestSnap = {
+      for (const transform of transforms) {
+        const supportEdgeSlotKey = getSupportEdgeSlotKey(target.instanceId, target.id);
+        const wallSegmentKey = getWallSegmentKey(activePart, transform, source.id);
+        const occupancyKeys = wallSegmentKey ? [supportEdgeSlotKey, wallSegmentKey] : [supportEdgeSlotKey];
+
+        const score = distance(transform.position, input.cursor);
+        const candidate = validateCandidate(
+          input.activePartId,
           transform,
-          score,
-          binding: {
+          input.instances,
+          true,
+          'support-edge',
+          {
+            placementMode: 'support-edge',
+            snapChannel,
             sourceAnchorId: source.id,
             targetInstanceId: target.instanceId,
             targetAnchorId: target.id,
-          },
-        };
+            occupancyKey: supportEdgeSlotKey,
+            occupancyKeys,
+          }
+        );
+        const ranked = rankCandidate(candidate, score);
+        if (!bestSnap || ranked.score < bestSnap.score) {
+          bestSnap = ranked;
+        }
       }
     }
   }
 
   if (bestSnap) {
-    return validateCandidate(input.activePartId, bestSnap.transform, input.instances, true, bestSnap.binding);
+    return bestSnap.candidate;
   }
 
   const rotationY = nearestAllowedRotation(input.rotationY, activePart.allowedRotations);
+  const placementMode: PlacementMode = input.snapToGrid ? 'grid-ground' : 'free-ground';
   const transform: Transform2D = {
-    position: [snapToGrid(input.cursor[0]), 0, snapToGrid(input.cursor[2])],
+    position: input.snapToGrid
+      ? [snapCoordinateToGrid(input.cursor[0]), 0, snapCoordinateToGrid(input.cursor[2])]
+      : [input.cursor[0], 0, input.cursor[2]],
     rotationY,
   };
 
-  return validateCandidate(input.activePartId, transform, input.instances, false);
+  const wallSegmentKey = isWallEdgePart(activePart)
+    ? getWallSegmentKey(activePart, transform)
+    : undefined;
+  const binding = wallSegmentKey
+    ? {
+        placementMode,
+        occupancyKey: wallSegmentKey,
+        occupancyKeys: [wallSegmentKey],
+      }
+    : undefined;
+
+  return validateCandidate(input.activePartId, transform, input.instances, input.snapToGrid ?? false, placementMode, binding);
 };

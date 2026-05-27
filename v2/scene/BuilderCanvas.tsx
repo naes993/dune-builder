@@ -7,7 +7,7 @@ import { solvePlacement } from '../engine/snapSolver';
 import { getWorldEdgeAnchors } from '../engine/anchors';
 import { getWorldFootprint } from '../engine/occupancy';
 import { useV2BuilderStore } from '../store/builderStore';
-import { PartId, PartInstance } from '../types';
+import { PartId, PartInstance, PlacementCandidate } from '../types';
 import { V2_UNIT_SIZE } from '../constants';
 import { V2_BUILD } from '../version';
 import { PartMesh } from './PartMesh';
@@ -67,6 +67,101 @@ const FootprintOutline = ({
   );
 };
 
+const DebugEdgeLine = ({
+  start,
+  end,
+  color,
+  yOffset = 0.22,
+}: {
+  start: [number, number, number];
+  end: [number, number, number];
+  color: string;
+  yOffset?: number;
+}) => {
+  return (
+    <line>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          args={[
+            new Float32Array([
+              start[0], start[1] + yOffset, start[2],
+              end[0], end[1] + yOffset, end[2],
+            ]),
+            3,
+          ]}
+        />
+      </bufferGeometry>
+      <lineBasicMaterial color={color} linewidth={2} />
+    </line>
+  );
+};
+
+const PreviewEdgeDiagnosticsLines = ({
+  activePartId,
+  instances,
+  preview,
+}: {
+  activePartId: PartId;
+  instances: PartInstance[];
+  preview: PlacementCandidate;
+}) => {
+  const activePart = PARTS[activePartId];
+  const binding = preview.binding;
+  if (activePart.occupancyLayer !== 'wall-edge' || !binding) return null;
+
+  const wallEdge = getWorldEdgeAnchors(activePart, preview.transform, 'preview').find(
+    (anchor) => anchor.id === binding.sourceAnchorId
+  );
+
+  if (!wallEdge) return null;
+
+  if (binding.placementMode === 'support-edge') {
+    const targetInstance = instances.find((instance) => instance.id === binding.targetInstanceId);
+    if (!targetInstance) return null;
+
+    const targetPart = PARTS[targetInstance.partId];
+    const targetEdge = getWorldEdgeAnchors(targetPart, targetInstance.transform, targetInstance.id).find(
+      (anchor) => anchor.id === binding.targetAnchorId
+    );
+
+    if (!targetEdge) return null;
+
+    return (
+      <>
+        <DebugEdgeLine start={targetEdge.startWorld} end={targetEdge.endWorld} color="#38bdf8" yOffset={0.34} />
+        <DebugEdgeLine start={wallEdge.startWorld} end={wallEdge.endWorld} color="#f97316" yOffset={0.46} />
+      </>
+    );
+  }
+
+  return (
+    <DebugEdgeLine start={wallEdge.startWorld} end={wallEdge.endWorld} color="#f97316" yOffset={0.46} />
+  );
+};
+
+const WallEndpointMarkers = ({ instance }: { instance: PartInstance }) => {
+  const part = PARTS[instance.partId];
+  if (part.occupancyLayer !== 'wall-edge') return null;
+
+  const anchors = getWorldEdgeAnchors(part, instance.transform, instance.id);
+
+  return (
+    <>
+      {anchors.flatMap((anchor) => [
+        <mesh key={`${instance.id}-${anchor.id}-start`} position={[anchor.startWorld[0], anchor.startWorld[1] + 0.28, anchor.startWorld[2]]}>
+          <sphereGeometry args={[0.13, 12, 12]} />
+          <meshBasicMaterial color="#f97316" />
+        </mesh>,
+        <mesh key={`${instance.id}-${anchor.id}-end`} position={[anchor.endWorld[0], anchor.endWorld[1] + 0.28, anchor.endWorld[2]]}>
+          <sphereGeometry args={[0.13, 12, 12]} />
+          <meshBasicMaterial color="#f97316" />
+        </mesh>,
+      ])}
+    </>
+  );
+};
+
 const V2GroundGrid = () => {
   const halfCells = GRID_CELLS_PER_SIDE / 2;
   const halfSize = (GRID_CELLS_PER_SIDE * V2_UNIT_SIZE) / 2;
@@ -91,6 +186,13 @@ const V2GroundGrid = () => {
   );
 };
 
+const formatSnapChannel = (channel?: string) => {
+  if (channel === 'foundation-structure') return 'Structural';
+  if (channel === 'floor-support') return 'Floor';
+  if (channel === 'wall-support') return 'Wall';
+  return undefined;
+};
+
 const SceneContents = () => {
   const {
     activePartId,
@@ -101,16 +203,20 @@ const SceneContents = () => {
     rotationY,
     setPreview,
     showGrid,
+    snapToGrid,
   } = useV2BuilderStore();
   const groundRef = useRef<THREE.Mesh>(null);
+  const lastCursorRef = useRef<[number, number, number]>([0, 0, 0]);
 
   const updatePreview = (point: THREE.Vector3) => {
+    lastCursorRef.current = [point.x, point.y, point.z];
     setPreview(
       solvePlacement({
-        cursor: [point.x, point.y, point.z],
+        cursor: lastCursorRef.current,
         activePartId,
         rotationY,
         instances,
+        snapToGrid,
       })
     );
   };
@@ -126,6 +232,18 @@ const SceneContents = () => {
     placePreview();
   };
 
+  useEffect(() => {
+    setPreview(
+      solvePlacement({
+        cursor: lastCursorRef.current,
+        activePartId,
+        rotationY,
+        instances,
+        snapToGrid,
+      })
+    );
+  }, [activePartId, instances, rotationY, setPreview, snapToGrid]);
+
   useFrame(() => {
     if (!preview && groundRef.current) {
       setPreview(
@@ -134,6 +252,7 @@ const SceneContents = () => {
           activePartId,
           rotationY,
           instances,
+          snapToGrid,
         })
       );
     }
@@ -160,6 +279,7 @@ const SceneContents = () => {
             <>
               <AnchorLines instance={instance} />
               <FootprintOutline instance={instance} />
+              <WallEndpointMarkers instance={instance} />
             </>
           )}
         </React.Fragment>
@@ -179,9 +299,53 @@ const SceneContents = () => {
               color={preview.isValid ? '#59e38a' : '#f05252'}
             />
           )}
+          {debugVisuals && (
+            <PreviewEdgeDiagnosticsLines
+              activePartId={activePartId}
+              instances={instances}
+              preview={preview}
+            />
+          )}
         </>
       )}
     </group>
+  );
+};
+
+const PlacementDebugPanel = () => {
+  const { activePartId, debugVisuals, preview } = useV2BuilderStore();
+  const activePart = PARTS[activePartId];
+  const binding = preview?.binding;
+
+  if (!debugVisuals || !binding) return null;
+
+  return (
+    <div className="pointer-events-none absolute left-4 top-40 z-10 max-w-sm rounded-lg border border-sky-400/30 bg-black/75 p-3 text-[11px] leading-5 text-white shadow-xl backdrop-blur">
+      <div className="mb-1 font-semibold uppercase tracking-wide text-sky-300">Placement Debug</div>
+      <div>mode: {binding.placementMode}</div>
+      <div>channel: {binding.snapChannel ?? 'none'}</div>
+      {binding.placementMode === 'support-edge' && (
+        <>
+          <div>support instance: {binding.targetInstanceId}</div>
+          <div>support edge: {binding.targetAnchorId}</div>
+        </>
+      )}
+      {binding.placementMode === 'wall-run' && (
+        <>
+          <div>target wall: {binding.targetWallInstanceId}</div>
+          <div>target endpoint: {binding.targetWallEndpointId}</div>
+        </>
+      )}
+      <div>wall edge: {binding.sourceAnchorId ?? 'none'}</div>
+      <div>source endpoint: {binding.sourceEndpointId ?? 'none'}</div>
+      <div>key: {binding.occupancyKey ?? 'none'}</div>
+      <div className={binding.targetOccupied ? 'text-red-300' : 'text-emerald-300'}>
+        target status: {binding.targetOccupied ? 'occupied' : 'free'}
+      </div>
+      {activePart.occupancyLayer === 'wall-edge' && (
+        <div className="mt-1 text-white/50">blue = support edge, orange = wall endpoint/preview segment</div>
+      )}
+    </div>
   );
 };
 
@@ -197,7 +361,9 @@ const Toolbar = () => {
     setActivePartId,
     toggleDebugVisuals,
     showGrid,
+    snapToGrid,
     toggleGrid,
+    toggleSnapToGrid,
   } = useV2BuilderStore();
 
   useEffect(() => {
@@ -261,6 +427,15 @@ const Toolbar = () => {
         <label className="flex h-10 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
           <input
             type="checkbox"
+            checked={snapToGrid}
+            onChange={toggleSnapToGrid}
+            className="h-4 w-4 accent-dune-gold"
+          />
+          Snap Grid
+        </label>
+        <label className="flex h-10 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
+          <input
+            type="checkbox"
             checked={debugVisuals}
             onChange={toggleDebugVisuals}
             className="h-4 w-4 accent-dune-gold"
@@ -270,7 +445,15 @@ const Toolbar = () => {
         <div className="ml-2 min-w-44 text-xs text-white/70">
           <div>{instances.length} placed</div>
           <div className={preview?.isValid === false ? 'text-red-300' : 'text-emerald-300'}>
-            {preview?.isValid === false ? preview.reasons[0] : preview?.snapped ? 'Edge snap' : 'Grid placement'}
+            {preview?.isValid === false
+              ? preview.reasons[0]
+              : preview?.placementMode === 'wall-run'
+                ? 'Wall run'
+                : preview?.placementMode === 'support-edge'
+                  ? `Support edge${formatSnapChannel(preview.binding?.snapChannel) ? `: ${formatSnapChannel(preview.binding?.snapChannel)}` : ''}`
+                  : preview?.placementMode === 'grid-ground'
+                    ? 'Grid placement'
+                    : 'Free placement'}
           </div>
         </div>
       </div>
@@ -298,6 +481,7 @@ export const BuilderCanvas = () => {
           <div>{V2_BUILD.description}</div>
         </div>
       </div>
+      <PlacementDebugPanel />
       <Toolbar />
     </div>
   );

@@ -2,7 +2,7 @@
 
 This repository currently contains the original legacy builder and an isolated V2 builder prototype.
 
-The V2 prototype is available at `/v2`. The current active development branch is `v2-builder-engine-prototype`, and the current safe checkpoint is `b2cbda9`.
+The V2 prototype is available at `/v2`. The current working checkpoint is `v2-dev-0008`.
 
 ## V2 Builder Prototype
 
@@ -13,8 +13,27 @@ V2 is being built as a data-driven placement engine:
 - Placement rules define allowed placement.
 - Occupancy validation rejects overlaps.
 - GLB files are visual wrappers only.
+- Global grid snapping is optional and off by default.
+- Connection targets take priority over ground fallback placement.
+- Foundation edge snapping is separated into structural, floor-support, and wall-support channels.
 
 The V2 code is intentionally isolated under `v2/` so it can evolve without depending on the legacy builder implementation.
+
+## Current V2 Checkpoint
+
+`v2-dev-0008` makes placement connection-first and channel-aware:
+
+- Existing connection targets are evaluated before ground placement.
+- `Snap Grid` controls global grid snapping for ground fallback placement only.
+- `Grid` controls visible grid lines only.
+- When `Snap Grid` is off and no connection target is found, the preview and placed part use the ground hit position.
+- When `Snap Grid` is on and no connection target is found, the preview and placed part snap to the global V2 grid.
+- Support-edge placement and wall-run continuation are not forced back onto the global grid.
+- Foundation pieces use the structural side-adjacency channel.
+- Floor pieces use the floor-support channel.
+- Wall pieces use the wall-support channel.
+
+Do not use GLB bounds, pivots, mesh centers, or `_COL` files as placement truth.
 
 ## Local Assets
 
@@ -37,10 +56,15 @@ npm run dev
 
 Open `/v2` to test the V2 prototype.
 
+Use the in-app browser, Browser plugin, or Chrome for placement testing. The current preview was verified at:
+
+```text
+http://127.0.0.1:3002/v2
+```
+
 ## Validate
 
 ```bash
 npm run build
 npx tsc --noEmit
 ```
-

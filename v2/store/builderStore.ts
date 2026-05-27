@@ -8,6 +8,7 @@ interface BuilderState {
   activePartId: PartId;
   debugVisuals: boolean;
   showGrid: boolean;
+  snapToGrid: boolean;
   rotationY: number;
   preview: PlacementCandidate | null;
   setActivePartId: (partId: PartId) => void;
@@ -15,6 +16,7 @@ interface BuilderState {
   setPreview: (preview: PlacementCandidate | null) => void;
   toggleDebugVisuals: () => void;
   toggleGrid: () => void;
+  toggleSnapToGrid: () => void;
   placePreview: () => void;
   clear: () => void;
 }
@@ -24,6 +26,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   activePartId: 'foundation.square',
   debugVisuals: false,
   showGrid: false,
+  snapToGrid: false,
   rotationY: 0,
   preview: null,
   setActivePartId: (partId) => {
@@ -45,6 +48,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   setPreview: (preview) => set({ preview }),
   toggleDebugVisuals: () => set((state) => ({ debugVisuals: !state.debugVisuals })),
   toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
+  toggleSnapToGrid: () => set((state) => ({ snapToGrid: !state.snapToGrid })),
   placePreview: () => {
     const { activePartId, preview } = get();
     if (!preview?.isValid) return;
@@ -56,6 +60,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
           id: crypto.randomUUID(),
           partId: activePartId,
           transform: preview.transform,
+          binding: preview.binding,
         },
       ],
     }));
