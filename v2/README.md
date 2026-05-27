@@ -1,12 +1,12 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0008`
+Current V2 build: `v2-dev-0009`
 
-Description: Foundation edge snapping uses explicit structural, floor, and wall channels.
+Description: Floor snapping is restored while foundation wall snapping remains profile-specific.
 
 ## Checkpoint Summary
 
-`v2-dev-0008` is a connection-first placement checkpoint with explicit foundation snap channels. Existing V2 connection targets are evaluated before any ground fallback placement:
+`v2-dev-0009` is a connection-first placement checkpoint with explicit snap profiles and channels. Existing V2 connection targets are evaluated before any ground fallback placement:
 
 1. Connection snap target if available.
 2. Free ground placement when `snapToGrid` is `false`.
@@ -18,7 +18,9 @@ Foundation edge relationships are separated by channel:
 
 - `foundation-structure`: foundation parts snap flush side-to-side with other foundation parts.
 - `floor-support`: floor parts snap to floor-compatible footprint edges, including the base edge of foundation parts.
-- `wall-support`: wall parts snap to wall-compatible foundation side edges.
+- `wall-support`: wall parts snap to wall-compatible edges on floors and foundations.
+
+Floor, foundation, and wall parts also have separate snap profiles. Floors can expose wall-compatible sides without inheriting foundation-specific wall behavior.
 
 There is no top-surface snap system in this checkpoint. Existing top/floor behavior should be preserved if one is added elsewhere, but this pass does not add a vertical building system.
 
@@ -37,7 +39,7 @@ There is no top-surface snap system in this checkpoint. Existing top/floor behav
 - Square placement.
 - Triangle placement.
 - Edge alignment.
-- Snap relationship channels for foundation structural, floor-support, and wall-support placement.
+- Snap profiles and relationship channels for floor, foundation, and wall placement.
 - Wall-edge slot occupancy for snapped wall and door parts.
 - Wall-run continuation from existing wall endpoints.
 - Invalid overlap preview.
@@ -56,13 +58,15 @@ Use the in-app browser, Browser plugin, or Chrome for interactive placement test
 http://127.0.0.1:3002/v2
 ```
 
-Expected smoke checks for `v2-dev-0008`:
+Expected smoke checks for `v2-dev-0009`:
 
 - With `Snap Grid` off, first-piece placement on open ground should stay at the cursor location.
 - With `Snap Grid` on, open-ground placement should snap to the global V2 grid.
+- Real Floor placement near a Real Floor edge should show the floor support-edge channel in Debug.
+- Real Floor placement near a Real Foundation edge should show the floor support-edge channel in Debug.
+- Wall placement near any Real Floor side should show the wall support-edge channel and use full-edge wall alignment.
+- Wall placement near a Real Foundation side should show the wall support-edge channel and use the foundation-specific endpoint behavior.
 - Foundation placement near a foundation edge should show the structural support-edge channel in Debug.
-- Floor placement near a foundation edge should show the floor support-edge channel in Debug.
-- Wall placement near a foundation edge should show the wall support-edge channel in Debug.
 - Wall continuation near a wall endpoint should prefer the wall-run target.
 - The `Grid` checkbox should only affect visible grid lines.
 - Debug visuals should still work independently.

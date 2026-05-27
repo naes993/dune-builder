@@ -1,5 +1,17 @@
 # V2 Changelog
 
+## v2-dev-0009 - 2026-05-26
+
+Floor snapping is restored while foundation wall snapping remains profile-specific.
+
+- Added V2 snap profiles for floor, foundation, and wall parts.
+- Floor targets expose `floor-support` and `wall-support` without sharing foundation settings.
+- Floor-to-floor and floor-to-foundation placement use full-edge `floor-support` snapping.
+- Wall-to-floor placement uses full-edge `wall-support` snapping on all floor sides.
+- Wall-to-foundation placement keeps the `v2-dev-0008` foundation-specific endpoint behavior.
+- Foundation-to-foundation placement remains `foundation-structure`.
+- No `V2_UNIT_SIZE`, GLB scale, visual offset, material, mesh transform, or wedge/triangle geometry values were changed.
+
 ## v2-dev-0008 - 2026-05-26
 
 Foundation edge snapping uses explicit structural, floor, and wall channels.

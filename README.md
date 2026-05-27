@@ -2,7 +2,7 @@
 
 This repository currently contains the original legacy builder and an isolated V2 builder prototype.
 
-The V2 prototype is available at `/v2`. The current working checkpoint is `v2-dev-0008`.
+The V2 prototype is available at `/v2`. The current working checkpoint is `v2-dev-0009`.
 
 ## V2 Builder Prototype
 
@@ -15,13 +15,13 @@ V2 is being built as a data-driven placement engine:
 - GLB files are visual wrappers only.
 - Global grid snapping is optional and off by default.
 - Connection targets take priority over ground fallback placement.
-- Foundation edge snapping is separated into structural, floor-support, and wall-support channels.
+- Floor, foundation, and wall snapping is separated by profile and channel.
 
 The V2 code is intentionally isolated under `v2/` so it can evolve without depending on the legacy builder implementation.
 
 ## Current V2 Checkpoint
 
-`v2-dev-0008` makes placement connection-first and channel-aware:
+`v2-dev-0009` makes placement connection-first, channel-aware, and profile-aware:
 
 - Existing connection targets are evaluated before ground placement.
 - `Snap Grid` controls global grid snapping for ground fallback placement only.
@@ -30,8 +30,9 @@ The V2 code is intentionally isolated under `v2/` so it can evolve without depen
 - When `Snap Grid` is on and no connection target is found, the preview and placed part snap to the global V2 grid.
 - Support-edge placement and wall-run continuation are not forced back onto the global grid.
 - Foundation pieces use the structural side-adjacency channel.
-- Floor pieces use the floor-support channel.
+- Floor pieces use the floor-support channel and expose wall-compatible sides.
 - Wall pieces use the wall-support channel.
+- Walls use full-edge wall support on floors and foundation-specific endpoint support on foundations.
 
 Do not use GLB bounds, pivots, mesh centers, or `_COL` files as placement truth.
 

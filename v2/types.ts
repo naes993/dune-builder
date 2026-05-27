@@ -18,6 +18,7 @@ export type AnchorKind = 'edge';
 export type AnchorRole = 'foundation-edge';
 export type PlacementMode = 'support-edge' | 'wall-run' | 'free-ground' | 'grid-ground';
 export type SnapChannel = 'foundation-structure' | 'floor-support' | 'wall-support';
+export type SnapProfile = 'floor' | 'foundation' | 'wall';
 
 export interface EdgeAnchorDef {
   id: string;
@@ -57,6 +58,7 @@ export interface PartDefinition {
   name: string;
   category: PartCategory;
   occupancyLayer: OccupancyLayer;
+  snapProfile: SnapProfile;
   snapSourceChannels: SnapChannel[];
   snapTargetChannels: SnapChannel[];
   height: number;

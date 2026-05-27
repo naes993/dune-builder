@@ -230,7 +230,7 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
       if (Math.abs(getEdgeLength(source) - target.length) > 0.01) continue;
 
       const transforms =
-        snapChannel === 'wall-support' && isWallEdgePart(activePart)
+        snapChannel === 'wall-support' && isWallEdgePart(activePart) && targetPart.snapProfile === 'foundation'
           ? [
               calculateWallSupportTransform(target, source, 'start', 'start', activePart.allowedRotations),
               calculateWallSupportTransform(target, source, 'start', 'end', activePart.allowedRotations),

@@ -118,7 +118,7 @@ const TRIANGLE_ROTATIONS = [
 ];
 const FOUNDATION_SOURCE_CHANNELS = ['foundation-structure'] as const;
 const FLOOR_SOURCE_CHANNELS = ['floor-support'] as const;
-const FLOOR_TARGET_CHANNELS = ['floor-support'] as const;
+const FLOOR_TARGET_CHANNELS = ['floor-support', 'wall-support'] as const;
 const WALL_SOURCE_CHANNELS = ['wall-support'] as const;
 const NO_TARGET_CHANNELS = [] as const;
 
@@ -128,6 +128,7 @@ export const PARTS: PartRegistry = {
     name: 'Square Foundation',
     category: 'foundation',
     occupancyLayer: 'foundation',
+    snapProfile: 'foundation',
     snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
     snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
     height: HEIGHT,
@@ -145,6 +146,7 @@ export const PARTS: PartRegistry = {
     name: 'Triangle Foundation',
     category: 'foundation',
     occupancyLayer: 'foundation',
+    snapProfile: 'foundation',
     snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
     snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
     height: HEIGHT,
@@ -162,6 +164,7 @@ export const PARTS: PartRegistry = {
     name: 'Calibration Harkonnen Floor Square',
     category: 'calibration-foundation',
     occupancyLayer: 'foundation',
+    snapProfile: 'floor',
     snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
     snapTargetChannels: [...FLOOR_TARGET_CHANNELS],
     height: HEIGHT,
@@ -186,6 +189,7 @@ export const PARTS: PartRegistry = {
     name: 'Calibration Harkonnen Foundation Square',
     category: 'calibration-foundation',
     occupancyLayer: 'foundation',
+    snapProfile: 'foundation',
     snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
     snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
     height: HEIGHT,
@@ -210,6 +214,7 @@ export const PARTS: PartRegistry = {
     name: 'Calibration Harkonnen Floor Wedge',
     category: 'calibration-foundation',
     occupancyLayer: 'foundation',
+    snapProfile: 'floor',
     snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
     snapTargetChannels: [...FLOOR_TARGET_CHANNELS],
     height: HEIGHT,
@@ -234,6 +239,7 @@ export const PARTS: PartRegistry = {
     name: 'Calibration Harkonnen Foundation Wedge',
     category: 'calibration-foundation',
     occupancyLayer: 'foundation',
+    snapProfile: 'foundation',
     snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
     snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
     height: HEIGHT,
@@ -258,6 +264,7 @@ export const PARTS: PartRegistry = {
     name: 'Harkonnen Level 3 Straight Wall',
     category: 'wall',
     occupancyLayer: 'wall-edge',
+    snapProfile: 'wall',
     snapSourceChannels: [...WALL_SOURCE_CHANNELS],
     snapTargetChannels: [...NO_TARGET_CHANNELS],
     height: STANDARD_WALL_HEIGHT,
@@ -299,6 +306,7 @@ export const PARTS: PartRegistry = {
     name: 'Harkonnen Level 3 Tall Wall Corner',
     category: 'wall-corner',
     occupancyLayer: 'wall-edge',
+    snapProfile: 'wall',
     snapSourceChannels: [...WALL_SOURCE_CHANNELS],
     snapTargetChannels: [...NO_TARGET_CHANNELS],
     height: TALL_WALL_HEIGHT,
@@ -348,6 +356,7 @@ export const PARTS: PartRegistry = {
     name: 'Harkonnen Level 3 Inclined Tall Wall',
     category: 'wall',
     occupancyLayer: 'wall-edge',
+    snapProfile: 'wall',
     snapSourceChannels: [...WALL_SOURCE_CHANNELS],
     snapTargetChannels: [...NO_TARGET_CHANNELS],
     height: TALL_WALL_HEIGHT,
@@ -389,6 +398,7 @@ export const PARTS: PartRegistry = {
     name: 'Harkonnen Level 3 Door Assembly',
     category: 'wall-door',
     occupancyLayer: 'wall-edge',
+    snapProfile: 'wall',
     snapSourceChannels: [...WALL_SOURCE_CHANNELS],
     snapTargetChannels: [...NO_TARGET_CHANNELS],
     height: STANDARD_WALL_HEIGHT,
