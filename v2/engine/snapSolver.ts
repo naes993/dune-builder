@@ -25,11 +25,12 @@ import {
   validatePlacement,
 } from './rules';
 import { getSnapRelationship } from './snapRelationships';
-import { V2_UNIT_SIZE } from '../constants';
 
 const DEFAULT_SNAP_RADIUS = 3.5;
 const WALL_ENDPOINT_SNAP_RADIUS = 1.35;
-const GRID_SIZE = V2_UNIT_SIZE;
+// Small enough that the cursor still chooses the target edge; large enough that
+// the requested rotation breaks ties between orientations on the same edge.
+const ROTATION_PREFERENCE_WEIGHT = 0.3;
 
 const distance = (a: [number, number, number], b: [number, number, number]) => {
   return new THREE.Vector3(...a).distanceTo(new THREE.Vector3(...b));
@@ -72,12 +73,13 @@ const getWallEndpointTargets = (instances: PartInstance[]): WallEndpointTarget[]
   });
 };
 
-const snapCoordinateToGrid = (value: number) => {
-  const offset = GRID_SIZE / 2;
-  return Math.round((value - offset) / GRID_SIZE) * GRID_SIZE + offset;
-};
-
 const angleFromDirection = ([x, , z]: Vec3) => Math.atan2(x, z);
+
+const rotationDistance = (a: number, b: number) => {
+  const twoPi = Math.PI * 2;
+  const delta = Math.abs((((a - b) % twoPi) + twoPi) % twoPi);
+  return Math.min(delta, twoPi - delta);
+};
 
 const calculateWallSupportTransform = (
   target: WorldEdgeAnchor,
@@ -244,7 +246,10 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
         const wallSegmentKey = getWallSegmentKey(activePart, transform, source.id);
         const occupancyKeys = wallSegmentKey ? [supportEdgeSlotKey, wallSegmentKey] : [supportEdgeSlotKey];
 
-        const score = distance(transform.position, input.cursor);
+        const preferredRotation = nearestAllowedRotation(input.rotationY, activePart.allowedRotations);
+        const score =
+          distance(transform.position, input.cursor) +
+          ROTATION_PREFERENCE_WEIGHT * rotationDistance(transform.rotationY, preferredRotation);
         const candidate = validateCandidate(
           input.activePartId,
           transform,
@@ -273,12 +278,12 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
     return bestSnap.candidate;
   }
 
+  // No connection target nearby: place freely at the cursor. There is no world
+  // grid — the first placed piece establishes the build grid, like the game.
   const rotationY = nearestAllowedRotation(input.rotationY, activePart.allowedRotations);
-  const placementMode: PlacementMode = input.snapToGrid ? 'grid-ground' : 'free-ground';
+  const placementMode: PlacementMode = 'free-ground';
   const transform: Transform2D = {
-    position: input.snapToGrid
-      ? [snapCoordinateToGrid(input.cursor[0]), 0, snapCoordinateToGrid(input.cursor[2])]
-      : [input.cursor[0], 0, input.cursor[2]],
+    position: [input.cursor[0], 0, input.cursor[2]],
     rotationY,
   };
 
@@ -293,5 +298,5 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
       }
     : undefined;
 
-  return validateCandidate(input.activePartId, transform, input.instances, input.snapToGrid ?? false, placementMode, binding);
+  return validateCandidate(input.activePartId, transform, input.instances, false, placementMode, binding);
 };

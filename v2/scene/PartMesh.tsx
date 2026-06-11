@@ -227,12 +227,10 @@ const GltfVisuals = ({
 
 const PlaceholderVisual = ({
   part,
-  partId,
   ghost,
   valid,
 }: {
   part: PartDefinition;
-  partId: PartId;
   ghost: boolean;
   valid: boolean;
 }) => {
@@ -243,7 +241,7 @@ const PlaceholderVisual = ({
 
   const materialColor = ghost
     ? valid ? '#59e38a' : '#f05252'
-    : partId === 'foundation.triangle' ? '#a78bfa' : '#8c8c8c';
+    : '#8c8c8c';
   const materialOpacity = ghost ? 0.48 : 1;
 
   useEffect(() => {
@@ -302,7 +300,7 @@ export const PartMesh = ({
       {hasRenderableVisuals ? (
         <GltfVisuals part={part} debugVisuals={debugVisuals} ghost={ghost} valid={valid} />
       ) : (
-        <PlaceholderVisual part={part} partId={partId} ghost={ghost} valid={valid} />
+        <PlaceholderVisual part={part} ghost={ghost} valid={valid} />
       )}
     </group>
   );

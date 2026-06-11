@@ -2,7 +2,7 @@
 
 This repository currently contains the original legacy builder and an isolated V2 builder prototype.
 
-The V2 prototype is available at `/v2`. The current working checkpoint is `v2-dev-0009`.
+The V2 prototype is available at `/v2`. The current working checkpoint is `v2-dev-0010`.
 
 ## V2 Builder Prototype
 
@@ -13,22 +13,20 @@ V2 is being built as a data-driven placement engine:
 - Placement rules define allowed placement.
 - Occupancy validation rejects overlaps.
 - GLB files are visual wrappers only.
-- Global grid snapping is optional and off by default.
-- Connection targets take priority over ground fallback placement.
+- Placement is connection-first: there is no world grid. The first placed piece establishes the build grid, like the game; everything else snaps to existing pieces.
 - Floor, foundation, and wall snapping is separated by profile and channel.
 
 The V2 code is intentionally isolated under `v2/` so it can evolve without depending on the legacy builder implementation.
 
 ## Current V2 Checkpoint
 
-`v2-dev-0009` makes placement connection-first, channel-aware, and profile-aware:
+`v2-dev-0010` removes the world grid and promotes the real Harkonnen parts:
 
-- Existing connection targets are evaluated before ground placement.
-- `Snap Grid` controls global grid snapping for ground fallback placement only.
-- `Grid` controls visible grid lines only.
-- When `Snap Grid` is off and no connection target is found, the preview and placed part use the ground hit position.
-- When `Snap Grid` is on and no connection target is found, the preview and placed part snap to the global V2 grid.
-- Support-edge placement and wall-run continuation are not forced back onto the global grid.
+- Global grid snapping and the visible ground grid are removed entirely.
+- When no connection target is found, the preview and placed part use the ground hit position.
+- The buildable parts are the real Harkonnen floor/foundation squares and wedges plus the wall batch; the generic placeholder square/triangle are gone.
+- Logical heights are calibrated from measured GLBs: floors are 0.3735 thick (pivot at walking surface), foundations 3.8968 tall (pivot at base).
+- Pressing R rotates the preview, including snapped previews (the solver prefers the orientation nearest the requested rotation).
 - Foundation pieces use the structural side-adjacency channel.
 - Floor pieces use the floor-support channel and expose wall-compatible sides.
 - Wall pieces use the wall-support channel.

@@ -1,5 +1,18 @@
 # V2 Changelog
 
+## v2-dev-0010 - 2026-06-10
+
+Connection-first only; real Harkonnen parts are the buildables.
+
+- Removed global grid snapping entirely (store flag, solver fallback, `Snap Grid` checkbox). The first placed piece establishes the build grid; everything else snaps to existing pieces, matching the game.
+- Removed the visible ground grid and `Grid` checkbox — there is no preset world grid.
+- Removed the generic placeholder `foundation.square` / `foundation.triangle` parts.
+- Promoted the calibration wrappers to real parts: `floor.harkonnen.level3.square`, `floor.harkonnen.level3.wedge`, `foundation.harkonnen.level3.square`, `foundation.harkonnen.level3.wedge`.
+- Calibrated logical heights from measured GLBs (`scripts/measure-core-parts.mjs`): floors are 0.3735 thick with the GLB pivot at the walking surface; foundations are 3.8968 tall with the pivot at the base. Visual mesh offsets now match each family's pivot convention instead of assuming a shared 0.2 slab.
+- Confirmed by measurement that the wedge GLB pivot is at the triangle centroid with the base toward +Z, matching the registry's equilateral triangle anchors (side = 5.317) within visual overhang tolerance — no wedge anchor recalibration needed.
+- Pressing R now visibly rotates snapped previews: the solver prefers candidate orientations closest to the requested rotation (weighted tie-break), so R cycles valid orientations on the same support edge.
+- No vertical/top-surface building system yet; floors and foundations still both sit at ground level, so floor tops do not yet align with foundation tops.
+
 ## v2-dev-0009 - 2026-05-26
 
 Floor snapping is restored while foundation wall snapping remains profile-specific.

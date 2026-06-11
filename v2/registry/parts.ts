@@ -1,10 +1,11 @@
 import { EdgeAnchorDef, FootprintDef, PartRegistry } from '../types';
-import { V2_FOUNDATION_HEIGHT, V2_UNIT_SIZE } from '../constants';
+import { V2_FLOOR_HEIGHT, V2_FOUNDATION_HEIGHT, V2_UNIT_SIZE } from '../constants';
 import { FOUNDATION_TARGET_CHANNELS } from '../engine/snapRelationships';
 
 const UNIT = V2_UNIT_SIZE;
 const HALF = UNIT / 2;
-const HEIGHT = V2_FOUNDATION_HEIGHT;
+const FLOOR_HEIGHT = V2_FLOOR_HEIGHT;
+const FOUNDATION_HEIGHT = V2_FOUNDATION_HEIGHT;
 const WALL_DEPTH = 0.65;
 const WALL_HALF_DEPTH = WALL_DEPTH / 2;
 const DOOR_DEPTH = 1.2;
@@ -20,7 +21,7 @@ const HARKONNEN_FALLBACK_MATERIAL = {
   roughness: 0.7,
 };
 
-const CALIBRATION_FOUNDATION_MATERIAL = {
+const HARKONNEN_SURFACE_MATERIAL = {
   color: '#4b5563',
   metalness: 0.2,
   roughness: 0.75,
@@ -123,140 +124,106 @@ const WALL_SOURCE_CHANNELS = ['wall-support'] as const;
 const NO_TARGET_CHANNELS = [] as const;
 
 export const PARTS: PartRegistry = {
-  'foundation.square': {
-    id: 'foundation.square',
-    name: 'Square Foundation',
-    category: 'foundation',
-    occupancyLayer: 'foundation',
-    snapProfile: 'foundation',
-    snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
-    snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
-    height: HEIGHT,
-    yOffset: HEIGHT / 2,
-    allowedRotations: STANDARD_ROTATIONS,
-    anchors: SQUARE_FOUNDATION_ANCHORS,
-    footprint: SQUARE_FOOTPRINT,
-    placeholderMesh: {
-      type: 'box',
-      size: [UNIT, HEIGHT, UNIT],
-    },
-  },
-  'foundation.triangle': {
-    id: 'foundation.triangle',
-    name: 'Triangle Foundation',
-    category: 'foundation',
-    occupancyLayer: 'foundation',
-    snapProfile: 'foundation',
-    snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
-    snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
-    height: HEIGHT,
-    yOffset: HEIGHT / 2,
-    allowedRotations: TRIANGLE_ROTATIONS,
-    anchors: TRIANGLE_FOUNDATION_ANCHORS,
-    footprint: TRIANGLE_FOOTPRINT,
-    placeholderMesh: {
-      type: 'triangle-prism',
-      size: [UNIT, HEIGHT, UNIT],
-    },
-  },
-  'calibration.harkonnen.level3.floor.square': {
-    id: 'calibration.harkonnen.level3.floor.square',
-    name: 'Calibration Harkonnen Floor Square',
-    category: 'calibration-foundation',
+  // GLB pivot conventions (measured by scripts/measure-core-parts.mjs):
+  // floor pivots sit at the walking surface, foundation pivots at the base.
+  'floor.harkonnen.level3.square': {
+    id: 'floor.harkonnen.level3.square',
+    name: 'Harkonnen Floor',
+    category: 'floor',
     occupancyLayer: 'foundation',
     snapProfile: 'floor',
     snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
     snapTargetChannels: [...FLOOR_TARGET_CHANNELS],
-    height: HEIGHT,
-    yOffset: HEIGHT / 2,
+    height: FLOOR_HEIGHT,
+    yOffset: FLOOR_HEIGHT / 2,
     allowedRotations: STANDARD_ROTATIONS,
     anchors: SQUARE_FOUNDATION_ANCHORS,
     footprint: SQUARE_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
-      size: [UNIT, HEIGHT, UNIT],
+      size: [UNIT, FLOOR_HEIGHT, UNIT],
     },
     mesh: {
       url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Floor.glb',
       scale: [1, 1, 1],
-      offset: [0, -HEIGHT / 2, 0],
+      offset: [0, FLOOR_HEIGHT / 2, 0],
       rotation: [0, 0, 0],
-      materialOverride: CALIBRATION_FOUNDATION_MATERIAL,
+      materialOverride: HARKONNEN_SURFACE_MATERIAL,
     },
   },
-  'calibration.harkonnen.level3.foundation.square': {
-    id: 'calibration.harkonnen.level3.foundation.square',
-    name: 'Calibration Harkonnen Foundation Square',
-    category: 'calibration-foundation',
+  'floor.harkonnen.level3.wedge': {
+    id: 'floor.harkonnen.level3.wedge',
+    name: 'Harkonnen Floor Wedge',
+    category: 'floor',
+    occupancyLayer: 'foundation',
+    snapProfile: 'floor',
+    snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
+    snapTargetChannels: [...FLOOR_TARGET_CHANNELS],
+    height: FLOOR_HEIGHT,
+    yOffset: FLOOR_HEIGHT / 2,
+    allowedRotations: TRIANGLE_ROTATIONS,
+    anchors: TRIANGLE_FOUNDATION_ANCHORS,
+    footprint: TRIANGLE_FOOTPRINT,
+    placeholderMesh: {
+      type: 'triangle-prism',
+      size: [UNIT, FLOOR_HEIGHT, UNIT],
+    },
+    mesh: {
+      url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FloorWedge.glb',
+      scale: [1, 1, 1],
+      offset: [0, FLOOR_HEIGHT / 2, 0],
+      rotation: [0, 0, 0],
+      materialOverride: HARKONNEN_SURFACE_MATERIAL,
+    },
+  },
+  'foundation.harkonnen.level3.square': {
+    id: 'foundation.harkonnen.level3.square',
+    name: 'Harkonnen Foundation',
+    category: 'foundation',
     occupancyLayer: 'foundation',
     snapProfile: 'foundation',
     snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
     snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
-    height: HEIGHT,
-    yOffset: HEIGHT / 2,
+    height: FOUNDATION_HEIGHT,
+    yOffset: FOUNDATION_HEIGHT / 2,
     allowedRotations: STANDARD_ROTATIONS,
     anchors: SQUARE_FOUNDATION_ANCHORS,
     footprint: SQUARE_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
-      size: [UNIT, HEIGHT, UNIT],
+      size: [UNIT, FOUNDATION_HEIGHT, UNIT],
     },
     mesh: {
       url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Foundation.glb',
       scale: [1, 1, 1],
-      offset: [0, -HEIGHT / 2, 0],
+      offset: [0, -FOUNDATION_HEIGHT / 2, 0],
       rotation: [0, 0, 0],
-      materialOverride: CALIBRATION_FOUNDATION_MATERIAL,
+      materialOverride: HARKONNEN_SURFACE_MATERIAL,
     },
   },
-  'calibration.harkonnen.level3.floor.wedge': {
-    id: 'calibration.harkonnen.level3.floor.wedge',
-    name: 'Calibration Harkonnen Floor Wedge',
-    category: 'calibration-foundation',
-    occupancyLayer: 'foundation',
-    snapProfile: 'floor',
-    snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
-    snapTargetChannels: [...FLOOR_TARGET_CHANNELS],
-    height: HEIGHT,
-    yOffset: HEIGHT / 2,
-    allowedRotations: TRIANGLE_ROTATIONS,
-    anchors: TRIANGLE_FOUNDATION_ANCHORS,
-    footprint: TRIANGLE_FOOTPRINT,
-    placeholderMesh: {
-      type: 'triangle-prism',
-      size: [UNIT, HEIGHT, UNIT],
-    },
-    mesh: {
-      url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FloorWedge.glb',
-      scale: [1, 1, 1],
-      offset: [0, -HEIGHT / 2, 0],
-      rotation: [0, 0, 0],
-      materialOverride: CALIBRATION_FOUNDATION_MATERIAL,
-    },
-  },
-  'calibration.harkonnen.level3.foundation.wedge': {
-    id: 'calibration.harkonnen.level3.foundation.wedge',
-    name: 'Calibration Harkonnen Foundation Wedge',
-    category: 'calibration-foundation',
+  'foundation.harkonnen.level3.wedge': {
+    id: 'foundation.harkonnen.level3.wedge',
+    name: 'Harkonnen Foundation Wedge',
+    category: 'foundation',
     occupancyLayer: 'foundation',
     snapProfile: 'foundation',
     snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
     snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
-    height: HEIGHT,
-    yOffset: HEIGHT / 2,
+    height: FOUNDATION_HEIGHT,
+    yOffset: FOUNDATION_HEIGHT / 2,
     allowedRotations: TRIANGLE_ROTATIONS,
     anchors: TRIANGLE_FOUNDATION_ANCHORS,
     footprint: TRIANGLE_FOOTPRINT,
     placeholderMesh: {
       type: 'triangle-prism',
-      size: [UNIT, HEIGHT, UNIT],
+      size: [UNIT, FOUNDATION_HEIGHT, UNIT],
     },
     mesh: {
       url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FoundationWedge.glb',
       scale: [1, 1, 1],
-      offset: [0, -HEIGHT / 2, 0],
+      offset: [0, -FOUNDATION_HEIGHT / 2, 0],
       rotation: [0, 0, 0],
-      materialOverride: CALIBRATION_FOUNDATION_MATERIAL,
+      materialOverride: HARKONNEN_SURFACE_MATERIAL,
     },
   },
   'wall.harkonnen.level3.straight': {

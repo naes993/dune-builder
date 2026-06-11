@@ -26,3 +26,6 @@ public/assets/**/*.glb
 *.sln
 *.sw?
 recorded/
+
+# Local browser-testing artifacts
+.playwright-cli/

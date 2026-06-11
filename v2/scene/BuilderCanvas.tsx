@@ -8,11 +8,8 @@ import { getWorldEdgeAnchors } from '../engine/anchors';
 import { getWorldFootprint } from '../engine/occupancy';
 import { useV2BuilderStore } from '../store/builderStore';
 import { PartId, PartInstance, PlacementCandidate } from '../types';
-import { V2_UNIT_SIZE } from '../constants';
 import { V2_BUILD } from '../version';
 import { PartMesh } from './PartMesh';
-
-const GRID_CELLS_PER_SIDE = 24;
 
 const AnchorLines = ({ instance }: { instance: PartInstance }) => {
   const part = PARTS[instance.partId];
@@ -162,30 +159,6 @@ const WallEndpointMarkers = ({ instance }: { instance: PartInstance }) => {
   );
 };
 
-const V2GroundGrid = () => {
-  const halfCells = GRID_CELLS_PER_SIDE / 2;
-  const halfSize = (GRID_CELLS_PER_SIDE * V2_UNIT_SIZE) / 2;
-  const positions: number[] = [];
-
-  for (let index = -halfCells; index <= halfCells; index += 1) {
-    const value = index * V2_UNIT_SIZE;
-    positions.push(-halfSize, 0.012, value, halfSize, 0.012, value);
-    positions.push(value, 0.012, -halfSize, value, 0.012, halfSize);
-  }
-
-  return (
-    <lineSegments>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[new Float32Array(positions), 3]}
-        />
-      </bufferGeometry>
-      <lineBasicMaterial color="#5b513c" transparent opacity={0.72} />
-    </lineSegments>
-  );
-};
-
 const formatSnapChannel = (channel?: string) => {
   if (channel === 'foundation-structure') return 'Structural';
   if (channel === 'floor-support') return 'Floor';
@@ -202,8 +175,6 @@ const SceneContents = () => {
     preview,
     rotationY,
     setPreview,
-    showGrid,
-    snapToGrid,
   } = useV2BuilderStore();
   const groundRef = useRef<THREE.Mesh>(null);
   const lastCursorRef = useRef<[number, number, number]>([0, 0, 0]);
@@ -216,7 +187,6 @@ const SceneContents = () => {
         activePartId,
         rotationY,
         instances,
-        snapToGrid,
       })
     );
   };
@@ -239,10 +209,9 @@ const SceneContents = () => {
         activePartId,
         rotationY,
         instances,
-        snapToGrid,
       })
     );
-  }, [activePartId, instances, rotationY, setPreview, snapToGrid]);
+  }, [activePartId, instances, rotationY, setPreview]);
 
   useFrame(() => {
     if (!preview && groundRef.current) {
@@ -252,7 +221,6 @@ const SceneContents = () => {
           activePartId,
           rotationY,
           instances,
-          snapToGrid,
         })
       );
     }
@@ -270,8 +238,6 @@ const SceneContents = () => {
         <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color="#d2b076" roughness={0.95} />
       </mesh>
-      {/* Placement points are cell centers; these visible lines mark cell boundaries. */}
-      {showGrid && <V2GroundGrid />}
       {instances.map((instance) => (
         <React.Fragment key={instance.id}>
           <PartMesh partId={instance.partId} transform={instance.transform} debugVisuals={debugVisuals} />
@@ -360,10 +326,6 @@ const Toolbar = () => {
     rotationY,
     setActivePartId,
     toggleDebugVisuals,
-    showGrid,
-    snapToGrid,
-    toggleGrid,
-    toggleSnapToGrid,
   } = useV2BuilderStore();
 
   useEffect(() => {
@@ -377,16 +339,14 @@ const Toolbar = () => {
   }, [rotateActivePart]);
 
   const tools: Array<{ id: PartId; label: string }> = [
-    { id: 'foundation.square', label: 'Square' },
-    { id: 'foundation.triangle', label: 'Triangle' },
-    { id: 'calibration.harkonnen.level3.floor.square', label: 'Real Floor' },
-    { id: 'calibration.harkonnen.level3.foundation.square', label: 'Real Foundation' },
-    { id: 'calibration.harkonnen.level3.floor.wedge', label: 'Real Floor Wedge' },
-    { id: 'calibration.harkonnen.level3.foundation.wedge', label: 'Real Foundation Wedge' },
-    { id: 'wall.harkonnen.level3.straight', label: 'Hark Wall' },
+    { id: 'foundation.harkonnen.level3.square', label: 'Foundation' },
+    { id: 'foundation.harkonnen.level3.wedge', label: 'Foundation Wedge' },
+    { id: 'floor.harkonnen.level3.square', label: 'Floor' },
+    { id: 'floor.harkonnen.level3.wedge', label: 'Floor Wedge' },
+    { id: 'wall.harkonnen.level3.straight', label: 'Wall' },
     { id: 'wall.harkonnen.level3.corner.tall', label: 'Tall Corner' },
     { id: 'wall.harkonnen.level3.inclined.tall', label: 'Inclined Wall' },
-    { id: 'wall.harkonnen.level3.door', label: 'Door Assembly' },
+    { id: 'wall.harkonnen.level3.door', label: 'Door' },
   ];
 
   return (
@@ -418,24 +378,6 @@ const Toolbar = () => {
         <label className="flex h-10 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
           <input
             type="checkbox"
-            checked={showGrid}
-            onChange={toggleGrid}
-            className="h-4 w-4 accent-dune-gold"
-          />
-          Grid
-        </label>
-        <label className="flex h-10 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
-          <input
-            type="checkbox"
-            checked={snapToGrid}
-            onChange={toggleSnapToGrid}
-            className="h-4 w-4 accent-dune-gold"
-          />
-          Snap Grid
-        </label>
-        <label className="flex h-10 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
-          <input
-            type="checkbox"
             checked={debugVisuals}
             onChange={toggleDebugVisuals}
             className="h-4 w-4 accent-dune-gold"
@@ -451,9 +393,7 @@ const Toolbar = () => {
                 ? 'Wall run'
                 : preview?.placementMode === 'support-edge'
                   ? `Support edge${formatSnapChannel(preview.binding?.snapChannel) ? `: ${formatSnapChannel(preview.binding?.snapChannel)}` : ''}`
-                  : preview?.placementMode === 'grid-ground'
-                    ? 'Grid placement'
-                    : 'Free placement'}
+                  : 'Free placement'}
           </div>
         </div>
       </div>
@@ -474,7 +414,7 @@ export const BuilderCanvas = () => {
       <div className="pointer-events-none absolute left-4 top-4 z-10 max-w-sm rounded-lg border border-white/15 bg-black/70 p-4 text-white shadow-xl backdrop-blur">
         <div className="text-sm font-bold uppercase tracking-wide text-dune-gold">V2 Placement Engine</div>
         <div className="mt-2 text-xs leading-5 text-white/70">
-          Placeholder foundations plus temporary real Harkonnen floor/foundation calibration wrappers. Move the cursor to preview, click to place, press R to rotate.
+          Real Harkonnen parts. The first placed piece establishes the build grid — everything else snaps to existing pieces. Move the cursor to preview, click to place, press R to rotate.
         </div>
         <div className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-4 text-white/55">
           <div className="font-semibold text-white/70">{V2_BUILD.id}</div>

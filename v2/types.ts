@@ -2,21 +2,19 @@ export type Vec3 = [number, number, number];
 export type Vec2 = [number, number];
 
 export type PartId =
-  | 'foundation.square'
-  | 'foundation.triangle'
-  | 'calibration.harkonnen.level3.floor.square'
-  | 'calibration.harkonnen.level3.foundation.square'
-  | 'calibration.harkonnen.level3.floor.wedge'
-  | 'calibration.harkonnen.level3.foundation.wedge'
+  | 'floor.harkonnen.level3.square'
+  | 'floor.harkonnen.level3.wedge'
+  | 'foundation.harkonnen.level3.square'
+  | 'foundation.harkonnen.level3.wedge'
   | 'wall.harkonnen.level3.straight'
   | 'wall.harkonnen.level3.corner.tall'
   | 'wall.harkonnen.level3.inclined.tall'
   | 'wall.harkonnen.level3.door';
-export type PartCategory = 'foundation' | 'calibration-foundation' | 'wall' | 'wall-corner' | 'wall-door';
+export type PartCategory = 'foundation' | 'floor' | 'wall' | 'wall-corner' | 'wall-door';
 export type OccupancyLayer = 'foundation' | 'wall-edge';
 export type AnchorKind = 'edge';
 export type AnchorRole = 'foundation-edge';
-export type PlacementMode = 'support-edge' | 'wall-run' | 'free-ground' | 'grid-ground';
+export type PlacementMode = 'support-edge' | 'wall-run' | 'free-ground';
 export type SnapChannel = 'foundation-structure' | 'floor-support' | 'wall-support';
 export type SnapProfile = 'floor' | 'foundation' | 'wall';
 
@@ -121,7 +119,6 @@ export interface SnapSolverInput {
   activePartId: PartId;
   rotationY: number;
   instances: PartInstance[];
-  snapToGrid?: boolean;
   snapRadius?: number;
 }
 

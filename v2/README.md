@@ -1,18 +1,23 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0009`
+Current V2 build: `v2-dev-0010`
 
-Description: Floor snapping is restored while foundation wall snapping remains profile-specific.
+Description: Connection-first only — world grid removed, real Harkonnen parts promoted, R rotates snapped previews.
 
 ## Checkpoint Summary
 
-`v2-dev-0009` is a connection-first placement checkpoint with explicit snap profiles and channels. Existing V2 connection targets are evaluated before any ground fallback placement:
+`v2-dev-0010` is a connection-first placement checkpoint. There is no world grid: the first placed piece establishes the build grid, exactly like the game. Placement priority is:
 
-1. Connection snap target if available.
-2. Free ground placement when `snapToGrid` is `false`.
-3. Grid-snapped ground placement when `snapToGrid` is `true`.
+1. Connection snap target if available (wall-run, then support-edge).
+2. Free ground placement at the cursor otherwise.
 
-`Grid` and `Snap Grid` are separate controls. `Grid` only controls visible grid lines. `Snap Grid` only controls the global grid fallback used when no supported connection target is nearby.
+The buildable parts are the real Harkonnen Level 3 floor/foundation squares and wedges plus the wall/door batch. The generic placeholder square/triangle foundations are removed.
+
+Logical vertical dimensions are calibrated from measured GLBs (`scripts/measure-core-parts.mjs`):
+
+- Floor slab: 0.3735 thick, GLB pivot at the walking surface.
+- Foundation block: 3.8968 tall, GLB pivot at the base.
+- Wedge GLB pivots sit at the triangle centroid with the base toward +Z, matching the registry's equilateral anchors (side = `V2_UNIT_SIZE`) within visual overhang tolerance.
 
 Foundation edge relationships are separated by channel:
 
@@ -22,31 +27,28 @@ Foundation edge relationships are separated by channel:
 
 Floor, foundation, and wall parts also have separate snap profiles. Floors can expose wall-compatible sides without inheriting foundation-specific wall behavior.
 
-There is no top-surface snap system in this checkpoint. Existing top/floor behavior should be preserved if one is added elsewhere, but this pass does not add a vertical building system.
+There is no top-surface/vertical snap system yet: floors and foundations both sit at ground level, so floor tops do not yet align with foundation tops. That is the next major engine milestone.
 
 ## Structure
 
-- `v2/constants.ts`: V2-only constants, including `V2_UNIT_SIZE = 5.317`.
+- `v2/constants.ts`: V2-only constants (`V2_UNIT_SIZE = 5.317`, measured floor/foundation heights).
 - `v2/version.ts`: Current V2 build label, date, and description.
 - `v2/registry/parts.ts`: Data-driven part definitions, logical footprints, anchors, occupancy layers, and visual metadata.
-- `v2/store/builderStore.ts`: Builder state for selected part, placed instances, preview, rotation, debug visuals, grid visibility, and optional grid snapping.
+- `v2/store/builderStore.ts`: Builder state for selected part, placed instances, preview, rotation, and debug visuals.
 - `v2/engine/*`: Anchor transforms, snap solving, placement rules, and occupancy validation.
 - `v2/engine/snapRelationships.ts`: Snap channel compatibility helpers.
-- `v2/scene/*`: React Three Fiber scene, UI controls, debug helpers, placeholder meshes, and GLB visual wrappers.
+- `v2/scene/*`: React Three Fiber scene, UI controls, debug helpers, and GLB visual wrappers.
 
 ## Implemented Features
 
-- Square placement.
-- Triangle placement.
-- Edge alignment.
+- Square and wedge placement using real Harkonnen GLBs.
+- Edge alignment (connection-first, no world grid).
 - Snap profiles and relationship channels for floor, foundation, and wall placement.
 - Wall-edge slot occupancy for snapped wall and door parts.
 - Wall-run continuation from existing wall endpoints.
 - Invalid overlap preview.
-- Real GLB visual wrappers for selected Harkonnen parts.
 - Material-name mapping for `_Ext` and `_Int`.
-- Optional Grid helper, off by default.
-- Optional Snap Grid placement fallback, off by default.
+- R rotates the preview, including snapped previews (rotation-preference tie-break in the solver).
 - Separate Debug helper.
 - Harkonnen asset audit and manifest.
 
@@ -55,44 +57,27 @@ There is no top-surface snap system in this checkpoint. Existing top/floor behav
 Use the in-app browser, Browser plugin, or Chrome for interactive placement testing. For the current local preview, open:
 
 ```text
-http://127.0.0.1:3002/v2
+http://127.0.0.1:3000/v2
 ```
 
-Expected smoke checks for `v2-dev-0009`:
+Expected smoke checks for `v2-dev-0010`:
 
-- With `Snap Grid` off, first-piece placement on open ground should stay at the cursor location.
-- With `Snap Grid` on, open-ground placement should snap to the global V2 grid.
-- Real Floor placement near a Real Floor edge should show the floor support-edge channel in Debug.
-- Real Floor placement near a Real Foundation edge should show the floor support-edge channel in Debug.
-- Wall placement near any Real Floor side should show the wall support-edge channel and use full-edge wall alignment.
-- Wall placement near a Real Foundation side should show the wall support-edge channel and use the foundation-specific endpoint behavior.
-- Foundation placement near a foundation edge should show the structural support-edge channel in Debug.
-- Wall continuation near a wall endpoint should prefer the wall-run target.
-- The `Grid` checkbox should only affect visible grid lines.
-- Debug visuals should still work independently.
-
-## Temporary Calibration Parts
-
-- Real Floor.
-- Real Foundation.
-- Real Floor Wedge.
-- Real Foundation Wedge.
-
-These parts exist for scale and visual calibration. Their GLB files remain local-only and are not committed.
+- First-piece placement on open ground stays at the cursor location (no grid rounding).
+- Floor placement near a floor or foundation edge shows the floor support-edge channel in Debug.
+- Wall placement near any floor side shows the wall support-edge channel and uses full-edge wall alignment.
+- Wall placement near a foundation side shows the wall support-edge channel and uses the foundation-specific endpoint behavior.
+- Foundation placement near a foundation edge shows the structural support-edge channel in Debug.
+- Wall continuation near a wall endpoint prefers the wall-run target.
+- Pressing R cycles the preview orientation; snapped previews keep the snap while honoring the nearest valid orientation.
+- Debug visuals work independently.
 
 ## Known Limitations
 
-- Wedge/triangle geometry still needs calibration from the real wedge GLBs.
-- Wall visual fit should be inspected after wedge/floor geometry stabilizes.
+- No vertical/top-surface building system: floor tops do not yet align with foundation tops, and walls stand at ground level beside foundations instead of on top of them.
 - There is no final Part Builder yet.
 - There is no final V2 save/export system yet.
 - There is no full roof, stair, or curve system yet.
 
 ## Next Recommended Task
 
-Recalibrate triangle/wedge logical geometry from:
-
-- `SM_Env_PB_Hark_Level3_FloorWedge.glb`
-- `SM_Env_PB_Hark_Level3_FoundationWedge.glb`
-
-Do this without using GLB bounds, pivots, mesh centers, or `_COL` files as placement truth.
+Add the vertical building system: floors snapping flush with foundation tops, walls standing on foundation/floor tops, and second-story support. Calibrate against in-game screenshots (foundation top = 3.8968, wall module ≈ 3.88).
