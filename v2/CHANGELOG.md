@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0012 - 2026-06-11
+
+Preview follows the mouse over placed parts.
+
+- Placed part meshes are now pointer-event targets alongside the ground plane. Previously only the ground was raycast, so hovering over an elevated part computed the cursor from the ground point hidden behind it — previews drifted away from the mouse and picked wrong edges.
+- The nearest surface under the mouse wins (event propagation stops at the closest hit), so hovering a foundation top selects edges local to where the mouse actually is.
+- Clicking a placed part places the previewed piece, same as clicking the ground.
+- No solver, registry, or snapping geometry changes.
+
 ## v2-dev-0011 - 2026-06-10
 
 Vertical building system: support surfaces carry elevation.

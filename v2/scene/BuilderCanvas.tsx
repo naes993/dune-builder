@@ -239,18 +239,22 @@ const SceneContents = () => {
         <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color="#d2b076" roughness={0.95} />
       </mesh>
-      {instances.map((instance) => (
-        <React.Fragment key={instance.id}>
-          <PartMesh partId={instance.partId} transform={instance.transform} debugVisuals={debugVisuals} />
-          {debugVisuals && (
-            <>
-              <AnchorLines instance={instance} />
-              <FootprintOutline instance={instance} />
-              <WallEndpointMarkers instance={instance} />
-            </>
-          )}
-        </React.Fragment>
-      ))}
+      {/* Placed parts are pointer targets too, so the cursor tracks the surface
+          under the mouse instead of the ground hidden behind elevated parts. */}
+      <group onPointerMove={handlePointerMove} onClick={handleClick}>
+        {instances.map((instance) => (
+          <React.Fragment key={instance.id}>
+            <PartMesh partId={instance.partId} transform={instance.transform} debugVisuals={debugVisuals} />
+            {debugVisuals && (
+              <>
+                <AnchorLines instance={instance} />
+                <FootprintOutline instance={instance} />
+                <WallEndpointMarkers instance={instance} />
+              </>
+            )}
+          </React.Fragment>
+        ))}
+      </group>
       {preview && (
         <>
           <PartMesh

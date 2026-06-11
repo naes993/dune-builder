@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0011`
+Current V2 build: `v2-dev-0012`
 
-Description: Vertical building — floors snap flush with foundation tops, walls stand on supports, second stories work.
+Description: Cursor tracks the surface under the mouse; vertical building from v2-dev-0011.
 
 ## Checkpoint Summary
 
