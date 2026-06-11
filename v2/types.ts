@@ -25,6 +25,10 @@ export interface EdgeAnchorDef {
   start: Vec3;
   end: Vec3;
   normal: Vec3;
+  /** Snap channels this edge exposes as a target. Empty array = source-only edge. */
+  channels?: SnapChannel[];
+  /** Whether this edge may be used as a source anchor on the active part. Default true. */
+  source?: boolean;
 }
 
 export interface FootprintDef {

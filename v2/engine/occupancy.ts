@@ -60,6 +60,15 @@ export const polygonsOverlap = (a: Vec2[], b: Vec2[]) => {
   return true;
 };
 
+const verticalRangesOverlap = (
+  aBase: number,
+  aHeight: number,
+  bBase: number,
+  bHeight: number
+) => {
+  return aBase < bBase + bHeight - EPSILON && bBase < aBase + aHeight - EPSILON;
+};
+
 export const getOccupancyConflicts = (
   part: PartDefinition,
   transform: Transform2D,
@@ -72,6 +81,16 @@ export const getOccupancyConflicts = (
   for (const instance of instances) {
     const otherPart = registry[instance.partId];
     if (otherPart.occupancyLayer !== part.occupancyLayer) continue;
+    if (
+      !verticalRangesOverlap(
+        transform.position[1],
+        part.height,
+        instance.transform.position[1],
+        otherPart.height
+      )
+    ) {
+      continue;
+    }
 
     const otherFootprint = getWorldFootprint(otherPart, instance.transform);
     if (polygonsOverlap(footprint, otherFootprint)) {

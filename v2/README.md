@@ -1,12 +1,12 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0010`
+Current V2 build: `v2-dev-0011`
 
-Description: Connection-first only — world grid removed, real Harkonnen parts promoted, R rotates snapped previews.
+Description: Vertical building — floors snap flush with foundation tops, walls stand on supports, second stories work.
 
 ## Checkpoint Summary
 
-`v2-dev-0010` is a connection-first placement checkpoint. There is no world grid: the first placed piece establishes the build grid, exactly like the game. Placement priority is:
+`v2-dev-0011` is a connection-first placement checkpoint with vertical building. There is no world grid: the first placed piece establishes the build grid, exactly like the game. Placement priority is:
 
 1. Connection snap target if available (wall-run, then support-edge).
 2. Free ground placement at the cursor otherwise.
@@ -19,15 +19,13 @@ Logical vertical dimensions are calibrated from measured GLBs (`scripts/measure-
 - Foundation block: 3.8968 tall, GLB pivot at the base.
 - Wedge GLB pivots sit at the triangle centroid with the base toward +Z, matching the registry's equilateral anchors (side = `V2_UNIT_SIZE`) within visual overhang tolerance.
 
-Foundation edge relationships are separated by channel:
+Edge relationships are separated by channel, and every edge declares which channels it exposes and its height:
 
-- `foundation-structure`: foundation parts snap flush side-to-side with other foundation parts.
-- `floor-support`: floor parts snap to floor-compatible footprint edges, including the base edge of foundation parts.
-- `wall-support`: wall parts snap to wall-compatible edges on floors and foundations.
+- `foundation-structure`: foundation base edges, for flush side-to-side foundation adjacency on the ground.
+- `floor-support`: exposed by foundation tops, floor walking surfaces, and wall tops. Floors snap so their walking surface stays flush with the support surface.
+- `wall-support`: exposed by the same support surfaces. Walls stand on top of foundations, floors, and other walls.
 
-Floor, foundation, and wall parts also have separate snap profiles. Floors can expose wall-compatible sides without inheriting foundation-specific wall behavior.
-
-There is no top-surface/vertical snap system yet: floors and foundations both sit at ground level, so floor tops do not yet align with foundation tops. That is the next major engine milestone.
+Vertical building works through these elevation-aware anchors: floors snap flush with foundation tops, walls stand on supports, and second-story floors snap to wall tops. Wall heights follow the game's vertical module (standard = foundation height 3.8968; tall = 3 modules). Footprint occupancy is vertical-range aware, so stacked stories do not collide. Snap proximity is evaluated in XZ because the cursor lives on the ground plane.
 
 ## Structure
 
@@ -60,24 +58,26 @@ Use the in-app browser, Browser plugin, or Chrome for interactive placement test
 http://127.0.0.1:3000/
 ```
 
-Expected smoke checks for `v2-dev-0010`:
+Expected smoke checks for `v2-dev-0011`:
 
 - First-piece placement on open ground stays at the cursor location (no grid rounding).
-- Floor placement near a floor or foundation edge shows the floor support-edge channel in Debug.
-- Wall placement near any floor side shows the wall support-edge channel and uses full-edge wall alignment.
-- Wall placement near a foundation side shows the wall support-edge channel and uses the foundation-specific endpoint behavior.
-- Foundation placement near a foundation edge shows the structural support-edge channel in Debug.
-- Wall continuation near a wall endpoint prefers the wall-run target.
+- Floor placement near a foundation edge previews elevated, walking surface flush with the foundation top.
+- Floor placement near another floor edge continues at the same elevation.
+- Wall placement near a foundation or floor stands on the support surface (wall base at the support top).
+- A floor near a placed wall snaps to the wall top (second story).
+- Foundation placement near a foundation edge snaps flush at ground level (structural channel).
+- Wall continuation near a wall endpoint prefers the wall-run target and preserves elevation.
 - Pressing R cycles the preview orientation; snapped previews keep the snap while honoring the nearest valid orientation.
 - Debug visuals work independently.
 
 ## Known Limitations
 
-- No vertical/top-surface building system: floor tops do not yet align with foundation tops, and walls stand at ground level beside foundations instead of on top of them.
+- Targets stacked at the same XZ (e.g. a wall top directly above a foundation edge) are disambiguated by scoring only; there is no explicit story-selection control yet.
+- Foundations do not stack on foundations yet.
 - There is no final Part Builder yet.
 - There is no final V2 save/export system yet.
 - There is no full roof, stair, or curve system yet.
 
 ## Next Recommended Task
 
-Add the vertical building system: floors snapping flush with foundation tops, walls standing on foundation/floor tops, and second-story support. Calibrate against in-game screenshots (foundation top = 3.8968, wall module ≈ 3.88).
+Verify vertical alignment and control parity against in-game screenshots, then add a story-selection/ambiguity control for stacked snap targets and foundation-on-foundation stacking.

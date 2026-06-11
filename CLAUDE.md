@@ -66,7 +66,8 @@ Snap channels (`v2/engine/snapRelationships.ts`):
 
 ## Known Gaps / Next Milestone
 
-- **Vertical system (next):** floors should align flush with foundation *tops*, walls should stand *on* foundations/floors, second stories. Vertical module ≈ 3.89.
+- Stacked snap targets at the same XZ (wall top above a foundation edge) have no explicit story-selection control yet — scoring picks one.
+- Foundations do not stack on foundations yet.
 - No roof, stair, or curve system yet (GLBs exist and are audited).
 - No save/export system yet.
 

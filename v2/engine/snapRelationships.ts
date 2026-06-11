@@ -1,30 +1,15 @@
-import { PartDefinition, SnapChannel } from '../types';
+import { EdgeAnchorDef, PartDefinition, SnapChannel } from '../types';
 
-export const FOUNDATION_TARGET_CHANNELS: SnapChannel[] = [
-  'foundation-structure',
-  'floor-support',
-  'wall-support',
-];
-
-export const getCompatibleSnapChannels = (
+/**
+ * Resolve the snap channel for a source part connecting to a specific target
+ * edge. Edges declare their own exposed channels; an edge without explicit
+ * channels falls back to the part-level target channels.
+ */
+export const getAnchorSnapChannel = (
   sourcePart: PartDefinition,
-  targetPart: PartDefinition
-) => {
-  return sourcePart.snapSourceChannels.filter((channel) => {
-    return targetPart.snapTargetChannels.includes(channel);
-  });
-};
-
-export const getSnapRelationship = (
-  sourcePart: PartDefinition,
-  targetPart: PartDefinition
-) => {
-  return getCompatibleSnapChannels(sourcePart, targetPart)[0];
-};
-
-export const isSnapRelationshipAllowed = (
-  sourcePart: PartDefinition,
-  targetPart: PartDefinition
-) => {
-  return Boolean(getSnapRelationship(sourcePart, targetPart));
+  targetPart: PartDefinition,
+  targetAnchor: Pick<EdgeAnchorDef, 'channels'>
+): SnapChannel | undefined => {
+  const targetChannels = targetAnchor.channels ?? targetPart.snapTargetChannels;
+  return sourcePart.snapSourceChannels.find((channel) => targetChannels.includes(channel));
 };

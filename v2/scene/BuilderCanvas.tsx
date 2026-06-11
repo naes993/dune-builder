@@ -47,6 +47,7 @@ const FootprintOutline = ({
 }) => {
   const part = PARTS[instance.partId];
   const points = getWorldFootprint(part, instance.transform);
+  const outlineY = instance.transform.position[1] + 0.12;
 
   return (
     <lineLoop>
@@ -54,7 +55,7 @@ const FootprintOutline = ({
         <bufferAttribute
           attach="attributes-position"
           args={[
-            new Float32Array(points.flatMap(([x, z]) => [x, 0.12, z])),
+            new Float32Array(points.flatMap(([x, z]) => [x, outlineY, z])),
             3,
           ]}
         />

@@ -1,6 +1,5 @@
-import { EdgeAnchorDef, FootprintDef, PartRegistry } from '../types';
+import { EdgeAnchorDef, PartRegistry, FootprintDef, SnapChannel } from '../types';
 import { V2_FLOOR_HEIGHT, V2_FOUNDATION_HEIGHT, V2_UNIT_SIZE } from '../constants';
-import { FOUNDATION_TARGET_CHANNELS } from '../engine/snapRelationships';
 
 const UNIT = V2_UNIT_SIZE;
 const HALF = UNIT / 2;
@@ -10,8 +9,10 @@ const WALL_DEPTH = 0.65;
 const WALL_HALF_DEPTH = WALL_DEPTH / 2;
 const DOOR_DEPTH = 1.2;
 const DOOR_HALF_DEPTH = DOOR_DEPTH / 2;
-const STANDARD_WALL_HEIGHT = 3.9;
-const TALL_WALL_HEIGHT = 11.7;
+// The game's vertical module: wall tops align with foundation tops, and the
+// tall wall pieces span exactly three modules (measured GLB: 11.644).
+const STANDARD_WALL_HEIGHT = V2_FOUNDATION_HEIGHT;
+const TALL_WALL_HEIGHT = V2_FOUNDATION_HEIGHT * 3;
 const TRIANGLE_APOTHEM = UNIT / (2 * Math.sqrt(3));
 const TRIANGLE_RADIUS = UNIT / Math.sqrt(3);
 
@@ -27,65 +28,96 @@ const HARKONNEN_SURFACE_MATERIAL = {
   roughness: 0.75,
 };
 
-const SQUARE_FOUNDATION_ANCHORS: EdgeAnchorDef[] = [
-  {
-    id: 'edge.north',
-    kind: 'edge',
-    role: 'foundation-edge',
-    start: [-HALF, 0, HALF],
-    end: [HALF, 0, HALF],
-    normal: [0, 0, 1],
-  },
-  {
-    id: 'edge.east',
-    kind: 'edge',
-    role: 'foundation-edge',
-    start: [HALF, 0, HALF],
-    end: [HALF, 0, -HALF],
-    normal: [1, 0, 0],
-  },
-  {
-    id: 'edge.south',
-    kind: 'edge',
-    role: 'foundation-edge',
-    start: [HALF, 0, -HALF],
-    end: [-HALF, 0, -HALF],
-    normal: [0, 0, -1],
-  },
-  {
-    id: 'edge.west',
-    kind: 'edge',
-    role: 'foundation-edge',
-    start: [-HALF, 0, -HALF],
-    end: [-HALF, 0, HALF],
-    normal: [-1, 0, 0],
-  },
+// 2D edge specs (XZ plane, CCW winding) lifted to 3D anchors at a given height.
+type EdgeSpec = {
+  id: string;
+  start: [number, number];
+  end: [number, number];
+  normal: [number, number];
+};
+
+const SQUARE_EDGE_SPECS: EdgeSpec[] = [
+  { id: 'edge.north', start: [-HALF, HALF], end: [HALF, HALF], normal: [0, 1] },
+  { id: 'edge.east', start: [HALF, HALF], end: [HALF, -HALF], normal: [1, 0] },
+  { id: 'edge.south', start: [HALF, -HALF], end: [-HALF, -HALF], normal: [0, -1] },
+  { id: 'edge.west', start: [-HALF, -HALF], end: [-HALF, HALF], normal: [-1, 0] },
 ];
 
-const TRIANGLE_FOUNDATION_ANCHORS: EdgeAnchorDef[] = [
-  {
-    id: 'edge.base',
-    kind: 'edge',
-    role: 'foundation-edge',
-    start: [-HALF, 0, TRIANGLE_APOTHEM],
-    end: [HALF, 0, TRIANGLE_APOTHEM],
-    normal: [0, 0, 1],
-  },
+const TRIANGLE_EDGE_SPECS: EdgeSpec[] = [
+  { id: 'edge.base', start: [-HALF, TRIANGLE_APOTHEM], end: [HALF, TRIANGLE_APOTHEM], normal: [0, 1] },
   {
     id: 'edge.right',
-    kind: 'edge',
-    role: 'foundation-edge',
-    start: [HALF, 0, TRIANGLE_APOTHEM],
-    end: [0, 0, -TRIANGLE_RADIUS],
-    normal: [Math.cos(Math.PI / 6), 0, -Math.sin(Math.PI / 6)],
+    start: [HALF, TRIANGLE_APOTHEM],
+    end: [0, -TRIANGLE_RADIUS],
+    normal: [Math.cos(Math.PI / 6), -Math.sin(Math.PI / 6)],
   },
   {
     id: 'edge.left',
+    start: [0, -TRIANGLE_RADIUS],
+    end: [-HALF, TRIANGLE_APOTHEM],
+    normal: [-Math.cos(Math.PI / 6), -Math.sin(Math.PI / 6)],
+  },
+];
+
+const edgeAnchors = (
+  specs: EdgeSpec[],
+  y: number,
+  options: { idSuffix?: string; channels: SnapChannel[]; source?: boolean }
+): EdgeAnchorDef[] =>
+  specs.map((spec) => ({
+    id: options.idSuffix ? `${spec.id}${options.idSuffix}` : spec.id,
     kind: 'edge',
     role: 'foundation-edge',
-    start: [0, 0, -TRIANGLE_RADIUS],
-    end: [-HALF, 0, TRIANGLE_APOTHEM],
-    normal: [-Math.cos(Math.PI / 6), 0, -Math.sin(Math.PI / 6)],
+    start: [spec.start[0], y, spec.start[1]],
+    end: [spec.end[0], y, spec.end[1]],
+    normal: [spec.normal[0], 0, spec.normal[1]],
+    channels: options.channels,
+    source: options.source ?? true,
+  }));
+
+const SUPPORT_CHANNELS: SnapChannel[] = ['floor-support', 'wall-support'];
+
+// Foundations: side-snap to each other at the base; their tops are the support
+// surface where floors align flush and walls stand.
+const FOUNDATION_SQUARE_ANCHORS = [
+  ...edgeAnchors(SQUARE_EDGE_SPECS, 0, { channels: ['foundation-structure'] }),
+  ...edgeAnchors(SQUARE_EDGE_SPECS, FOUNDATION_HEIGHT, { idSuffix: '.top', channels: SUPPORT_CHANNELS, source: false }),
+];
+const FOUNDATION_TRIANGLE_ANCHORS = [
+  ...edgeAnchors(TRIANGLE_EDGE_SPECS, 0, { channels: ['foundation-structure'] }),
+  ...edgeAnchors(TRIANGLE_EDGE_SPECS, FOUNDATION_HEIGHT, { idSuffix: '.top', channels: SUPPORT_CHANNELS, source: false }),
+];
+
+// Floors: all snapping happens at the walking surface, so floor tops stay flush
+// with whatever supports them (foundation tops, other floors, wall tops).
+const FLOOR_SQUARE_ANCHORS = edgeAnchors(SQUARE_EDGE_SPECS, FLOOR_HEIGHT, {
+  idSuffix: '.top',
+  channels: SUPPORT_CHANNELS,
+});
+const FLOOR_TRIANGLE_ANCHORS = edgeAnchors(TRIANGLE_EDGE_SPECS, FLOOR_HEIGHT, {
+  idSuffix: '.top',
+  channels: SUPPORT_CHANNELS,
+});
+
+const wallAnchors = (height: number): EdgeAnchorDef[] => [
+  {
+    id: 'edge.wall-bottom',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [-HALF, 0, 0],
+    end: [HALF, 0, 0],
+    normal: [0, 0, 1],
+    channels: [],
+  },
+  {
+    id: 'edge.wall-top',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [-HALF, height, 0],
+    end: [HALF, height, 0],
+    normal: [0, 0, 1],
+    channels: SUPPORT_CHANNELS,
+    source: false,
   },
 ];
 
@@ -108,6 +140,26 @@ const TRIANGLE_FOOTPRINT: FootprintDef = {
   ],
 };
 
+const WALL_FOOTPRINT: FootprintDef = {
+  type: 'polygon',
+  points: [
+    [-HALF, -WALL_HALF_DEPTH],
+    [HALF, -WALL_HALF_DEPTH],
+    [HALF, WALL_HALF_DEPTH],
+    [-HALF, WALL_HALF_DEPTH],
+  ],
+};
+
+const DOOR_FOOTPRINT: FootprintDef = {
+  type: 'polygon',
+  points: [
+    [-HALF, -DOOR_HALF_DEPTH],
+    [HALF, -DOOR_HALF_DEPTH],
+    [HALF, DOOR_HALF_DEPTH],
+    [-HALF, DOOR_HALF_DEPTH],
+  ],
+};
+
 const STANDARD_ROTATIONS = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
 const TRIANGLE_ROTATIONS = [
   0,
@@ -117,11 +169,10 @@ const TRIANGLE_ROTATIONS = [
   (4 * Math.PI) / 3,
   (5 * Math.PI) / 3,
 ];
-const FOUNDATION_SOURCE_CHANNELS = ['foundation-structure'] as const;
-const FLOOR_SOURCE_CHANNELS = ['floor-support'] as const;
-const FLOOR_TARGET_CHANNELS = ['floor-support', 'wall-support'] as const;
-const WALL_SOURCE_CHANNELS = ['wall-support'] as const;
-const NO_TARGET_CHANNELS = [] as const;
+const FOUNDATION_SOURCE_CHANNELS: SnapChannel[] = ['foundation-structure'];
+const FOUNDATION_TARGET_CHANNELS: SnapChannel[] = ['foundation-structure', ...SUPPORT_CHANNELS];
+const FLOOR_SOURCE_CHANNELS: SnapChannel[] = ['floor-support'];
+const WALL_SOURCE_CHANNELS: SnapChannel[] = ['wall-support'];
 
 export const PARTS: PartRegistry = {
   // GLB pivot conventions (measured by scripts/measure-core-parts.mjs):
@@ -133,11 +184,11 @@ export const PARTS: PartRegistry = {
     occupancyLayer: 'foundation',
     snapProfile: 'floor',
     snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
-    snapTargetChannels: [...FLOOR_TARGET_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
     height: FLOOR_HEIGHT,
     yOffset: FLOOR_HEIGHT / 2,
     allowedRotations: STANDARD_ROTATIONS,
-    anchors: SQUARE_FOUNDATION_ANCHORS,
+    anchors: FLOOR_SQUARE_ANCHORS,
     footprint: SQUARE_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
@@ -158,11 +209,11 @@ export const PARTS: PartRegistry = {
     occupancyLayer: 'foundation',
     snapProfile: 'floor',
     snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
-    snapTargetChannels: [...FLOOR_TARGET_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
     height: FLOOR_HEIGHT,
     yOffset: FLOOR_HEIGHT / 2,
     allowedRotations: TRIANGLE_ROTATIONS,
-    anchors: TRIANGLE_FOUNDATION_ANCHORS,
+    anchors: FLOOR_TRIANGLE_ANCHORS,
     footprint: TRIANGLE_FOOTPRINT,
     placeholderMesh: {
       type: 'triangle-prism',
@@ -187,7 +238,7 @@ export const PARTS: PartRegistry = {
     height: FOUNDATION_HEIGHT,
     yOffset: FOUNDATION_HEIGHT / 2,
     allowedRotations: STANDARD_ROTATIONS,
-    anchors: SQUARE_FOUNDATION_ANCHORS,
+    anchors: FOUNDATION_SQUARE_ANCHORS,
     footprint: SQUARE_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
@@ -212,7 +263,7 @@ export const PARTS: PartRegistry = {
     height: FOUNDATION_HEIGHT,
     yOffset: FOUNDATION_HEIGHT / 2,
     allowedRotations: TRIANGLE_ROTATIONS,
-    anchors: TRIANGLE_FOUNDATION_ANCHORS,
+    anchors: FOUNDATION_TRIANGLE_ANCHORS,
     footprint: TRIANGLE_FOOTPRINT,
     placeholderMesh: {
       type: 'triangle-prism',
@@ -233,29 +284,12 @@ export const PARTS: PartRegistry = {
     occupancyLayer: 'wall-edge',
     snapProfile: 'wall',
     snapSourceChannels: [...WALL_SOURCE_CHANNELS],
-    snapTargetChannels: [...NO_TARGET_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
     height: STANDARD_WALL_HEIGHT,
     yOffset: STANDARD_WALL_HEIGHT / 2,
-    allowedRotations: [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2],
-    anchors: [
-      {
-        id: 'edge.wall-bottom',
-        kind: 'edge',
-        role: 'foundation-edge',
-        start: [-HALF, 0, 0],
-        end: [HALF, 0, 0],
-        normal: [0, 0, 1],
-      },
-    ],
-    footprint: {
-      type: 'polygon',
-      points: [
-        [-HALF, -WALL_HALF_DEPTH],
-        [HALF, -WALL_HALF_DEPTH],
-        [HALF, WALL_HALF_DEPTH],
-        [-HALF, WALL_HALF_DEPTH],
-      ],
-    },
+    allowedRotations: STANDARD_ROTATIONS,
+    anchors: wallAnchors(STANDARD_WALL_HEIGHT),
+    footprint: WALL_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
       size: [UNIT, STANDARD_WALL_HEIGHT, WALL_DEPTH],
@@ -275,10 +309,10 @@ export const PARTS: PartRegistry = {
     occupancyLayer: 'wall-edge',
     snapProfile: 'wall',
     snapSourceChannels: [...WALL_SOURCE_CHANNELS],
-    snapTargetChannels: [...NO_TARGET_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
     height: TALL_WALL_HEIGHT,
     yOffset: TALL_WALL_HEIGHT / 2,
-    allowedRotations: [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2],
+    allowedRotations: STANDARD_ROTATIONS,
     anchors: [
       {
         id: 'edge.corner-front',
@@ -287,6 +321,7 @@ export const PARTS: PartRegistry = {
         start: [-HALF, 0, -HALF],
         end: [HALF, 0, -HALF],
         normal: [0, 0, 1],
+        channels: [],
       },
       {
         id: 'edge.corner-side',
@@ -295,17 +330,30 @@ export const PARTS: PartRegistry = {
         start: [HALF, 0, HALF],
         end: [HALF, 0, -HALF],
         normal: [1, 0, 0],
+        channels: [],
+      },
+      {
+        id: 'edge.corner-front.top',
+        kind: 'edge',
+        role: 'foundation-edge',
+        start: [-HALF, TALL_WALL_HEIGHT, -HALF],
+        end: [HALF, TALL_WALL_HEIGHT, -HALF],
+        normal: [0, 0, 1],
+        channels: SUPPORT_CHANNELS,
+        source: false,
+      },
+      {
+        id: 'edge.corner-side.top',
+        kind: 'edge',
+        role: 'foundation-edge',
+        start: [HALF, TALL_WALL_HEIGHT, HALF],
+        end: [HALF, TALL_WALL_HEIGHT, -HALF],
+        normal: [1, 0, 0],
+        channels: SUPPORT_CHANNELS,
+        source: false,
       },
     ],
-    footprint: {
-      type: 'polygon',
-      points: [
-        [-HALF, -HALF],
-        [HALF, -HALF],
-        [HALF, HALF],
-        [-HALF, HALF],
-      ],
-    },
+    footprint: SQUARE_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
       size: [UNIT, TALL_WALL_HEIGHT, UNIT],
@@ -325,29 +373,12 @@ export const PARTS: PartRegistry = {
     occupancyLayer: 'wall-edge',
     snapProfile: 'wall',
     snapSourceChannels: [...WALL_SOURCE_CHANNELS],
-    snapTargetChannels: [...NO_TARGET_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
     height: TALL_WALL_HEIGHT,
     yOffset: TALL_WALL_HEIGHT / 2,
-    allowedRotations: [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2],
-    anchors: [
-      {
-        id: 'edge.wall-bottom',
-        kind: 'edge',
-        role: 'foundation-edge',
-        start: [-HALF, 0, 0],
-        end: [HALF, 0, 0],
-        normal: [0, 0, 1],
-      },
-    ],
-    footprint: {
-      type: 'polygon',
-      points: [
-        [-HALF, -DOOR_HALF_DEPTH],
-        [HALF, -DOOR_HALF_DEPTH],
-        [HALF, DOOR_HALF_DEPTH],
-        [-HALF, DOOR_HALF_DEPTH],
-      ],
-    },
+    allowedRotations: STANDARD_ROTATIONS,
+    anchors: wallAnchors(TALL_WALL_HEIGHT),
+    footprint: DOOR_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
       size: [UNIT, TALL_WALL_HEIGHT, DOOR_DEPTH],
@@ -367,29 +398,12 @@ export const PARTS: PartRegistry = {
     occupancyLayer: 'wall-edge',
     snapProfile: 'wall',
     snapSourceChannels: [...WALL_SOURCE_CHANNELS],
-    snapTargetChannels: [...NO_TARGET_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
     height: STANDARD_WALL_HEIGHT,
     yOffset: STANDARD_WALL_HEIGHT / 2,
-    allowedRotations: [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2],
-    anchors: [
-      {
-        id: 'edge.wall-bottom',
-        kind: 'edge',
-        role: 'foundation-edge',
-        start: [-HALF, 0, 0],
-        end: [HALF, 0, 0],
-        normal: [0, 0, 1],
-      },
-    ],
-    footprint: {
-      type: 'polygon',
-      points: [
-        [-HALF, -DOOR_HALF_DEPTH],
-        [HALF, -DOOR_HALF_DEPTH],
-        [HALF, DOOR_HALF_DEPTH],
-        [-HALF, DOOR_HALF_DEPTH],
-      ],
-    },
+    allowedRotations: STANDARD_ROTATIONS,
+    anchors: wallAnchors(STANDARD_WALL_HEIGHT),
+    footprint: DOOR_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
       size: [UNIT, STANDARD_WALL_HEIGHT, DOOR_DEPTH],

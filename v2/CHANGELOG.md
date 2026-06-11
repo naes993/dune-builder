@@ -1,5 +1,21 @@
 # V2 Changelog
 
+## v2-dev-0011 - 2026-06-10
+
+Vertical building system: support surfaces carry elevation.
+
+- Edge anchors now declare per-edge snap channels (`channels`) and source eligibility (`source`), and anchors carry explicit heights.
+- Foundations side-snap at the base via `foundation-structure`; their top edges (y = 3.8968) expose `floor-support` and `wall-support`.
+- Floor anchors moved to the walking surface, so floors snap flush with whatever supports them: foundation tops, other floors, and wall tops.
+- Walls stand on support surfaces (foundation/floor/wall tops) instead of beside foundation sides; the foundation-specific endpoint wall transform was removed.
+- Wall top edges expose `floor-support` + `wall-support`: second-story floors and wall stacking work.
+- Wall heights snapped to the game's vertical module: standard = foundation height (3.8968), tall = exactly 3 modules (11.69, matching the measured GLB at 11.644).
+- Snap proximity and scoring now use XZ distance (the cursor lives on the ground plane; targets can be elevated).
+- Wall-run continuation preserves elevation, and wall segment occupancy keys include height.
+- Footprint occupancy conflicts now require overlapping vertical ranges, so stacked stories don't collide.
+- Known limitation: targets stacked at the same XZ (e.g. a wall top directly above a foundation edge) are disambiguated by distance/rotation scoring only — no explicit story-selection control yet.
+- Known limitation: foundations do not stack on foundations yet.
+
 ## v2-dev-0010 - 2026-06-10
 
 Connection-first only; real Harkonnen parts are the buildables.

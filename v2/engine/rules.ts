@@ -9,8 +9,8 @@ const normalizeCoordinate = (value: number) => {
   return (Math.round(normalized * 100) / 100).toFixed(2);
 };
 
-const normalizePoint = ([x, , z]: [number, number, number]) => {
-  return `${normalizeCoordinate(x)},${normalizeCoordinate(z)}`;
+const normalizePoint = ([x, y, z]: [number, number, number]) => {
+  return `${normalizeCoordinate(x)},${normalizeCoordinate(y)},${normalizeCoordinate(z)}`;
 };
 
 export const getSupportEdgeSlotKey = (supportInstanceId: string, supportEdgeId: string) => {
@@ -23,6 +23,7 @@ export const getWallSegmentKey = (
   sourceAnchorId?: string
 ) => {
   const anchor = getWorldEdgeAnchors(part, transform).find((candidate) => {
+    if (candidate.source === false) return false;
     return sourceAnchorId ? candidate.id === sourceAnchorId : true;
   });
 
@@ -36,10 +37,12 @@ const getInstanceWallSegmentKeys = (instance: PartInstance, registry: PartRegist
   const part = registry[instance.partId];
   if (!isWallEdgePart(part)) return [];
 
-  return getWorldEdgeAnchors(part, instance.transform, instance.id).map((anchor) => {
-    const endpoints = [normalizePoint(anchor.startWorld), normalizePoint(anchor.endWorld)].sort();
-    return `wall-segment:${endpoints[0]}:${endpoints[1]}`;
-  });
+  return getWorldEdgeAnchors(part, instance.transform, instance.id)
+    .filter((anchor) => anchor.source !== false)
+    .map((anchor) => {
+      const endpoints = [normalizePoint(anchor.startWorld), normalizePoint(anchor.endWorld)].sort();
+      return `wall-segment:${endpoints[0]}:${endpoints[1]}`;
+    });
 };
 
 export const getOccupiedPlacementKeys = (instances: PartInstance[], registry: PartRegistry) => {
