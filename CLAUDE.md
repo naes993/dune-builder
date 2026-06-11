@@ -1,236 +1,84 @@
-# Dune: Awakening Base Building Planner
+# Dune: Awakening Base Building Planner (V2)
 
 ## Project Overview
 
-A Three.js/React-Three-Fiber based 3D base building planner for Funcom's "Dune: Awakening" game. Built with Vite + TypeScript.
+A Three.js/React-Three-Fiber 3D base building planner for Funcom's "Dune: Awakening", built with Vite + TypeScript. The app is the V2 data-driven placement engine under `v2/`; the legacy v1 builder was removed in June 2026.
 
 ## Quick Start
 
 ```bash
 npm install
 npm run dev
+# open http://127.0.0.1:3000/
 ```
 
 ## Role & Expertise
 
-You are an expert base building consultant for this project. You specialize in structural planning—foundations, floors, walls, roofs, and inclines—not decorative elements like lighting, furniture, or deco pieces.
+You are an expert base building consultant for this project. You specialize in structural planning—foundations, floors, walls, roofs, and inclines—not decorative elements.
+
+## Core Design Principles
+
+1. **Connection-first, no world grid.** The first placed piece establishes the build grid, exactly like the game. Pieces snap to each other via edge anchors and snap channels; there is no preset ground grid and no grid-snap fallback. Never reintroduce grid-first logic.
+2. **Logical data is placement truth.** Footprints, anchors, occupancy, and rules live in `v2/registry/parts.ts` and `v2/engine/`. GLB files are visual wrappers only — do not use GLB bounds, pivots, mesh centers, or `_COL` files as placement truth.
+3. **Real parts only.** Buildable parts are the real Harkonnen Level 3 GLBs (provided by the developer, local-only, never committed). No generic placeholder shapes.
+4. **Game-parity controls.** Match the game's build controls where known (R rotates the preview, including snapped previews). Sean can provide in-game screenshots when control or alignment details are ambiguous.
 
 ## Building System Fundamentals
 
-The building system uses tessellating geometric shapes based on squares and 60° triangles. This allows for structures ranging from simple rectangular bases to complex rounded, pyramidal, or organic shapes.
+Tessellating shapes based on squares and 60° equilateral triangles (wedges). Foundations are tall structural blocks; floors are thin walkable platforms.
 
-**Foundation vs. Floor:** Foundations are the structural grid pieces that establish the building footprint. Floors are the walkable surface layers that sit on top of foundations.
+**Key measured constants (`v2/constants.ts`, from real GLBs via `scripts/measure-core-parts.mjs`):**
+- `V2_UNIT_SIZE = 5.317` — canonical square edge (real Harkonnen floor tile)
+- `V2_FLOOR_HEIGHT = 0.3735` — floor slab thickness; floor GLB pivot is at the walking surface
+- `V2_FOUNDATION_HEIGHT = 3.8968` — foundation block height; foundation GLB pivot is at the base
+- Wedge GLB pivots sit at the triangle centroid, base toward +Z, matching the registry's equilateral anchors
 
-**Key Constants (see types.ts):**
-- `UNIT_SIZE = 4` — Base grid unit
-- `WALL_HEIGHT = 3` — Full wall height
-- `HALF_WALL_HEIGHT = 1.5` — Half wall height
-- `FOUNDATION_HEIGHT = 0.2` — Foundation thickness
-- `TRIANGLE_APOTHEM` — Center to midpoint of triangle side (~1.15)
-- `TRIANGLE_RADIUS` — Center to vertex of triangle (~2.31)
-- `CURVE_RADIUS = 4` — Quarter circle radius
-
----
-
-## Current Implementation
-
-### Building Types (types.ts → BuildingType enum)
-
-**Foundations:**
-- SQUARE_FOUNDATION — Standard 4x4 grid unit
-- TRIANGLE_FOUNDATION — 60° triangle for angled designs
-- INNER_CURVED_CORNER — Convex quarter-circle (4 make a full circle)
-- OUTER_CURVED_CORNER — Concave fill piece for squaring off curves
-
-**Walls:**
-- WALL — Full height solid wall
-- HALF_WALL — Half height wall
-- WINDOW_WALL — Wall with window opening
-- DOORWAY — Wall with door opening
-
-**Roofs:**
-- SQUARE_ROOF — Angled roof for square foundations
-- TRIANGLE_ROOF — Conical roof for triangle foundations
-
-**Inclines:**
-- STAIRS — 8-step staircase
-- RAMP — Smooth inclined surface
-
-### Socket System (utils/geometry.ts)
-
-The snapping system uses typed sockets for smart piece connections:
-
-**Socket Types:**
-- `FOUNDATION_EDGE` — Side of foundation, connects to other foundations
-- `FOUNDATION_TOP` — Top surface where walls attach
-- `WALL_BOTTOM` — Bottom of wall, snaps to foundation tops
-- `WALL_SIDE` — Side of wall, connects to adjacent walls
-- `WALL_TOP` — Top of wall, roofs snap here
-- `ROOF_EDGE` — Edge of roof pieces
-- `INCLINE_BOTTOM` / `INCLINE_TOP` — Stairs/ramp connection points
-
-**Compatibility Rules (SOCKET_COMPATIBILITY in types.ts):**
-- Foundations snap edge-to-edge
-- Walls snap to foundation tops or wall tops
-- Roofs snap to wall tops or other roof edges
-
-### File Structure
+## File Structure
 
 ```
-├── App.tsx              # Main app, state management, save/load
-├── types.ts             # BuildingType enum, Socket interfaces, constants
-├── components/
-│   ├── Scene.tsx        # Three.js canvas, BuildingMesh, placement logic
-│   └── UI.tsx           # Toolbar, controls, instructions overlay
-└── utils/
-    └── geometry.ts      # Socket definitions, snapping calculations
+├── App.tsx                      # Renders the V2 BuilderCanvas
+├── index.tsx                    # Entry point (root directory — there is NO src/ folder)
+├── v2/
+│   ├── constants.ts             # Measured unit/height constants
+│   ├── types.ts                 # PartId, anchors, snap channels, placement types
+│   ├── version.ts               # Build label — update with every behavior change
+│   ├── CHANGELOG.md             # V2 changelog — update with every behavior change
+│   ├── registry/parts.ts        # Data-driven part definitions (placement truth)
+│   ├── registry/HARKONNEN_ASSET_AUDIT.md  # Measured inventory of all 92 GLBs
+│   ├── engine/                  # anchors, snapSolver, rules, occupancy, snapRelationships
+│   ├── store/builderStore.ts    # Zustand state
+│   └── scene/                   # BuilderCanvas (R3F scene + UI), PartMesh (GLB wrappers)
+├── scripts/                     # GLB inspection/measurement tools
+└── public/assets/parts/         # Local-only game GLBs (gitignored, never commit)
 ```
 
----
+## Snap System
 
-## Not Yet Implemented (Future Work)
+Placement priority in `v2/engine/snapSolver.ts`:
+1. Wall-run continuation from existing wall endpoints.
+2. Support-edge connection to a compatible target edge (channel-filtered, rotation-preference tie-break so R cycles orientations).
+3. Free ground placement at the cursor.
 
-### Foundations
-- Columns & Pillars (Corner Column, Center Column)
+Snap channels (`v2/engine/snapRelationships.ts`):
+- `foundation-structure` — foundation↔foundation side adjacency
+- `floor-support` — floors to floor-compatible edges (incl. foundation bases)
+- `wall-support` — walls to wall-compatible edges on floors/foundations
 
-### Walls
-- Curved Wall — For curved foundation edges
-- Curved Corner Wall
-- Triangle Wall variants (Top Left/Right, Bottom Left/Right) — For angled sections
-- Archway
+## Known Gaps / Next Milestone
 
-### Roofs
-- Corner Roof
-- Dome Roof
-- Angled Roof + Angled Roof Corner + Angled Roof Inwards Corner
-- Curved roof pieces (inner/outer matching foundations)
-- Inverted/Reversed roof variants
+- **Vertical system (next):** floors should align flush with foundation *tops*, walls should stand *on* foundations/floors, second stories. Vertical module ≈ 3.89.
+- No roof, stair, or curve system yet (GLBs exist and are audited).
+- No save/export system yet.
 
-### Inclines
-- Half Stairs
-- Corner Stairs
-- Corner Slopes
-- Inverted variants
+## Workflow Rules (see AGENTS.md)
 
-### Building Sets (Cosmetic Styles)
-Different visual styles using the same shapes:
-- **Dune Man** — Basic utilitarian (current default)
-- **Atreides** — Regal, falcon motifs, wing-like balconies
-- **Harkonnen** — Dark, chitinous, menacing, tall slanted walls
-- **Observer** — Sleek, rounded aesthetic with unique columns
-- **CHOAM** — Industrial/commercial with specialized passageways
+- Run `npm run build` and `npx tsc --noEmit` after code changes.
+- Maintain `v2/version.ts` and `v2/CHANGELOG.md` when changing V2 behavior.
+- Never commit `.glb` files; game assets are local-only and must not be redistributed.
+- Prefer small focused tasks and checkpoint commits. Do not push unless asked.
 
----
+## Deployment
 
-## Curved Building System Logic
+GitHub Pages deploys `dist/` on push to `main` (`.github/workflows/deploy.yml`). **Caveat:** the GLB assets are local-only, so the deployed site currently has no models — it is effectively a local-first app until an asset hosting decision is made.
 
-The curved pieces work as a complete system:
-
-1. **Inner Curved Corners** create the circular shape (4 pieces = full circle room)
-2. **Outer Curved Corners** fill the gaps to square off the footprint for grid alignment
-3. **Curved Walls** (not yet implemented) would enclose the rounded space
-4. **Curved Roof pieces** (not yet implemented) would cap with matching geometry
-
-All curved pieces maintain the same grid spacing as standard squares/triangles.
-
----
-
-## Controls
-
-- **Left Click**: Place structure
-- **Right Click**: Demolish structure
-- **R**: Rotate preview (45° increments)
-- **Middle Mouse Drag**: Orbit camera
-- **Right Mouse Drag**: Pan camera
-
----
-
-## Common Tasks
-
-### Adding a New Building Type
-
-1. Add to `BuildingType` enum in `types.ts`
-2. Add socket definitions in `getLocalSockets()` in `geometry.ts`
-3. Add geometry/mesh in `BuildingMesh` component in `Scene.tsx`
-4. Add UI button in `tools` array in `UI.tsx`
-5. Update offset calculations in `Scene.tsx` if needed
-
-### Modifying Snapping Behavior
-
-- Socket positions/normals: `getLocalSockets()` in `geometry.ts`
-- Compatibility rules: `SOCKET_COMPATIBILITY` in `types.ts`
-- Snap radius/grid: `calculateSnap()` in `geometry.ts`
-
-
-## Deployment & Build Process
-
-### Production Deployment
-
-The app is deployed on **Cloudflare Pages** with automatic builds from the GitHub repository.
-
-- **Live URL**: https://dune-builder.pages.dev/
-- - **Deployment**: Automatic on push to `main` branch
-  - - **Build command**: `npm run build`
-    - - **Build output**: `dist/` directory
-     
-      - ### Important: No Import Maps
-     
-      - As of January 2026, this project migrated from browser-based import maps (aistudiocdn.com) to a standard Vite bundler setup.
-     
-      - **What this means:**
-      - - All dependencies are now managed through npm (`package.json`)
-        - - Imports in TypeScript files use standard npm package names (e.g., `@react-three/fiber`)
-          - - Vite bundles everything during `npm run build`
-            - - The built assets are deployed to Cloudflare Pages
-              - - No manual CSS or import map configuration needed in `index.html`
-               
-                - ### Local Development
-               
-                - ```bash
-                  npm install
-                  npm run dev
-                  ```
-
-                  ### Production Build
-
-                  ```bash
-                  npm run build
-                  # Output goes to dist/ directory
-
-                  
-
-
-
-
-
-
-
-                  ### Critical Configuration Notes (Updated Jan 23, 2026)
-
-                  **Entry Point:**
-                  - Main file is `/index.tsx` in the ROOT directory
-                  - There is NO `src/` folder in this project
-                  - `index.html` must reference: `<script type="module" src="/index.tsx"></script>`
-                  - **Common mistake**: Using `/src/main.tsx` will cause build failures
-
-                  **Vite Configuration:**
-                  - `vite.config.ts` must have `base: '/'` for Cloudflare Pages
-                  - DO NOT use `base: '/dune-builder/'` (that's for GitHub Pages only)
-                  - This is why assets load from root path instead of subdirectory
-
-                  **Troubleshooting Build Failures:**
-                  - Error: "Failed to resolve /src/main.tsx" → Check that `index.html` points to `/index.tsx`
-                  - Black screen on Cloudflare deployment → Verify `vite.config.ts` has `base: '/'`
-                  - Assets 404 errors → Confirm base path is set correctly for deployment target
-
-                  **Deployment History:**
-                  - GitHub Pages deployment was abandoned (requires base: '/dune-builder/')
-                  - Cloudflare Pages is now the primary deployment (requires base: '/')
-                  - Both fixes applied Jan 23, 2026 to enable Cloudflare deployment```
-
-                  The build process automatically:
-                  - Compiles TypeScript to JavaScript
-                  - - Bundles all React Three Fiber and Three.js dependencies
-                    - - Processes and optimizes CSS (via Tailwind CDN in HTML)
-                      - - Generates hashed filenames for cache busting
-                        - - Creates a production-ready `dist/` directory
+Entry point is `/index.tsx` in the root (`index.html` references it directly); `vite.config.ts` port is 3000.

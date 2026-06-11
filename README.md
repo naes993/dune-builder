@@ -1,8 +1,6 @@
 # Dune Builder
 
-This repository currently contains the original legacy builder and an isolated V2 builder prototype.
-
-The V2 prototype is available at `/v2`. The current working checkpoint is `v2-dev-0010`.
+This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0010`.
 
 ## V2 Builder Prototype
 
@@ -16,7 +14,7 @@ V2 is being built as a data-driven placement engine:
 - Placement is connection-first: there is no world grid. The first placed piece establishes the build grid, like the game; everything else snaps to existing pieces.
 - Floor, foundation, and wall snapping is separated by profile and channel.
 
-The V2 code is intentionally isolated under `v2/` so it can evolve without depending on the legacy builder implementation.
+The V2 code lives under `v2/`; the root `App.tsx` is a thin wrapper that renders the V2 builder.
 
 ## Current V2 Checkpoint
 
@@ -53,12 +51,12 @@ npm install
 npm run dev
 ```
 
-Open `/v2` to test the V2 prototype.
+The V2 builder loads at the root URL.
 
 Use the in-app browser, Browser plugin, or Chrome for placement testing. The current preview was verified at:
 
 ```text
-http://127.0.0.1:3002/v2
+http://127.0.0.1:3000/
 ```
 
 ## Validate

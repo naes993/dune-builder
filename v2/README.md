@@ -57,7 +57,7 @@ There is no top-surface/vertical snap system yet: floors and foundations both si
 Use the in-app browser, Browser plugin, or Chrome for interactive placement testing. For the current local preview, open:
 
 ```text
-http://127.0.0.1:3000/v2
+http://127.0.0.1:3000/
 ```
 
 Expected smoke checks for `v2-dev-0010`:
