@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0016 - 2026-06-11
+
+Floors attach on either side of wall edges.
+
+- The solver now generates both edge alignments (outward and flipped) for every part, not just walls/doors. Floors previously could only attach to one side of a wall's top/bottom edge — the "silver side" refused floors.
+- The cursor's XZ side picks which alignment wins; occupancy validation rejects flipped placements that would overlap their own support (e.g. floor onto its supporting foundation cell), so footprint parts behave as before everywhere else.
+- New capability fallout: inner ceilings — a floor can snap to a wall top extending inward over the room.
+- Extended `scripts/repro-floor-snap.ts` with lone-wall both-sides probes.
+
 ## v2-dev-0015 - 2026-06-11
 
 Downward building and an Admin part-registry panel.

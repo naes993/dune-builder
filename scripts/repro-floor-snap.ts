@@ -67,3 +67,31 @@ const probeWall = (label: string, cursor: [number, number, number]) => {
 
 probeWall('under overhang edge (low cursor) ', [0, 1.0, V2_UNIT_SIZE + HALF]);
 probeWall('on overhang surface (high cursor)', [0, 7.8, V2_UNIT_SIZE + HALF]);
+
+// A lone wall on open ground: floors must attach to its base on BOTH sides.
+const loneWall: PartInstance[] = [
+  {
+    id: 'wall-lone',
+    partId: 'wall.harkonnen.level3.straight',
+    transform: { position: [50, 0, 50], rotationY: 0 },
+  },
+];
+
+const probeSide = (label: string, cursor: [number, number, number]) => {
+  const result = solvePlacement({
+    cursor,
+    activePartId: 'floor.harkonnen.level3.square',
+    rotationY: 0,
+    instances: loneWall,
+  });
+  console.log(label, {
+    mode: result.placementMode,
+    valid: result.isValid,
+    target: result.binding?.targetAnchorId,
+    z: Number(result.transform.position[2].toFixed(3)),
+    y: Number(result.transform.position[1].toFixed(3)),
+  });
+};
+
+probeSide('floor north of lone wall base', [50, 0.4, 51.5]);
+probeSide('floor south of lone wall base', [50, 0.4, 48.5]);

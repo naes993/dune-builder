@@ -204,12 +204,15 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
     for (const source of sourceAnchors) {
       if (Math.abs(getEdgeLength(source) - target.length) > 0.01) continue;
 
-      // Walls and doors can face either way on the same segment; R picks the
-      // facing via the rotation preference below. Footprint parts only get the
-      // outward alignment (the flipped one would overlap the support).
-      const transforms = isWallEdgePart(activePart)
-        ? [calculateEdgeSnapTransform(target, source), calculateEdgeSnapTransform(target, source, true)]
-        : [calculateEdgeSnapTransform(target, source)];
+      // Both alignments are always generated: walls/doors face either way on a
+      // segment (R picks the facing), and floors attach on either side of a
+      // wall's top/bottom edge (the cursor side picks). Where the flipped
+      // alignment would overlap the support (floor onto its own supporting
+      // floor/foundation), occupancy validation rejects it.
+      const transforms = [
+        calculateEdgeSnapTransform(target, source),
+        calculateEdgeSnapTransform(target, source, true),
+      ];
 
       // Walls can also hang below the support edge (e.g. under a floor
       // overhang). The downward variant occupies its own edge slot.

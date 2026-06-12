@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0015`
+Current V2 build: `v2-dev-0016`
 
-Description: Floors snap to wall bases, walls hang below floor edges, cursor height picks the story; Admin panel for part categories.
+Description: Floors attach on either side of wall edges (cursor side picks); inner ceilings now possible.
 
 ## Checkpoint Summary
 

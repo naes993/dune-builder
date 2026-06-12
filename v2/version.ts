@@ -1,5 +1,5 @@
 export const V2_BUILD = {
-  id: 'v2-dev-0015',
+  id: 'v2-dev-0016',
   date: '2026-06-11',
-  description: 'Floors snap to wall bases, walls hang below floor edges, cursor height picks the story; Admin panel for part categories.',
+  description: 'Floors attach on either side of wall edges (cursor side picks); inner ceilings now possible.',
 } as const;
