@@ -276,18 +276,40 @@ const PlaceholderVisual = ({
   );
 };
 
+const HighlightOverlay = ({ part, color }: { part: PartDefinition; color: string }) => {
+  const triangle = useMemo(() => {
+    if (part.placeholderMesh.type !== 'triangle-prism') return null;
+    return triangleGeometry(part);
+  }, [part]);
+
+  useEffect(() => {
+    return () => {
+      triangle?.dispose();
+    };
+  }, [triangle]);
+
+  return (
+    <mesh raycast={() => null} geometry={triangle ?? undefined}>
+      {part.placeholderMesh.type === 'box' && <boxGeometry args={part.placeholderMesh.size} />}
+      <meshBasicMaterial color={color} transparent opacity={0.35} depthTest={false} />
+    </mesh>
+  );
+};
+
 export const PartMesh = ({
   partId,
   transform,
   debugVisuals = false,
   ghost = false,
   valid = true,
+  highlightColor,
 }: {
   partId: PartId;
   transform: Transform2D;
   debugVisuals?: boolean;
   ghost?: boolean;
   valid?: boolean;
+  highlightColor?: string;
 }) => {
   const part = PARTS[partId];
   const hasRenderableVisuals = Boolean(part.mesh || part.meshes?.length);
@@ -302,6 +324,7 @@ export const PartMesh = ({
       ) : (
         <PlaceholderVisual part={part} ghost={ghost} valid={valid} />
       )}
+      {highlightColor && <HighlightOverlay part={part} color={highlightColor} />}
     </group>
   );
 };

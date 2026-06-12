@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0013`
+Current V2 build: `v2-dev-0014`
 
-Description: Walls and doors can face either direction on an edge — R flips the facing.
+Description: Game-parity build menu — category tabs, right-click build modes, wheel piece cycling, copy piece.
 
 ## Checkpoint Summary
 
@@ -49,6 +49,18 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - R rotates the preview, including snapped previews (rotation-preference tie-break in the solver).
 - Separate Debug helper.
 - Harkonnen asset audit and manifest.
+
+## Controls (game parity)
+
+- **Left Click** — apply the current build mode (place / replace / demolish).
+- **Right Click** — cycle build mode: Build → Replace → Customize → Demolish.
+- **R** — rotate the preview (flips wall/door facing when snapped).
+- **Q / E** — previous / next category tab.
+- **Mouse Wheel** — cycle pieces in the active tab; **Shift+Wheel** zooms the camera.
+- **Middle Click** — copy a hovered piece (makes it the active piece).
+- **Middle-drag** — orbit camera; **Left-drag** — pan camera.
+- **B** — collapse/expand the build menu.
+- **Z / C** — reserved for building-set cycling once multiple sets exist.
 
 ## Placement Testing
 

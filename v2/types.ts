@@ -11,6 +11,8 @@ export type PartId =
   | 'wall.harkonnen.level3.inclined.tall'
   | 'wall.harkonnen.level3.door';
 export type PartCategory = 'foundation' | 'floor' | 'wall' | 'wall-corner' | 'wall-door';
+/** Build-menu tab, mirroring the game's subcategories. */
+export type MenuCategory = 'structural' | 'walls' | 'wedge-walls' | 'roofs' | 'inclines' | 'special';
 export type OccupancyLayer = 'foundation' | 'wall-edge';
 export type AnchorKind = 'edge';
 export type AnchorRole = 'foundation-edge';
@@ -59,6 +61,7 @@ export interface PartDefinition {
   id: PartId;
   name: string;
   category: PartCategory;
+  menuCategory: MenuCategory;
   occupancyLayer: OccupancyLayer;
   snapProfile: SnapProfile;
   snapSourceChannels: SnapChannel[];

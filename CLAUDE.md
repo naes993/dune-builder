@@ -21,7 +21,7 @@ You are an expert base building consultant for this project. You specialize in s
 1. **Connection-first, no world grid.** The first placed piece establishes the build grid, exactly like the game. Pieces snap to each other via edge anchors and snap channels; there is no preset ground grid and no grid-snap fallback. Never reintroduce grid-first logic.
 2. **Logical data is placement truth.** Footprints, anchors, occupancy, and rules live in `v2/registry/parts.ts` and `v2/engine/`. GLB files are visual wrappers only — do not use GLB bounds, pivots, mesh centers, or `_COL` files as placement truth.
 3. **Real parts only.** Buildable parts are the real Harkonnen Level 3 GLBs (provided by the developer, local-only, never committed). No generic placeholder shapes.
-4. **Game-parity controls.** Match the game's build controls where known (R rotates the preview, including snapped previews). Sean can provide in-game screenshots when control or alignment details are ambiguous.
+4. **Game-parity controls.** Match the game's build controls where known. Current map (from Sean's in-game reference): Left Click applies the build mode; Right Click cycles Build → Replace → Customize → Demolish (Repair/Move intentionally omitted); R rotates (flips wall/door facing when snapped); Q/E cycle category tabs; Mouse Wheel cycles pieces (Shift+Wheel zooms); Middle Click copies a piece; B toggles the build menu; Z/C reserved for building-set cycling. Sean can provide in-game screenshots when details are ambiguous.
 
 ## Building System Fundamentals
 

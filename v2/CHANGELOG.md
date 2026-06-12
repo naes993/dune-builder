@@ -1,5 +1,17 @@
 # V2 Changelog
 
+## v2-dev-0014 - 2026-06-11
+
+Game-parity build menu and controls, from Sean's in-game reference screenshots.
+
+- Category tabs mirroring the game's subcategories: ALL, STRUCTURAL, WALLS, WEDGE WALLS, ROOFS, INCLINES, SPECIAL. Parts declare a `menuCategory`; empty tabs render with a "no pieces yet" note. Q/E cycle tabs.
+- Build modes cycle with Right Click, in game order minus Repair/Move: Build → Replace → Customize → Demolish. Left Click applies the mode. A side panel shows the active mode like the game's HUD.
+- Replace swaps a hovered wall-slot piece for the selected one (wall ↔ door on the same edge), keeping its transform and binding. Non-matching pieces are refused.
+- Demolish removes the hovered piece (red highlight); Replace highlights blue. Customize is a stub for future color sets.
+- Mouse Wheel cycles pieces within the active tab; Shift+Wheel zooms the camera. Middle Click copies a hovered piece (sets it active); Middle-drag orbits; Left-drag pans.
+- B collapses/expands the build menu.
+- Z/C (top-level category/set cycling) is reserved until multiple building sets exist.
+
 ## v2-dev-0013 - 2026-06-11
 
 Walls and doors flip facing with R.
