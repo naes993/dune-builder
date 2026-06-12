@@ -1,5 +1,16 @@
 # V2 Changelog
 
+## v2-dev-0015 - 2026-06-11
+
+Downward building and an Admin part-registry panel.
+
+- Wall (and corner) base edges now expose `floor-support`, so floors snap flush with a wall's base plane — previously floors could only attach at wall tops.
+- Walls and doors can hang **below** a support edge (e.g. under a floor overhang): the solver generates a downward variant for every `wall-support` snap, occupying its own edge slot (`...:down`) so a wall above and below the same edge can coexist.
+- Cursor height now feeds candidate scoring (`VERTICAL_AFFINITY_WEIGHT`): point high to build up, point low to build down. This also softens the old stacked-targets ambiguity, since the cursor tracks the surface under the mouse.
+- New Admin panel (toolbar button): lists every registered part with its build-menu category, editable via dropdown. Overrides persist in localStorage and re-filter the tabs immediately (e.g. the flat floor can be assigned to ROOFS like the game's Rooftop piece).
+- Added `scripts/repro-floor-snap.ts` as a deterministic engine smoke test for the new snap behaviors.
+- Known issue (hardware, parked): Shift+Wheel zoom works on MacBook trackpads but not on a Logitech M720; revisit with event logging.
+
 ## v2-dev-0014 - 2026-06-11
 
 Game-parity build menu and controls, from Sean's in-game reference screenshots.

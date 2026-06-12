@@ -107,7 +107,8 @@ const wallAnchors = (height: number): EdgeAnchorDef[] => [
     start: [-HALF, 0, 0],
     end: [HALF, 0, 0],
     normal: [0, 0, 1],
-    channels: [],
+    // Floors can snap flush with a wall's base plane (e.g. under an overhang).
+    channels: ['floor-support'],
   },
   {
     id: 'edge.wall-top',
@@ -327,7 +328,7 @@ export const PARTS: PartRegistry = {
         start: [-HALF, 0, -HALF],
         end: [HALF, 0, -HALF],
         normal: [0, 0, 1],
-        channels: [],
+        channels: ['floor-support'],
       },
       {
         id: 'edge.corner-side',
@@ -336,7 +337,7 @@ export const PARTS: PartRegistry = {
         start: [HALF, 0, HALF],
         end: [HALF, 0, -HALF],
         normal: [1, 0, 0],
-        channels: [],
+        channels: ['floor-support'],
       },
       {
         id: 'edge.corner-front.top',

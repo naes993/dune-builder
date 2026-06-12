@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0014`
+Current V2 build: `v2-dev-0015`
 
-Description: Game-parity build menu — category tabs, right-click build modes, wheel piece cycling, copy piece.
+Description: Floors snap to wall bases, walls hang below floor edges, cursor height picks the story; Admin panel for part categories.
 
 ## Checkpoint Summary
 

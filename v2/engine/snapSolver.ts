@@ -29,6 +29,11 @@ const WALL_ENDPOINT_SNAP_RADIUS = 1.35;
 // Small enough that the cursor still chooses the target edge; large enough that
 // the requested rotation breaks ties between orientations on the same edge.
 const ROTATION_PREFERENCE_WEIGHT = 0.3;
+// The cursor tracks the surface under the mouse, so its height disambiguates
+// stacked candidates: point high to build up, point low to build down.
+const VERTICAL_AFFINITY_WEIGHT = 0.35;
+// Tie-break in favor of building upward when the cursor height is ambiguous.
+const DOWNWARD_TIE_BREAK = 0.01;
 
 // The cursor lives on the ground plane, but snap targets can be elevated
 // (foundation tops, wall tops). All proximity tests are therefore done in XZ.
@@ -206,16 +211,31 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
         ? [calculateEdgeSnapTransform(target, source), calculateEdgeSnapTransform(target, source, true)]
         : [calculateEdgeSnapTransform(target, source)];
 
-      for (const transform of transforms) {
-        if (!transform) continue;
+      // Walls can also hang below the support edge (e.g. under a floor
+      // overhang). The downward variant occupies its own edge slot.
+      const variants = transforms
+        .filter((transform): transform is Transform2D => Boolean(transform))
+        .flatMap((transform) => {
+          const upward = { transform, slotSuffix: '' };
+          if (snapChannel !== 'wall-support' || !isWallEdgePart(activePart)) return [upward];
+          const downwardTransform: Transform2D = {
+            position: [transform.position[0], transform.position[1] - activePart.height, transform.position[2]],
+            rotationY: transform.rotationY,
+          };
+          return [upward, { transform: downwardTransform, slotSuffix: ':down' }];
+        });
 
-        const supportEdgeSlotKey = getSupportEdgeSlotKey(target.instanceId, target.id);
+      for (const { transform, slotSuffix } of variants) {
+        const supportEdgeSlotKey = getSupportEdgeSlotKey(target.instanceId, target.id) + slotSuffix;
         const wallSegmentKey = getWallSegmentKey(activePart, transform, source.id);
         const occupancyKeys = wallSegmentKey ? [supportEdgeSlotKey, wallSegmentKey] : [supportEdgeSlotKey];
 
+        const candidateMidY = transform.position[1] + activePart.height / 2;
         const score =
           distanceXZ(transform.position, input.cursor) +
-          ROTATION_PREFERENCE_WEIGHT * rotationDistance(transform.rotationY, preferredRotation);
+          ROTATION_PREFERENCE_WEIGHT * rotationDistance(transform.rotationY, preferredRotation) +
+          VERTICAL_AFFINITY_WEIGHT * Math.abs(input.cursor[1] - candidateMidY) +
+          (slotSuffix ? DOWNWARD_TIE_BREAK : 0);
         const candidate = validateCandidate(
           input.activePartId,
           transform,

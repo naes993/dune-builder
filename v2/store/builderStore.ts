@@ -10,9 +10,25 @@ export const BUILD_MODES: BuildMode[] = ['build', 'replace', 'customize', 'demol
 export type MenuTab = 'all' | MenuCategory;
 export const MENU_TABS: MenuTab[] = ['all', 'structural', 'walls', 'wedge-walls', 'roofs', 'inclines', 'special'];
 
-export const getTabParts = (tab: MenuTab): PartId[] => {
+export type CategoryOverrides = Partial<Record<PartId, MenuCategory>>;
+
+const OVERRIDES_STORAGE_KEY = 'v2.categoryOverrides';
+
+const loadCategoryOverrides = (): CategoryOverrides => {
+  try {
+    return JSON.parse(window.localStorage.getItem(OVERRIDES_STORAGE_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+};
+
+export const getPartCategory = (partId: PartId, overrides: CategoryOverrides): MenuCategory => {
+  return overrides[partId] ?? PARTS[partId].menuCategory;
+};
+
+export const getTabParts = (tab: MenuTab, overrides: CategoryOverrides): PartId[] => {
   return Object.values(PARTS)
-    .filter((part) => tab === 'all' || part.menuCategory === tab)
+    .filter((part) => tab === 'all' || getPartCategory(part.id, overrides) === tab)
     .map((part) => part.id);
 };
 
@@ -22,12 +38,16 @@ interface BuilderState {
   activeTab: MenuTab;
   buildMode: BuildMode;
   menuExpanded: boolean;
+  settingsOpen: boolean;
+  categoryOverrides: CategoryOverrides;
   hoveredInstanceId: string | null;
   debugVisuals: boolean;
   rotationY: number;
   preview: PlacementCandidate | null;
   setActivePartId: (partId: PartId) => void;
   setActiveTab: (tab: MenuTab) => void;
+  toggleSettings: () => void;
+  setCategoryOverride: (partId: PartId, category: MenuCategory | null) => void;
   cycleTab: (direction: 1 | -1) => void;
   cycleActivePart: (direction: 1 | -1) => void;
   cycleBuildMode: () => void;
@@ -49,6 +69,8 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   activeTab: 'all',
   buildMode: 'build',
   menuExpanded: true,
+  settingsOpen: false,
+  categoryOverrides: loadCategoryOverrides(),
   hoveredInstanceId: null,
   debugVisuals: false,
   rotationY: 0,
@@ -63,10 +85,25 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   },
   setActiveTab: (tab) => {
     set({ activeTab: tab });
-    const tabParts = getTabParts(tab);
+    const tabParts = getTabParts(tab, get().categoryOverrides);
     if (tabParts.length > 0 && !tabParts.includes(get().activePartId)) {
       get().setActivePartId(tabParts[0]);
     }
+  },
+  toggleSettings: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
+  setCategoryOverride: (partId, category) => {
+    const overrides = { ...get().categoryOverrides };
+    if (category === null || category === PARTS[partId].menuCategory) {
+      delete overrides[partId];
+    } else {
+      overrides[partId] = category;
+    }
+    try {
+      window.localStorage.setItem(OVERRIDES_STORAGE_KEY, JSON.stringify(overrides));
+    } catch {
+      // localStorage unavailable; overrides stay session-only.
+    }
+    set({ categoryOverrides: overrides });
   },
   cycleTab: (direction) => {
     const currentIndex = MENU_TABS.indexOf(get().activeTab);
@@ -74,7 +111,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
     get().setActiveTab(MENU_TABS[nextIndex]);
   },
   cycleActivePart: (direction) => {
-    const tabParts = getTabParts(get().activeTab);
+    const tabParts = getTabParts(get().activeTab, get().categoryOverrides);
     if (tabParts.length === 0) return;
     const currentIndex = tabParts.indexOf(get().activePartId);
     const nextIndex = currentIndex < 0 ? 0 : (currentIndex + direction + tabParts.length) % tabParts.length;

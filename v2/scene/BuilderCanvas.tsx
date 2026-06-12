@@ -413,11 +413,71 @@ const BuildModePanel = () => {
   );
 };
 
+const SettingsPanel = () => {
+  const { categoryOverrides, setCategoryOverride, settingsOpen, toggleSettings } = useV2BuilderStore();
+
+  if (!settingsOpen) return null;
+
+  const categories = MENU_TABS.filter((tab): tab is Exclude<MenuTab, 'all'> => tab !== 'all');
+
+  return (
+    <div className="absolute right-4 top-4 z-20 max-h-[80vh] w-96 overflow-y-auto rounded-lg border border-white/15 bg-black/90 p-4 text-white shadow-2xl backdrop-blur">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-sm font-bold uppercase tracking-wide text-dune-gold">Admin · Part Registry</div>
+        <button onClick={toggleSettings} className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20">
+          Close
+        </button>
+      </div>
+      <div className="mb-3 text-[11px] leading-4 text-white/55">
+        Assign each piece to its in-game build-menu category. Changes are saved locally and take effect
+        immediately; an asterisk marks pieces moved from their default.
+      </div>
+      <table className="w-full text-left text-xs">
+        <thead>
+          <tr className="text-white/40">
+            <th className="pb-1 font-semibold">Piece</th>
+            <th className="pb-1 font-semibold">Category</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.values(PARTS).map((part) => (
+            <tr key={part.id} className="border-t border-white/10">
+              <td className="py-1.5 pr-2">
+                <div className="font-semibold">
+                  {partLabel(part.id)}
+                  {categoryOverrides[part.id] ? ' *' : ''}
+                </div>
+                <div className="text-[10px] text-white/35">{part.id}</div>
+              </td>
+              <td className="py-1.5">
+                <select
+                  value={categoryOverrides[part.id] ?? part.menuCategory}
+                  onChange={(event) =>
+                    setCategoryOverride(part.id, event.target.value as Exclude<MenuTab, 'all'>)
+                  }
+                  className="w-full rounded bg-white/10 px-2 py-1 text-xs text-white"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category} className="bg-zinc-900">
+                      {TAB_LABELS[category]}
+                    </option>
+                  ))}
+                </select>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const Toolbar = () => {
   const {
     activePartId,
     activeTab,
     buildMode,
+    categoryOverrides,
     clear,
     cycleActivePart,
     cycleTab,
@@ -431,6 +491,7 @@ const Toolbar = () => {
     setActiveTab,
     toggleDebugVisuals,
     toggleMenuExpanded,
+    toggleSettings,
   } = useV2BuilderStore();
 
   useEffect(() => {
@@ -457,7 +518,7 @@ const Toolbar = () => {
     return () => window.removeEventListener('wheel', handleWheel);
   }, [cycleActivePart]);
 
-  const tabParts = getTabParts(activeTab);
+  const tabParts = getTabParts(activeTab, categoryOverrides);
 
   if (!menuExpanded) {
     return (
@@ -525,6 +586,12 @@ const Toolbar = () => {
             />
             Debug
           </label>
+          <button
+            onClick={toggleSettings}
+            className="h-10 rounded-md bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/20"
+          >
+            Admin
+          </button>
           <div className="ml-2 min-w-44 text-xs text-white/70">
             <div>
               {instances.length} placed · <span className="text-dune-gold">{MODE_LABELS[buildMode]}</span>
@@ -599,6 +666,7 @@ export const BuilderCanvas = () => {
       </div>
       <PlacementDebugPanel />
       <BuildModePanel />
+      <SettingsPanel />
       <Toolbar />
     </div>
   );
