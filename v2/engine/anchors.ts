@@ -78,22 +78,30 @@ export const getWorldEdgeAnchors = (
   });
 };
 
+/**
+ * Align a source edge onto a target edge. Default alignment is antiparallel
+ * (the part sits on the outside of the target edge). `flip` aligns parallel
+ * instead: same segment, part rotated 180° — used to flip wall/door facing.
+ */
 export const calculateEdgeSnapTransform = (
   target: WorldEdgeAnchor,
-  source: EdgeAnchorDef
+  source: EdgeAnchorDef,
+  flip = false
 ): Transform2D | null => {
   const targetStart = toVector3(target.startWorld);
   const targetEnd = toVector3(target.endWorld);
   const targetDirection = targetEnd.clone().sub(targetStart).normalize();
   const sourceDirection = toVector3(source.end).sub(toVector3(source.start)).normalize();
-  const desiredSourceDirection = targetDirection.clone().negate();
+  const desiredSourceDirection = flip ? targetDirection.clone() : targetDirection.clone().negate();
 
   const sourceAngle = Math.atan2(sourceDirection.x, sourceDirection.z);
   const targetAngle = Math.atan2(desiredSourceDirection.x, desiredSourceDirection.z);
   const rotationY = normalizeAngle(targetAngle - sourceAngle);
 
+  const expectedStart = flip ? targetStart : targetEnd;
+  const expectedEnd = flip ? targetEnd : targetStart;
   const rotatedSourceStart = toVector3(source.start).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationY);
-  const position = targetEnd.clone().sub(rotatedSourceStart);
+  const position = expectedStart.clone().sub(rotatedSourceStart);
   const transform = { position: toTuple(position), rotationY };
 
   const startWorld = toVector3(transformPoint(source.start, transform));
@@ -101,8 +109,8 @@ export const calculateEdgeSnapTransform = (
   const sourceCenter = startWorld.clone().add(endWorld).multiplyScalar(0.5);
   const targetCenter = toVector3(target.centerWorld);
 
-  if (startWorld.distanceTo(targetEnd) > 0.01) return null;
-  if (endWorld.distanceTo(targetStart) > 0.01) return null;
+  if (startWorld.distanceTo(expectedStart) > 0.01) return null;
+  if (endWorld.distanceTo(expectedEnd) > 0.01) return null;
   if (sourceCenter.distanceTo(targetCenter) > 0.01) return null;
 
   return transform;

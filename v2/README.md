@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0012`
+Current V2 build: `v2-dev-0013`
 
-Description: Cursor tracks the surface under the mouse; vertical building from v2-dev-0011.
+Description: Walls and doors can face either direction on an edge — R flips the facing.
 
 ## Checkpoint Summary
 

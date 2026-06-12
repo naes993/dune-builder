@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0013 - 2026-06-11
+
+Walls and doors flip facing with R.
+
+- Edge snapping previously produced exactly one orientation per support edge (source edge antiparallel to the target edge), so walls and doors were locked to one facing — the door's silver side always faced away from the floor.
+- `calculateEdgeSnapTransform` now supports a flipped (parallel) alignment: same segment, part rotated 180°.
+- The solver generates both facings for wall-edge parts; the rotation preference (R) chooses between them. Requested 0°/90° keeps the outward facing, 180°/270° flips it.
+- Footprint parts (floors/foundations) still get only the outward alignment — the flipped one would overlap the support.
+
 ## v2-dev-0012 - 2026-06-11
 
 Preview follows the mouse over placed parts.

@@ -199,35 +199,43 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
     for (const source of sourceAnchors) {
       if (Math.abs(getEdgeLength(source) - target.length) > 0.01) continue;
 
-      const transform = calculateEdgeSnapTransform(target, source);
-      if (!transform) continue;
+      // Walls and doors can face either way on the same segment; R picks the
+      // facing via the rotation preference below. Footprint parts only get the
+      // outward alignment (the flipped one would overlap the support).
+      const transforms = isWallEdgePart(activePart)
+        ? [calculateEdgeSnapTransform(target, source), calculateEdgeSnapTransform(target, source, true)]
+        : [calculateEdgeSnapTransform(target, source)];
 
-      const supportEdgeSlotKey = getSupportEdgeSlotKey(target.instanceId, target.id);
-      const wallSegmentKey = getWallSegmentKey(activePart, transform, source.id);
-      const occupancyKeys = wallSegmentKey ? [supportEdgeSlotKey, wallSegmentKey] : [supportEdgeSlotKey];
+      for (const transform of transforms) {
+        if (!transform) continue;
 
-      const score =
-        distanceXZ(transform.position, input.cursor) +
-        ROTATION_PREFERENCE_WEIGHT * rotationDistance(transform.rotationY, preferredRotation);
-      const candidate = validateCandidate(
-        input.activePartId,
-        transform,
-        input.instances,
-        true,
-        'support-edge',
-        {
-          placementMode: 'support-edge',
-          snapChannel,
-          sourceAnchorId: source.id,
-          targetInstanceId: target.instanceId,
-          targetAnchorId: target.id,
-          occupancyKey: supportEdgeSlotKey,
-          occupancyKeys,
+        const supportEdgeSlotKey = getSupportEdgeSlotKey(target.instanceId, target.id);
+        const wallSegmentKey = getWallSegmentKey(activePart, transform, source.id);
+        const occupancyKeys = wallSegmentKey ? [supportEdgeSlotKey, wallSegmentKey] : [supportEdgeSlotKey];
+
+        const score =
+          distanceXZ(transform.position, input.cursor) +
+          ROTATION_PREFERENCE_WEIGHT * rotationDistance(transform.rotationY, preferredRotation);
+        const candidate = validateCandidate(
+          input.activePartId,
+          transform,
+          input.instances,
+          true,
+          'support-edge',
+          {
+            placementMode: 'support-edge',
+            snapChannel,
+            sourceAnchorId: source.id,
+            targetInstanceId: target.instanceId,
+            targetAnchorId: target.id,
+            occupancyKey: supportEdgeSlotKey,
+            occupancyKeys,
+          }
+        );
+        const ranked = rankCandidate(candidate, score);
+        if (!bestSnap || ranked.score < bestSnap.score) {
+          bestSnap = ranked;
         }
-      );
-      const ranked = rankCandidate(candidate, score);
-      if (!bestSnap || ranked.score < bestSnap.score) {
-        bestSnap = ranked;
       }
     }
   }
