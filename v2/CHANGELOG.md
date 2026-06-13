@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0019 - 2026-06-12
+
+19 new wall-family pieces wired into the registry (9 → 28 buildable parts).
+
+- Straight wall styles 2-5 (`Wall_02`-`Wall_05`), Half Wall, Window Wall, and Window Wall (Glazed — Window + WindowGlass assembly, same pattern as the door) in the Walls tab.
+- All 12 wedge walls (Bottom/Top × Left/Right × standard/half/tall) in the Wedge Walls tab. Bottom (sloped-top) pieces expose no flat top edge to build on; Top pieces keep the standard wall-top support edge.
+- New `wallVariant` registry factory: variants share Wall_01's placement truth (wall slab footprint, base-center pivot, edge anchors); only GLB, height, and top-edge exposure differ. Decorative protrusions on Wall_02-04/Window stay visual-only.
+- Half pieces use `V2_FOUNDATION_HEIGHT / 2`, tall pieces the existing 3-module tall height — pivots and heights confirmed against the GLBs via new `scripts/measure-wall-variants.mjs`.
+
 ## v2-dev-0018 - 2026-06-12
 
 Part-category organization can be published to all users.

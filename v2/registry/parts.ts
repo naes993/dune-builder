@@ -1,4 +1,4 @@
-import { EdgeAnchorDef, PartRegistry, FootprintDef, SnapChannel } from '../types';
+import { EdgeAnchorDef, MenuCategory, PartDefinition, PartId, PartRegistry, FootprintDef, SnapChannel } from '../types';
 import { V2_FLOOR_HEIGHT, V2_FOUNDATION_HEIGHT, V2_UNIT_SIZE } from '../constants';
 
 const UNIT = V2_UNIT_SIZE;
@@ -12,6 +12,7 @@ const DOOR_HALF_DEPTH = DOOR_DEPTH / 2;
 // The game's vertical module: wall tops align with foundation tops, and the
 // tall wall pieces span exactly three modules (measured GLB: 11.644).
 const STANDARD_WALL_HEIGHT = V2_FOUNDATION_HEIGHT;
+const HALF_WALL_HEIGHT = V2_FOUNDATION_HEIGHT / 2;
 const TALL_WALL_HEIGHT = V2_FOUNDATION_HEIGHT * 3;
 const TRIANGLE_APOTHEM = UNIT / (2 * Math.sqrt(3));
 const TRIANGLE_RADIUS = UNIT / Math.sqrt(3);
@@ -122,6 +123,10 @@ const wallAnchors = (height: number): EdgeAnchorDef[] => [
   },
 ];
 
+// Triangle-bottom (sloped-top) walls expose no flat top edge to build on.
+const wallAnchorsSlopedTop = (height: number): EdgeAnchorDef[] =>
+  wallAnchors(height).filter((anchor) => anchor.id !== 'edge.wall-top');
+
 const SQUARE_FOOTPRINT: FootprintDef = {
   type: 'polygon',
   points: [
@@ -174,6 +179,49 @@ const FOUNDATION_SOURCE_CHANNELS: SnapChannel[] = ['foundation-structure'];
 const FOUNDATION_TARGET_CHANNELS: SnapChannel[] = ['foundation-structure', ...SUPPORT_CHANNELS];
 const FLOOR_SOURCE_CHANNELS: SnapChannel[] = ['floor-support'];
 const WALL_SOURCE_CHANNELS: SnapChannel[] = ['wall-support'];
+
+// Straight-wall variants share Wall_01's placement data exactly; only the GLB,
+// height, and (for triangle pieces) the top anchor differ. All wall-family
+// pivots sit at the base center (measured by scripts/measure-wall-variants.mjs),
+// and decorative protrusions (Wall_02-04, Window) stay visual-only — the
+// logical footprint remains the standard wall slab.
+const wallVariant = (options: {
+  id: PartId;
+  name: string;
+  glbs: string[];
+  height?: number;
+  menuCategory?: MenuCategory;
+  slopedTop?: boolean;
+}): PartDefinition => {
+  const height = options.height ?? STANDARD_WALL_HEIGHT;
+  const visuals = options.glbs.map((glb) => ({
+    url: `/assets/parts/harkonnen/${glb}`,
+    scale: [1, 1, 1] as [number, number, number],
+    offset: [0, -height / 2, 0] as [number, number, number],
+    rotation: [0, 0, 0] as [number, number, number],
+    materialOverride: HARKONNEN_FALLBACK_MATERIAL,
+  }));
+  return {
+    id: options.id,
+    name: options.name,
+    category: 'wall',
+    menuCategory: options.menuCategory ?? 'walls',
+    occupancyLayer: 'wall-edge',
+    snapProfile: 'wall',
+    snapSourceChannels: [...WALL_SOURCE_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
+    height,
+    yOffset: height / 2,
+    allowedRotations: STANDARD_ROTATIONS,
+    anchors: options.slopedTop ? wallAnchorsSlopedTop(height) : wallAnchors(height),
+    footprint: WALL_FOOTPRINT,
+    placeholderMesh: {
+      type: 'box',
+      size: [UNIT, height, WALL_DEPTH],
+    },
+    ...(visuals.length === 1 ? { mesh: visuals[0] } : { meshes: visuals }),
+  };
+};
 
 export const PARTS: PartRegistry = {
   // GLB pivot conventions (measured by scripts/measure-core-parts.mjs):
@@ -308,6 +356,128 @@ export const PARTS: PartRegistry = {
       materialOverride: HARKONNEN_FALLBACK_MATERIAL,
     },
   },
+  'wall.harkonnen.level3.straight.02': wallVariant({
+    id: 'wall.harkonnen.level3.straight.02',
+    name: 'Harkonnen Level 3 Wall Style 2',
+    glbs: ['SM_Env_PB_Hark_Level3_Wall_02.glb'],
+  }),
+  'wall.harkonnen.level3.straight.03': wallVariant({
+    id: 'wall.harkonnen.level3.straight.03',
+    name: 'Harkonnen Level 3 Wall Style 3',
+    glbs: ['SM_Env_PB_Hark_Level3_Wall_03.glb'],
+  }),
+  'wall.harkonnen.level3.straight.04': wallVariant({
+    id: 'wall.harkonnen.level3.straight.04',
+    name: 'Harkonnen Level 3 Wall Style 4',
+    glbs: ['SM_Env_PB_Hark_Level3_Wall_04.glb'],
+  }),
+  'wall.harkonnen.level3.straight.05': wallVariant({
+    id: 'wall.harkonnen.level3.straight.05',
+    name: 'Harkonnen Level 3 Wall Style 5',
+    glbs: ['SM_Env_PB_Hark_Level3_Wall_05.glb'],
+  }),
+  'wall.harkonnen.level3.half': wallVariant({
+    id: 'wall.harkonnen.level3.half',
+    name: 'Harkonnen Level 3 Half Wall',
+    glbs: ['SM_Env_PB_Hark_Level3_Wall_Half.glb'],
+    height: HALF_WALL_HEIGHT,
+  }),
+  'wall.harkonnen.level3.window': wallVariant({
+    id: 'wall.harkonnen.level3.window',
+    name: 'Harkonnen Level 3 Window Wall',
+    glbs: ['SM_Env_PB_Hark_Level3_Window.glb'],
+  }),
+  'wall.harkonnen.level3.window.glazed': wallVariant({
+    id: 'wall.harkonnen.level3.window.glazed',
+    name: 'Harkonnen Level 3 Window Wall (Glazed)',
+    glbs: ['SM_Env_PB_Hark_Level3_Window.glb', 'SM_Env_PB_Hark_Level3_WindowGlass.glb'],
+  }),
+  'wall.harkonnen.level3.triangle.bottom.left': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.bottom.left',
+    name: 'Harkonnen Level 3 Wedge Wall Bottom (Left)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleBottom_L.glb'],
+    menuCategory: 'wedge-walls',
+    slopedTop: true,
+  }),
+  'wall.harkonnen.level3.triangle.bottom.right': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.bottom.right',
+    name: 'Harkonnen Level 3 Wedge Wall Bottom (Right)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleBottom_R.glb'],
+    menuCategory: 'wedge-walls',
+    slopedTop: true,
+  }),
+  'wall.harkonnen.level3.triangle.top.left': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.top.left',
+    name: 'Harkonnen Level 3 Wedge Wall Top (Left)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleTop_L.glb'],
+    menuCategory: 'wedge-walls',
+  }),
+  'wall.harkonnen.level3.triangle.top.right': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.top.right',
+    name: 'Harkonnen Level 3 Wedge Wall Top (Right)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleTop_R.glb'],
+    menuCategory: 'wedge-walls',
+  }),
+  'wall.harkonnen.level3.triangle.bottom.half.left': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.bottom.half.left',
+    name: 'Harkonnen Level 3 Half Wedge Wall Bottom (Left)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleBottom_Half_L.glb'],
+    height: HALF_WALL_HEIGHT,
+    menuCategory: 'wedge-walls',
+    slopedTop: true,
+  }),
+  'wall.harkonnen.level3.triangle.bottom.half.right': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.bottom.half.right',
+    name: 'Harkonnen Level 3 Half Wedge Wall Bottom (Right)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleBottom_Half_R.glb'],
+    height: HALF_WALL_HEIGHT,
+    menuCategory: 'wedge-walls',
+    slopedTop: true,
+  }),
+  'wall.harkonnen.level3.triangle.top.half.left': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.top.half.left',
+    name: 'Harkonnen Level 3 Half Wedge Wall Top (Left)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleTop_Half_L.glb'],
+    height: HALF_WALL_HEIGHT,
+    menuCategory: 'wedge-walls',
+  }),
+  'wall.harkonnen.level3.triangle.top.half.right': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.top.half.right',
+    name: 'Harkonnen Level 3 Half Wedge Wall Top (Right)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleTop_Half_R.glb'],
+    height: HALF_WALL_HEIGHT,
+    menuCategory: 'wedge-walls',
+  }),
+  'wall.harkonnen.level3.triangle.bottom.tall.left': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.bottom.tall.left',
+    name: 'Harkonnen Level 3 Tall Wedge Wall Bottom (Left)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleBottom_Tall_L.glb'],
+    height: TALL_WALL_HEIGHT,
+    menuCategory: 'wedge-walls',
+    slopedTop: true,
+  }),
+  'wall.harkonnen.level3.triangle.bottom.tall.right': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.bottom.tall.right',
+    name: 'Harkonnen Level 3 Tall Wedge Wall Bottom (Right)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleBottom_Tall_R.glb'],
+    height: TALL_WALL_HEIGHT,
+    menuCategory: 'wedge-walls',
+    slopedTop: true,
+  }),
+  'wall.harkonnen.level3.triangle.top.tall.left': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.top.tall.left',
+    name: 'Harkonnen Level 3 Tall Wedge Wall Top (Left)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleTop_Tall_L.glb'],
+    height: TALL_WALL_HEIGHT,
+    menuCategory: 'wedge-walls',
+  }),
+  'wall.harkonnen.level3.triangle.top.tall.right': wallVariant({
+    id: 'wall.harkonnen.level3.triangle.top.tall.right',
+    name: 'Harkonnen Level 3 Tall Wedge Wall Top (Right)',
+    glbs: ['SM_Env_PB_Hark_Level3_WallTriangleTop_Tall_R.glb'],
+    height: TALL_WALL_HEIGHT,
+    menuCategory: 'wedge-walls',
+  }),
   'wall.harkonnen.level3.corner.tall': {
     id: 'wall.harkonnen.level3.corner.tall',
     name: 'Harkonnen Level 3 Tall Wall Corner',
