@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0017 - 2026-06-12
+
+Facing indicator on wall/door ghost previews.
+
+- Wall and door previews now show an orange arrow pointing outward from the outer (`_Ext`) face, plus a faint orange tint plane over the inner (`_Int`) face — mirroring the game's orange banding. No text labels by design.
+- The indicator renders in part-local space, so it flips with the preview when R flips facing, and it tracks every placement mode (support-edge, wall-run, free ground).
+- Preview-only: placed pieces never show the indicator. Corners are excluded (square footprint, no single facing).
+- Outer face = part-local +Z, confirmed by measuring the `_Ext`/`_Int` primitive Z ranges in the wall/door GLBs (`scripts/inspect-facing.mjs`, new inspection tool).
+
 ## v2-dev-0016 - 2026-06-11
 
 Floors attach on either side of wall edges.

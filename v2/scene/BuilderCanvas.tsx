@@ -14,7 +14,7 @@ import {
   getTabParts,
   useV2BuilderStore,
 } from '../store/builderStore';
-import { PartId, PartInstance, PlacementCandidate } from '../types';
+import { PartId, PartInstance, PlacementCandidate, Transform2D } from '../types';
 import { V2_BUILD } from '../version';
 import { PartMesh } from './PartMesh';
 
@@ -142,6 +142,69 @@ const PreviewEdgeDiagnosticsLines = ({
 
   return (
     <DebugEdgeLine start={wallEdge.startWorld} end={wallEdge.endWorld} color="#f97316" yOffset={0.46} />
+  );
+};
+
+// Facing indicator for wall/door ghost previews: an arrow pointing outward
+// from the outer (_Ext) face plus a faint orange tint over the inner (_Int)
+// face, mirroring the game's orange banding. The outer face is local +Z
+// (measured from the GLB _Ext/_Int primitives via scripts/inspect-facing.mjs);
+// flipped facings are 180° rotations, so rendering in part-local space tracks R.
+const FACING_COLOR = '#f97316';
+
+const FacingIndicator = ({
+  partId,
+  transform,
+}: {
+  partId: PartId;
+  transform: Transform2D;
+}) => {
+  const part = PARTS[partId];
+  if (part.category !== 'wall' && part.category !== 'wall-door') return null;
+
+  const halfWidth = Math.max(...part.footprint.points.map(([x]) => Math.abs(x)));
+  const halfDepth = Math.max(...part.footprint.points.map(([, z]) => Math.abs(z)));
+  const arrowY = part.height * 0.5;
+  const shaftLength = 1.1;
+  const headLength = 0.55;
+  const shaftStart = halfDepth + 0.2;
+
+  return (
+    <group
+      position={[transform.position[0], transform.position[1], transform.position[2]]}
+      rotation={[0, transform.rotationY, 0]}
+    >
+      <mesh
+        raycast={() => null}
+        position={[0, arrowY, shaftStart + shaftLength / 2]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <cylinderGeometry args={[0.07, 0.07, shaftLength, 8]} />
+        <meshBasicMaterial color={FACING_COLOR} depthTest={false} transparent opacity={0.9} />
+      </mesh>
+      <mesh
+        raycast={() => null}
+        position={[0, arrowY, shaftStart + shaftLength + headLength / 2]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <coneGeometry args={[0.24, headLength, 12]} />
+        <meshBasicMaterial color={FACING_COLOR} depthTest={false} transparent opacity={0.9} />
+      </mesh>
+      <mesh
+        raycast={() => null}
+        position={[0, part.height / 2, -(halfDepth + 0.04)]}
+        rotation={[0, Math.PI, 0]}
+      >
+        <planeGeometry args={[halfWidth * 2 * 0.96, part.height * 0.96]} />
+        <meshBasicMaterial
+          color={FACING_COLOR}
+          transparent
+          opacity={0.16}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
   );
 };
 
@@ -314,6 +377,7 @@ const SceneContents = () => {
             ghost
             valid={preview.isValid}
           />
+          <FacingIndicator partId={activePartId} transform={preview.transform} />
           {debugVisuals && (
             <FootprintOutline
               instance={{ id: 'preview', partId: activePartId, transform: preview.transform }}
