@@ -11,6 +11,8 @@ import {
   BuildMode,
   MENU_TABS,
   MenuTab,
+  getDefaultPartCategory,
+  getEffectiveCategoryMap,
   getTabParts,
   useV2BuilderStore,
 } from '../store/builderStore';
@@ -479,10 +481,23 @@ const BuildModePanel = () => {
 
 const SettingsPanel = () => {
   const { categoryOverrides, setCategoryOverride, settingsOpen, toggleSettings } = useV2BuilderStore();
+  const [masterCopied, setMasterCopied] = useState(false);
 
   if (!settingsOpen) return null;
 
   const categories = MENU_TABS.filter((tab): tab is Exclude<MenuTab, 'all'> => tab !== 'all');
+
+  const copyMasterJson = async () => {
+    const json = JSON.stringify(getEffectiveCategoryMap(categoryOverrides), null, 2);
+    try {
+      await navigator.clipboard.writeText(json);
+      setMasterCopied(true);
+      setTimeout(() => setMasterCopied(false), 2500);
+    } catch {
+      // Clipboard unavailable (e.g. insecure context); show the JSON instead.
+      window.prompt('Copy the master category JSON:', json);
+    }
+  };
 
   return (
     <div className="absolute right-4 top-4 z-20 max-h-[80vh] w-96 overflow-y-auto rounded-lg border border-white/15 bg-black/90 p-4 text-white shadow-2xl backdrop-blur">
@@ -492,9 +507,20 @@ const SettingsPanel = () => {
           Close
         </button>
       </div>
-      <div className="mb-3 text-[11px] leading-4 text-white/55">
-        Assign each piece to its in-game build-menu category. Changes are saved locally and take effect
-        immediately; an asterisk marks pieces moved from their default.
+      <div className="mb-2 text-[11px] leading-4 text-white/55">
+        Assign each piece to its in-game build-menu category. Changes save to this browser immediately and
+        persist across sessions; an asterisk marks pieces moved from the shipped master organization.
+      </div>
+      <div className="mb-3 flex items-center gap-2">
+        <button
+          onClick={copyMasterJson}
+          className="rounded bg-dune-gold/20 px-2 py-1 text-[11px] font-semibold text-dune-gold hover:bg-dune-gold/30"
+        >
+          {masterCopied ? 'Copied!' : 'Copy Master JSON'}
+        </button>
+        <span className="text-[10px] leading-3 text-white/40">
+          Paste into v2/registry/categoryMaster.ts and deploy to make this the default for everyone.
+        </span>
       </div>
       <table className="w-full text-left text-xs">
         <thead>
@@ -515,7 +541,7 @@ const SettingsPanel = () => {
               </td>
               <td className="py-1.5">
                 <select
-                  value={categoryOverrides[part.id] ?? part.menuCategory}
+                  value={categoryOverrides[part.id] ?? getDefaultPartCategory(part.id)}
                   onChange={(event) =>
                     setCategoryOverride(part.id, event.target.value as Exclude<MenuTab, 'all'>)
                   }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { MenuCategory, PartId, PartInstance, PlacementCandidate } from '../types';
 import { PARTS } from '../registry/parts';
+import { CATEGORY_MASTER } from '../registry/categoryMaster';
 import { nearestAllowedRotation } from '../engine/anchors';
 
 export type BuildMode = 'build' | 'replace' | 'customize' | 'demolish';
@@ -22,8 +23,24 @@ const loadCategoryOverrides = (): CategoryOverrides => {
   }
 };
 
+/**
+ * Category resolution order: local Admin edits (localStorage) > committed
+ * master organization (`categoryMaster.ts`, ships to everyone) > the part's
+ * own default in `parts.ts`.
+ */
+export const getDefaultPartCategory = (partId: PartId): MenuCategory => {
+  return CATEGORY_MASTER[partId] ?? PARTS[partId].menuCategory;
+};
+
 export const getPartCategory = (partId: PartId, overrides: CategoryOverrides): MenuCategory => {
-  return overrides[partId] ?? PARTS[partId].menuCategory;
+  return overrides[partId] ?? getDefaultPartCategory(partId);
+};
+
+/** Full effective part → category mapping, for the Admin panel's master export. */
+export const getEffectiveCategoryMap = (overrides: CategoryOverrides): Record<PartId, MenuCategory> => {
+  return Object.fromEntries(
+    Object.values(PARTS).map((part) => [part.id, getPartCategory(part.id, overrides)])
+  ) as Record<PartId, MenuCategory>;
 };
 
 export const getTabParts = (tab: MenuTab, overrides: CategoryOverrides): PartId[] => {
@@ -93,7 +110,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   toggleSettings: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
   setCategoryOverride: (partId, category) => {
     const overrides = { ...get().categoryOverrides };
-    if (category === null || category === PARTS[partId].menuCategory) {
+    if (category === null || category === getDefaultPartCategory(partId)) {
       delete overrides[partId];
     } else {
       overrides[partId] = category;

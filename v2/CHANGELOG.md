@@ -1,5 +1,13 @@
 # V2 Changelog
 
+## v2-dev-0018 - 2026-06-12
+
+Part-category organization can be published to all users.
+
+- New committed layer `v2/registry/categoryMaster.ts`: the master build-menu organization, shipped with the app. Category resolution is now local Admin edits (localStorage) > master > the part's `menuCategory` default in `parts.ts`.
+- Admin panel gains a "Copy Master JSON" button that copies the full effective part → category mapping. Pasting it into `categoryMaster.ts` (or handing it to the agent) and deploying makes the arrangement the default for every user — the app is a static site with no backend, so the deploy is the distribution mechanism.
+- Local Admin edits still save to the browser immediately and persist across sessions; the asterisk now marks divergence from the shipped master rather than from `parts.ts`.
+
 ## v2-dev-0017 - 2026-06-12
 
 Facing indicator on wall/door ghost previews.
