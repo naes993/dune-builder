@@ -64,6 +64,13 @@ Snap channels (`v2/engine/snapRelationships.ts`):
 - `floor-support` — floors to floor-compatible edges (incl. foundation bases)
 - `wall-support` — walls to wall-compatible edges on floors/foundations
 
+## Parked Items & Decisions (carry-over from project memory)
+
+- **Next planned feature — facing indicator:** ghost previews for walls/doors get an arrow pointing outward from the outer face, plus a faint orange tint on the inner face (mirrors the game's orange banding). Explicitly NO text labels ("INNER FACE" was rejected as too wordy). Preview-only, never on placed pieces; must flip when R flips facing.
+- **Hardware bug, parked:** Shift+Wheel zoom works on MacBook trackpads but not Sean's Logitech M720 Triathlon (likely Logi Options+ remaps Shift+wheel to horizontal scroll / deltaX). When debugging: log raw wheel events from the M720; consider accepting deltaX as zoom or a keyboard fallback.
+- **Future separate project — "Base Parts Builder":** let users of other games define their own snappable pieces. The data-driven registry is already the right foundation (it's a UI + GLB import over `parts.ts`); keep the registry JSON-serializable. Sean marking "what snaps to what" per piece maps 1:1 onto the snap-channel model.
+- **Categories:** in-game, the flat floor and flat rooftop sit side by side in the same category; Sean adjusts placements via the Admin panel (localStorage overrides) and they should eventually be baked into the registry as defaults.
+
 ## Known Gaps / Next Milestone
 
 - Stacked snap targets at the same XZ (wall top above a foundation edge) have no explicit story-selection control yet — scoring picks one.
