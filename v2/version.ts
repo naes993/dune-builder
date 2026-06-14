@@ -1,5 +1,5 @@
 export const V2_BUILD = {
-  id: 'v2-dev-0020',
+  id: 'v2-dev-0021',
   date: '2026-06-14',
-  description: 'Preload all part GLBs + Suspense boundary so first-time part loads no longer freeze the placement preview.',
+  description: 'Debug visuals no longer affect placement; wall tops are reliably targetable via an invisible top-snap catcher.',
 } as const;

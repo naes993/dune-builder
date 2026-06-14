@@ -176,7 +176,13 @@ const GltfVisual = ({
 };
 
 const VisualBounds = ({ object, color }: { object: THREE.Object3D; color: string }) => {
-  const helper = useMemo(() => new THREE.BoxHelper(object, color), [color, object]);
+  const helper = useMemo(() => {
+    const boxHelper = new THREE.BoxHelper(object, color);
+    // Debug decoration only — must never be a cursor raycast target, or it would
+    // shadow real geometry and hijack placement when Debug is on.
+    boxHelper.raycast = () => null;
+    return boxHelper;
+  }, [color, object]);
 
   useFrame(() => {
     helper.update();

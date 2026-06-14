@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Canvas, ThreeEvent, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -17,8 +17,25 @@ import {
   useV2BuilderStore,
 } from '../store/builderStore';
 import { PartId, PartInstance, PlacementCandidate, Transform2D } from '../types';
+import { V2_FOUNDATION_HEIGHT } from '../constants';
 import { V2_BUILD } from '../version';
 import { PartMesh } from './PartMesh';
+
+// Renders children with raycasting disabled on the whole subtree. Debug overlays
+// are observe-only: if they remain raycastable they hijack the placement cursor
+// — either reporting their own (elevated) hit point or, as bare scene geometry,
+// shadowing the structure so the ground wins the event. Setting `raycast` to a
+// no-op via traversal works uniformly for <line>/<lineLoop>/<mesh> and sidesteps
+// the <line>/SVG JSX typing clash that blocks a per-element `raycast` prop.
+const NonRaycastableGroup = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef<THREE.Group>(null);
+  useLayoutEffect(() => {
+    ref.current?.traverse((object) => {
+      object.raycast = () => null;
+    });
+  });
+  return <group ref={ref}>{children}</group>;
+};
 
 const AnchorLines = ({ instance }: { instance: PartInstance }) => {
   const part = PARTS[instance.partId];
@@ -232,6 +249,47 @@ const WallEndpointMarkers = ({ instance }: { instance: PartInstance }) => {
   );
 };
 
+// Invisible raycast target sitting just above a wall's top edge. The placement
+// cursor is the point under the mouse, and the solver uses cursor height to pick
+// between stacked snap targets ("point high to build up"). A wall's actual top
+// is a thin strip, so aiming at/just above it otherwise sails past to the ground
+// behind — making it impossible to stack onto a wall top without the (now
+// non-raycastable) debug markers. This catcher gives that intent a real surface.
+// Rendered inside the instance's pointer group so a hit drives the cursor.
+const TOP_CATCHER_MAX_HEIGHT = V2_FOUNDATION_HEIGHT;
+
+const TopSnapCatcher = ({ instance }: { instance: PartInstance }) => {
+  const part = PARTS[instance.partId];
+  if (part.occupancyLayer !== 'wall-edge') return null;
+
+  const xs = part.footprint.points.map(([x]) => x);
+  const zs = part.footprint.points.map(([, z]) => z);
+  const width = Math.max(...xs) - Math.min(...xs);
+  const depth = Math.max(...zs) - Math.min(...zs);
+  const centerX = (Math.max(...xs) + Math.min(...xs)) / 2;
+  const centerZ = (Math.max(...zs) + Math.min(...zs)) / 2;
+
+  const catchHeight = Math.min(part.height, TOP_CATCHER_MAX_HEIGHT);
+  const topY = instance.transform.position[1] + part.height;
+
+  // Footprint centre offset, rotated into world space (walls are centred, so this
+  // is usually zero, but keep it correct for any off-centre footprint).
+  const cos = Math.cos(instance.transform.rotationY);
+  const sin = Math.sin(instance.transform.rotationY);
+  const worldX = instance.transform.position[0] + centerX * cos + centerZ * sin;
+  const worldZ = instance.transform.position[2] - centerX * sin + centerZ * cos;
+
+  return (
+    <mesh
+      position={[worldX, topY + catchHeight / 2, worldZ]}
+      rotation={[0, instance.transform.rotationY, 0]}
+    >
+      <boxGeometry args={[width, catchHeight, depth]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+    </mesh>
+  );
+};
+
 const formatSnapChannel = (channel?: string) => {
   if (channel === 'foundation-structure') return 'Structural';
   if (channel === 'floor-support') return 'Floor';
@@ -366,15 +424,23 @@ const SceneContents = () => {
             debugVisuals={debugVisuals}
             highlightColor={highlightFor(instance.id)}
           />
-          {debugVisuals && (
-            <>
+          <TopSnapCatcher instance={instance} />
+        </group>
+      ))}
+      {/* Debug overlays render OUTSIDE the pointer-handler groups and with
+          raycasting disabled: they are observe-only and must never intercept the
+          cursor raycast (doing so would let Debug change where pieces snap). */}
+      {debugVisuals && (
+        <NonRaycastableGroup>
+          {instances.map((instance) => (
+            <React.Fragment key={`debug-${instance.id}`}>
               <AnchorLines instance={instance} />
               <FootprintOutline instance={instance} />
               <WallEndpointMarkers instance={instance} />
-            </>
-          )}
-        </group>
-      ))}
+            </React.Fragment>
+          ))}
+        </NonRaycastableGroup>
+      )}
       {preview && buildMode === 'build' && (
         <>
           <PartMesh
@@ -386,17 +452,17 @@ const SceneContents = () => {
           />
           <FacingIndicator partId={activePartId} transform={preview.transform} />
           {debugVisuals && (
-            <FootprintOutline
-              instance={{ id: 'preview', partId: activePartId, transform: preview.transform }}
-              color={preview.isValid ? '#59e38a' : '#f05252'}
-            />
-          )}
-          {debugVisuals && (
-            <PreviewEdgeDiagnosticsLines
-              activePartId={activePartId}
-              instances={instances}
-              preview={preview}
-            />
+            <NonRaycastableGroup>
+              <FootprintOutline
+                instance={{ id: 'preview', partId: activePartId, transform: preview.transform }}
+                color={preview.isValid ? '#59e38a' : '#f05252'}
+              />
+              <PreviewEdgeDiagnosticsLines
+                activePartId={activePartId}
+                instances={instances}
+                preview={preview}
+              />
+            </NonRaycastableGroup>
           )}
         </>
       )}

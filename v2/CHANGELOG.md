@@ -1,5 +1,13 @@
 # V2 Changelog
 
+## v2-dev-0021 - 2026-06-14
+
+Fixed: toggling Debug changed where pieces snapped; wall tops are now targetable without it.
+
+- **Root cause:** the placement cursor is the point under the mouse, and the solver uses its height to choose between vertically-stacked snap targets ("point high to build up"). The debug overlays — anchor lines, footprint outlines, wall-endpoint spheres, and the per-part `BoxHelper` bounds — were **raycastable and rendered inside the instance pointer-handler groups**. With Debug on, the cursor ray hit a debug object at the wall *top* and reported a high point, snapping pieces onto the top; the ghost's `BoxHelper` (no handler) also shadowed real geometry and forced free-ground. With Debug off, none of that existed, so the cursor sailed past the thin wall top to the ground behind. Result: the same cursor produced different placements depending on Debug.
+- Debug is now strictly observe-only: instance and preview overlays render through a `NonRaycastableGroup` (outside the pointer-handler groups, raycasting disabled on the whole subtree), and the `BoxHelper` in `PartMesh` has its `raycast` disabled at creation. Verified: across 672 cursor samples, Debug on vs off now produce **identical** placement results.
+- **New `TopSnapCatcher`** (`v2/scene/BuilderCanvas.tsx`): an invisible, raycastable box sitting just above each wall's top edge, inside the instance pointer group. It gives "place on top of this wall" a real surface to hit, so wall tops are reliably targetable without the debug markers that previously enabled it by accident. Capped at one foundation-height tall; only added to `wall-edge` parts (foundations already expose a flat top face). Verified: wall-top snaps are now reachable identically with Debug on or off (207/207 sample hits).
+
 ## v2-dev-0020 - 2026-06-14
 
 Fixed: newly-added parts (wedge walls) appeared to "snap wrong" until a click.
