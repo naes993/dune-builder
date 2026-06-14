@@ -1,5 +1,21 @@
 # V2 Changelog
 
+## v2-dev-0023 - 2026-06-14
+
+Fixed: walls would not stand on top of a foundation (couldn't build a tower).
+
+- **Root cause:** for any `wall-support` snap, the solver generated both an upward variant (piece on top of the edge) and a downward one (piece hanging below it). A foundation is a tall solid block, so from a normal camera angle the cursor ray mostly hits its **sides** — a low point — and the solver's cursor-height affinity then chose the *downward* variant, wrapping a wall down the foundation's face at ground level instead of standing it on top.
+- The downward "hang below" variant is only meaningful under a **floor** (an overhang/façade with open space beneath). A foundation or wall top has solid structure below it, so a downward wall there just clips the side. `v2/engine/snapSolver.ts` now restricts the downward variant to floor target edges (`targetPart.category === 'floor'`).
+- Result: hovering a foundation snaps walls onto its top edges (towers work), wall-on-wall stacking is unchanged (still uses the top-snap catcher from v2-dev-0021), and floor overhangs keep their hang-below option. Verified across cursor sweeps: foundation hovers now produce only on-top snaps (y≈3.9, was y=0), wall-top stacking still reaches y≈7.8, and floor edges still offer both on-top and hang-below placements.
+
+## v2-dev-0022 - 2026-06-14
+
+Added: Admin option to reverse the scroll wheel's roles.
+
+- **What:** a "Reverse scroll wheel" checkbox in the Admin panel (under a new **Controls** section). Default behavior is unchanged — the bare wheel cycles pieces and Shift+Wheel zooms. When enabled, the roles swap: the bare wheel zooms the camera and Shift+Wheel cycles pieces.
+- The preference persists per-browser in `localStorage` (`v2.reverseScrollZoom`), mirroring how category overrides are stored.
+- Implementation: `v2/store/builderStore.ts` holds `reverseScrollZoom` + `toggleReverseScrollZoom`; the wheel handler in `v2/scene/BuilderCanvas.tsx` cycles only when `event.shiftKey === reverseScrollZoom`, and `OrbitControls.enableZoom` is gated on the opposite gesture. The on-screen controls hint updates to match the active mode.
+
 ## v2-dev-0021 - 2026-06-14
 
 Fixed: toggling Debug changed where pieces snapped; wall tops are now targetable without it.

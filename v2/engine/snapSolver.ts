@@ -214,13 +214,21 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
         calculateEdgeSnapTransform(target, source, true),
       ];
 
-      // Walls can also hang below the support edge (e.g. under a floor
-      // overhang). The downward variant occupies its own edge slot.
+      // Walls can also hang below the support edge — but only under a FLOOR
+      // (an overhang/façade), where there is open space below. A foundation or
+      // wall top has solid structure beneath it, so a downward wall there just
+      // wraps the side; offering it made walls snap down a foundation's face
+      // instead of standing on top (no towers). Restrict the downward variant to
+      // floor edges. It occupies its own edge slot.
+      const allowDownward =
+        snapChannel === 'wall-support' &&
+        isWallEdgePart(activePart) &&
+        targetPart.category === 'floor';
       const variants = transforms
         .filter((transform): transform is Transform2D => Boolean(transform))
         .flatMap((transform) => {
           const upward = { transform, slotSuffix: '' };
-          if (snapChannel !== 'wall-support' || !isWallEdgePart(activePart)) return [upward];
+          if (!allowDownward) return [upward];
           const downwardTransform: Transform2D = {
             position: [transform.position[0], transform.position[1] - activePart.height, transform.position[2]],
             rotationY: transform.rotationY,

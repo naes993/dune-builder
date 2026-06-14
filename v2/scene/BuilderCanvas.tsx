@@ -552,7 +552,8 @@ const BuildModePanel = () => {
 };
 
 const SettingsPanel = () => {
-  const { categoryOverrides, setCategoryOverride, settingsOpen, toggleSettings } = useV2BuilderStore();
+  const { categoryOverrides, setCategoryOverride, settingsOpen, toggleSettings, reverseScrollZoom, toggleReverseScrollZoom } =
+    useV2BuilderStore();
   const [masterCopied, setMasterCopied] = useState(false);
 
   if (!settingsOpen) return null;
@@ -593,6 +594,25 @@ const SettingsPanel = () => {
         <span className="text-[10px] leading-3 text-white/40">
           Paste into v2/registry/categoryMaster.ts and deploy to make this the default for everyone.
         </span>
+      </div>
+      <div className="mb-3 border-t border-white/10 pt-3">
+        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/55">Controls</div>
+        <label className="flex cursor-pointer items-start gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={reverseScrollZoom}
+            onChange={toggleReverseScrollZoom}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="font-semibold">Reverse scroll wheel</span>
+            <span className="block text-[10px] leading-4 text-white/45">
+              {reverseScrollZoom
+                ? 'Wheel zooms the camera; hold Shift + Wheel to cycle pieces.'
+                : 'Wheel cycles pieces; hold Shift + Wheel to zoom (default).'}
+            </span>
+          </span>
+        </label>
       </div>
       <table className="w-full text-left text-xs">
         <thead>
@@ -649,6 +669,7 @@ const Toolbar = () => {
     preview,
     rotateActivePart,
     rotationY,
+    reverseScrollZoom,
     setActivePartId,
     setActiveTab,
     toggleDebugVisuals,
@@ -670,15 +691,18 @@ const Toolbar = () => {
   }, [cycleTab, rotateActivePart, toggleMenuExpanded]);
 
   useEffect(() => {
-    // Mouse wheel cycles pieces like the game; hold Shift to zoom the camera.
+    // By default the wheel cycles pieces (Shift+Wheel zooms), like the game. The
+    // Admin "Reverse scroll wheel" option swaps these so the bare wheel zooms.
     const handleWheel = (event: WheelEvent) => {
-      if (event.shiftKey) return;
+      // Cycle when the Shift state matches the cycle gesture; otherwise let
+      // OrbitControls handle zoom.
+      if (event.shiftKey !== reverseScrollZoom) return;
       event.preventDefault();
       cycleActivePart(event.deltaY > 0 ? 1 : -1);
     };
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [cycleActivePart]);
+  }, [cycleActivePart, reverseScrollZoom]);
 
   const tabParts = getTabParts(activeTab, categoryOverrides);
 
@@ -782,7 +806,10 @@ const Toolbar = () => {
 
 export const BuilderCanvas = () => {
   const cycleBuildMode = useV2BuilderStore((state) => state.cycleBuildMode);
+  const reverseScrollZoom = useV2BuilderStore((state) => state.reverseScrollZoom);
   const [shiftHeld, setShiftHeld] = useState(false);
+  // Default: zoom requires Shift. Reversed: zoom is the bare wheel (no Shift).
+  const zoomEnabled = reverseScrollZoom ? !shiftHeld : shiftHeld;
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => setShiftHeld(event.shiftKey);
@@ -810,7 +837,7 @@ export const BuilderCanvas = () => {
         <OrbitControls
           makeDefault
           maxPolarAngle={Math.PI / 2 - 0.05}
-          enableZoom={shiftHeld}
+          enableZoom={zoomEnabled}
           mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.ROTATE }}
         />
       </Canvas>
@@ -819,7 +846,8 @@ export const BuilderCanvas = () => {
         <div className="mt-2 text-xs leading-5 text-white/70">
           Real Harkonnen parts; the first placed piece establishes the build grid. Left Click applies the current
           mode, Right Click cycles modes, R rotates, Q/E switch categories, Mouse Wheel cycles pieces, Middle Click
-          copies a piece, B toggles this menu. Middle-drag orbits, Left-drag pans, Shift+Wheel zooms.
+          copies a piece, B toggles this menu. Middle-drag orbits, Left-drag pans,{' '}
+          {reverseScrollZoom ? 'Wheel zooms, Shift+Wheel cycles pieces' : 'Shift+Wheel zooms'}.
         </div>
         <div className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-4 text-white/55">
           <div className="font-semibold text-white/70">{V2_BUILD.id}</div>

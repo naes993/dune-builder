@@ -14,12 +14,21 @@ export const MENU_TABS: MenuTab[] = ['all', 'structural', 'walls', 'wedge-walls'
 export type CategoryOverrides = Partial<Record<PartId, MenuCategory>>;
 
 const OVERRIDES_STORAGE_KEY = 'v2.categoryOverrides';
+const REVERSE_SCROLL_ZOOM_STORAGE_KEY = 'v2.reverseScrollZoom';
 
 const loadCategoryOverrides = (): CategoryOverrides => {
   try {
     return JSON.parse(window.localStorage.getItem(OVERRIDES_STORAGE_KEY) ?? '{}');
   } catch {
     return {};
+  }
+};
+
+const loadReverseScrollZoom = (): boolean => {
+  try {
+    return window.localStorage.getItem(REVERSE_SCROLL_ZOOM_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
   }
 };
 
@@ -56,6 +65,7 @@ interface BuilderState {
   buildMode: BuildMode;
   menuExpanded: boolean;
   settingsOpen: boolean;
+  reverseScrollZoom: boolean;
   categoryOverrides: CategoryOverrides;
   hoveredInstanceId: string | null;
   debugVisuals: boolean;
@@ -64,6 +74,7 @@ interface BuilderState {
   setActivePartId: (partId: PartId) => void;
   setActiveTab: (tab: MenuTab) => void;
   toggleSettings: () => void;
+  toggleReverseScrollZoom: () => void;
   setCategoryOverride: (partId: PartId, category: MenuCategory | null) => void;
   cycleTab: (direction: 1 | -1) => void;
   cycleActivePart: (direction: 1 | -1) => void;
@@ -87,6 +98,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   buildMode: 'build',
   menuExpanded: true,
   settingsOpen: false,
+  reverseScrollZoom: loadReverseScrollZoom(),
   categoryOverrides: loadCategoryOverrides(),
   hoveredInstanceId: null,
   debugVisuals: false,
@@ -108,6 +120,15 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
     }
   },
   toggleSettings: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
+  toggleReverseScrollZoom: () => {
+    const next = !get().reverseScrollZoom;
+    try {
+      window.localStorage.setItem(REVERSE_SCROLL_ZOOM_STORAGE_KEY, String(next));
+    } catch {
+      // localStorage unavailable; setting stays session-only.
+    }
+    set({ reverseScrollZoom: next });
+  },
   setCategoryOverride: (partId, category) => {
     const overrides = { ...get().categoryOverrides };
     if (category === null || category === getDefaultPartCategory(partId)) {

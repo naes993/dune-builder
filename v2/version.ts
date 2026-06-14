@@ -1,5 +1,5 @@
 export const V2_BUILD = {
-  id: 'v2-dev-0021',
+  id: 'v2-dev-0023',
   date: '2026-06-14',
-  description: 'Debug visuals no longer affect placement; wall tops are reliably targetable via an invisible top-snap catcher.',
+  description: 'Walls stand on top of foundations again (build towers); the hang-below variant is limited to floor overhangs.',
 } as const;
