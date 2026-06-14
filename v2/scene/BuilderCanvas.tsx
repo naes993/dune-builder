@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { Canvas, ThreeEvent, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -346,6 +346,11 @@ const SceneContents = () => {
         <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color="#d2b076" roughness={0.95} />
       </mesh>
+      {/* Part GLBs load inside a Suspense boundary so a first-time load suspends
+          only the meshes — never the ground plane above, which owns the pointer
+          handlers that drive the placement cursor. (GLBs are also preloaded in
+          PartMesh, so this is a safety net rather than the common path.) */}
+      <Suspense fallback={null}>
       {/* Placed parts are pointer targets too, so the cursor tracks the surface
           under the mouse instead of the ground hidden behind elevated parts. */}
       {instances.map((instance) => (
@@ -395,6 +400,7 @@ const SceneContents = () => {
           )}
         </>
       )}
+      </Suspense>
     </group>
   );
 };

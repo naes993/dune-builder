@@ -329,12 +329,16 @@ export const PartMesh = ({
   );
 };
 
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Wall_01.glb');
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallCorner_Tall.glb');
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_WallInclined_Tall.glb');
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_DoorFrame.glb');
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Door.glb');
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Floor.glb');
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Foundation.glb');
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FloorWedge.glb');
-useGLTF.preload('/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FoundationWedge.glb');
+// Preload every GLB referenced by the registry so selecting a part never blocks
+// on a first-time load. Without this, an unloaded GLB suspends the ghost mesh
+// and (absent a Suspense boundary) freezes cursor-driven preview updates until
+// the load finishes — making newly-added parts appear to "snap wrong" until a
+// re-render flushed the stale preview. See SnapPreview Suspense in BuilderCanvas.
+for (const part of Object.values(PARTS)) {
+  const visualDefs = part.meshes ?? (part.mesh ? [part.mesh] : []);
+  for (const visualDef of visualDefs) {
+    if (!isReferenceCollisionVisual(visualDef)) {
+      useGLTF.preload(visualDef.url);
+    }
+  }
+}

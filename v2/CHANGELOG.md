@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0020 - 2026-06-14
+
+Fixed: newly-added parts (wedge walls) appeared to "snap wrong" until a click.
+
+- **Root cause:** only the original 9 parts' GLBs were in `useGLTF.preload`. Selecting any other part (e.g. a wedge wall) triggered a first-time GLB load that *suspended* the ghost mesh. With no `<Suspense>` boundary around the scene, the whole interactive subtree — including the ground plane that owns the placement pointer handlers — froze for the duration of the load, leaving the ghost stuck at a stale/wrong snap. The preview only corrected when something forced a re-render/commit (e.g. toggling Debug), which is why a click "fixed" it but a hover did not, and why it never affected the preloaded straight wall.
+- `v2/scene/PartMesh.tsx`: preload **every** GLB referenced by the registry (loop over `PARTS`), replacing the hardcoded 9-file list. New parts are now covered automatically.
+- `v2/scene/BuilderCanvas.tsx`: wrapped placed instances + the ghost preview in a `<Suspense fallback={null}>` that excludes the ground plane, so any future first-time load suspends only the meshes and can never freeze cursor-driven preview updates again.
+- Verified in-browser: a freshly-selected wedge now tracks the cursor live and its preview settles immediately with no input — previously it flipped ~100ms later when the GLB finished loading.
+
 ## v2-dev-0019 - 2026-06-12
 
 19 new wall-family pieces wired into the registry (9 → 28 buildable parts).
