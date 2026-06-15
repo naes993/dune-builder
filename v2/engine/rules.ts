@@ -1,4 +1,4 @@
-import { getOccupancyConflicts } from './occupancy';
+import { getOccupancyConflicts, overlapsFoundationBody } from './occupancy';
 import { AnchorBinding, PartDefinition, PartInstance, PartRegistry, Transform2D } from '../types';
 import { getWorldEdgeAnchors } from './anchors';
 
@@ -92,6 +92,12 @@ export const validatePlacement = (
 
   if (conflicts.length > 0) {
     reasons.push('Footprint overlaps an existing part on this layer.');
+  }
+
+  // Walls/doors can stand on a foundation's top edge or run off it, but must not
+  // pass through the foundation's solid block (the "hugging" placement).
+  if (isWallEdgePart(part) && overlapsFoundationBody(part, transform, instances, registry)) {
+    reasons.push('A wall cannot pass through a foundation.');
   }
 
   return {

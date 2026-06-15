@@ -69,6 +69,41 @@ const verticalRangesOverlap = (
   return aBase < bBase + bHeight - EPSILON && bBase < aBase + aHeight - EPSILON;
 };
 
+// A wall/door must not pass through a foundation's solid block. Walls legitimately
+// straddle a foundation's top perimeter (half over the top), but that sits ABOVE
+// the block, so the vertical ranges don't overlap. A wall buried in the block —
+// e.g. lying along a foundation edge at ground level, or running back across the
+// footprint — does overlap, and that's the "hugging" placement we must reject.
+export const overlapsFoundationBody = (
+  part: PartDefinition,
+  transform: Transform2D,
+  instances: PartInstance[],
+  registry: PartRegistry
+) => {
+  if (part.occupancyLayer !== 'wall-edge') return false;
+  const footprint = getWorldFootprint(part, transform);
+
+  for (const instance of instances) {
+    const otherPart = registry[instance.partId];
+    if (otherPart.category !== 'foundation') continue;
+    if (
+      !verticalRangesOverlap(
+        transform.position[1],
+        part.height,
+        instance.transform.position[1],
+        otherPart.height
+      )
+    ) {
+      continue;
+    }
+    if (polygonsOverlap(footprint, getWorldFootprint(otherPart, instance.transform))) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const getOccupancyConflicts = (
   part: PartDefinition,
   transform: Transform2D,

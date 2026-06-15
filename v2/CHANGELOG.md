@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0025 - 2026-06-14
+
+Fixed: rotating a wall on a foundation corner produced "hugging" placements that buried the wall in the foundation.
+
+- With the cursor on a foundation's bottom corner, pressing R cycled through four placements; two extended a wall outward off the edge (correct — "holding hands"), but two ran the wall back along the foundation's own edge at ground level, passing through its solid block (the "hug").
+- **Root cause:** `getOccupancyConflicts` only compares parts on the *same* occupancy layer, so a wall (`wall-edge`) was never tested against a foundation (`foundation` layer). The hugging walls overlapped the foundation block but went undetected and previewed as valid.
+- `v2/engine/occupancy.ts` adds `overlapsFoundationBody`: a wall/door is invalid when its footprint overlaps a foundation's footprint *and* their vertical ranges overlap. A wall straddling the foundation's top perimeter sits above the block (no vertical overlap) and stays valid; a wall buried in the block does not. `v2/engine/rules.ts` enforces it in `validatePlacement`.
+- Effect: the hugging rotations are now invalid, so the solver picks the valid alternative instead. At a corner, R now cycles exactly the two outward extensions × two facings — flipping facing keeps the wall in place (e.g. the "arrow out" and "arrow in" states share one position). On-top placement and outward runs are unaffected (verified: 336 on-top snaps still valid, 0 false rejections, 0 hugging placements shown).
+
 ## v2-dev-0024 - 2026-06-14
 
 Added: walls can continue off a foundation's edges to build outward (fortress walls).
