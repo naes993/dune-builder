@@ -59,10 +59,17 @@ type WallEndpointTarget = {
 const getWallEndpointTargets = (instances: PartInstance[]): WallEndpointTarget[] => {
   return instances.flatMap((instance) => {
     const part = PARTS[instance.partId];
-    if (!isWallEdgePart(part)) return [];
+    const isWall = isWallEdgePart(part);
+    // A foundation behaves like four walls with a floor on top, so its perimeter
+    // corners are wall-run anchors too — a wall can continue off a foundation's
+    // edge to build outward (a fortress wall). Its base edges (y=0) and top edges
+    // (y≈foundation height) both qualify, so a run can leave at ground level or
+    // along the top; cursor height picks which (see wall-run scoring below).
+    const isFoundation = part.category === 'foundation';
+    if (!isWall && !isFoundation) return [];
 
     return getWorldEdgeAnchors(part, instance.transform, instance.id)
-      .filter((anchor) => anchor.source !== false)
+      .filter((anchor) => (isWall ? anchor.source !== false : true))
       .flatMap((anchor) => [
         {
           instanceId: instance.id,
@@ -174,7 +181,14 @@ export const solvePlacement = (input: SnapSolverInput): PlacementCandidate => {
               occupancyKeys: [wallSegmentKey],
             }
           );
-          const ranked = rankCandidate(candidate, targetDistance);
+          // Cursor height disambiguates stacked endpoints at the same XZ — e.g. a
+          // foundation corner exposes both a ground-level and a top-level anchor,
+          // so pointing low runs the wall off the base and pointing high runs it
+          // off the top.
+          const candidateMidY = transform.position[1] + activePart.height / 2;
+          const score =
+            targetDistance + VERTICAL_AFFINITY_WEIGHT * Math.abs(input.cursor[1] - candidateMidY);
+          const ranked = rankCandidate(candidate, score);
           if (!bestWallRun || ranked.score < bestWallRun.score) {
             bestWallRun = ranked;
           }

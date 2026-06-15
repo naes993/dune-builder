@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0024 - 2026-06-14
+
+Added: walls can continue off a foundation's edges to build outward (fortress walls).
+
+- A foundation is "four walls with a floor on top," so its perimeter corners now act as wall-run anchors, just like real walls. Previously wall-run continuation (`getWallEndpointTargets`) only considered wall-edge parts, so you could only stack walls *onto* a foundation's top — never run a wall *off* it.
+- `v2/engine/snapSolver.ts`: `getWallEndpointTargets` now includes foundation perimeter edges. Both the base corners (y≈0) and top corners (y≈foundation height) qualify, so a run can leave the foundation at ground level or along the top.
+- Wall-run scoring gained a vertical-affinity term (matching support-edge): with stacked endpoints at the same XZ corner, cursor height picks the level — point low to run the wall off the base, point high to run it off the top.
+- Unchanged: walls still stand on a foundation's top edges mid-span (support-edge), wall-to-wall runs chain as before, and foundation-to-foundation adjacency is unaffected (wall-run only applies while placing a wall). Verified in-browser: a wall continues east off a foundation's SE corner at ground level, on-top placement still works mid-edge, and runs chain into a perimeter.
+
 ## v2-dev-0023 - 2026-06-14
 
 Fixed: walls would not stand on top of a foundation (couldn't build a tower).

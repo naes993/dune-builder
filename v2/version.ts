@@ -1,5 +1,5 @@
 export const V2_BUILD = {
-  id: 'v2-dev-0023',
+  id: 'v2-dev-0024',
   date: '2026-06-14',
-  description: 'Walls stand on top of foundations again (build towers); the hang-below variant is limited to floor overhangs.',
+  description: 'Walls can continue off a foundation’s edges (wall runs from foundation corners) at ground or top level.',
 } as const;
