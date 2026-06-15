@@ -1,5 +1,12 @@
 # V2 Changelog
 
+## v2-dev-0032 - 2026-06-15
+
+Ground depth cue (procedural floor texture) + Admin selector.
+
+- The ground plane (`SceneContents` in `v2/scene/BuilderCanvas.tsx`) now uses a procedurally-baked canvas texture instead of a flat fill: `createGroundTexture(style)` draws a single 512×512 canvas once (via `useMemo`, disposed on change) and maps it across the plane. No image assets, no lights, no shadows, no per-frame cost — constant expense regardless of build size. Stays line-free, in keeping with the no-world-grid principle (a visual aid, not a snap reference).
+- **Admin → Ground style** selector (new `groundStyle` setting in `v2/store/builderStore.ts`, persisted to `localStorage` per browser): **Flat** (original solid color), **Gradient** (radial brighter-center → darker-edge across the whole plane), **Focused** (same gradient pulled in toward the origin), **Grain** (focused gradient + procedural per-pixel sand speckle). Default is `gradient`.
+
 ## v2-dev-0031 - 2026-06-15
 
 Wheel-zoom by default + a second unlock cheat code.

@@ -13,8 +13,14 @@ export const MENU_TABS: MenuTab[] = ['structural', 'walls', 'wedge-walls', 'roof
 
 export type CategoryOverrides = Partial<Record<PartId, MenuCategory>>;
 
+// Ground-plane appearance. All variants are baked once into a single canvas
+// texture (no image assets, no shadows) — constant cost regardless of build size.
+export type GroundStyle = 'flat' | 'gradient' | 'gradient-focused' | 'grain';
+export const GROUND_STYLES: GroundStyle[] = ['flat', 'gradient', 'gradient-focused', 'grain'];
+
 const OVERRIDES_STORAGE_KEY = 'v2.categoryOverrides';
 const REVERSE_SCROLL_ZOOM_STORAGE_KEY = 'v2.reverseScrollZoom';
+const GROUND_STYLE_STORAGE_KEY = 'v2.groundStyle';
 
 const loadCategoryOverrides = (): CategoryOverrides => {
   try {
@@ -31,6 +37,15 @@ const loadReverseScrollZoom = (): boolean => {
     return window.localStorage.getItem(REVERSE_SCROLL_ZOOM_STORAGE_KEY) !== 'false';
   } catch {
     return true;
+  }
+};
+
+const loadGroundStyle = (): GroundStyle => {
+  try {
+    const stored = window.localStorage.getItem(GROUND_STYLE_STORAGE_KEY);
+    return GROUND_STYLES.includes(stored as GroundStyle) ? (stored as GroundStyle) : 'gradient';
+  } catch {
+    return 'gradient';
   }
 };
 
@@ -68,6 +83,7 @@ interface BuilderState {
   menuExpanded: boolean;
   settingsOpen: boolean;
   reverseScrollZoom: boolean;
+  groundStyle: GroundStyle;
   categoryOverrides: CategoryOverrides;
   hoveredInstanceId: string | null;
   debugVisuals: boolean;
@@ -79,6 +95,7 @@ interface BuilderState {
   setActiveTab: (tab: MenuTab) => void;
   toggleSettings: () => void;
   toggleReverseScrollZoom: () => void;
+  setGroundStyle: (style: GroundStyle) => void;
   setCategoryOverride: (partId: PartId, category: MenuCategory | null) => void;
   cycleTab: (direction: 1 | -1) => void;
   cycleActivePart: (direction: 1 | -1) => void;
@@ -104,6 +121,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   menuExpanded: true,
   settingsOpen: false,
   reverseScrollZoom: loadReverseScrollZoom(),
+  groundStyle: loadGroundStyle(),
   categoryOverrides: loadCategoryOverrides(),
   hoveredInstanceId: null,
   debugVisuals: false,
@@ -134,6 +152,14 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
       // localStorage unavailable; setting stays session-only.
     }
     set({ reverseScrollZoom: next });
+  },
+  setGroundStyle: (style) => {
+    try {
+      window.localStorage.setItem(GROUND_STYLE_STORAGE_KEY, style);
+    } catch {
+      // localStorage unavailable; setting stays session-only.
+    }
+    set({ groundStyle: style });
   },
   setCategoryOverride: (partId, category) => {
     const overrides = { ...get().categoryOverrides };

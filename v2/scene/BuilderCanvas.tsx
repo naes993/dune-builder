@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, ThreeEvent, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -9,6 +9,8 @@ import { getWorldFootprint } from '../engine/occupancy';
 import {
   BUILD_MODES,
   BuildMode,
+  GROUND_STYLES,
+  GroundStyle,
   MENU_TABS,
   MenuTab,
   getDefaultPartCategory,
@@ -297,6 +299,51 @@ const formatSnapChannel = (channel?: string) => {
   return undefined;
 };
 
+const GROUND_BASE_COLOR = '#d2b076';
+
+// Ground-plane texture, baked once into a single canvas (no image assets, no
+// per-frame cost) and mapped across the plane — constant cost regardless of
+// build size, no lights or shadows. 'flat' returns null (use the base color).
+//  - gradient:          radial brighter-center → darker-edge across the plane
+//  - gradient-focused:  same, but the falloff is pulled in toward the origin
+//  - grain:             focused gradient + procedural sand speckle for surface
+const createGroundTexture = (style: GroundStyle): THREE.Texture | null => {
+  if (style === 'flat') return null;
+
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+
+  // 'gradient-focused'/'grain' pull the bright core in so the depth cue reads
+  // sooner; beyond the radius the gradient clamps to the dark edge color.
+  const outerRadius = style === 'gradient' ? size / 2 : size * 0.34;
+  const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, outerRadius);
+  gradient.addColorStop(0, '#e7c690'); // brighter near the build origin
+  gradient.addColorStop(0.5, GROUND_BASE_COLOR); // base sand (the prior flat color)
+  gradient.addColorStop(1, '#8a7044'); // darker toward the edges / horizon
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+
+  if (style === 'grain') {
+    // Procedural per-pixel noise — generated once, ships no image data.
+    const image = ctx.getImageData(0, 0, size, size);
+    const data = image.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const n = (Math.random() - 0.5) * 26; // subtle ±13 luminance jitter
+      data[i] += n;
+      data[i + 1] += n;
+      data[i + 2] += n;
+    }
+    ctx.putImageData(image, 0, 0);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+};
+
 const SceneContents = () => {
   const {
     activePartId,
@@ -304,6 +351,7 @@ const SceneContents = () => {
     copyPiece,
     debugVisuals,
     demolishInstance,
+    groundStyle,
     hoveredInstanceId,
     instances,
     placePreview,
@@ -314,6 +362,9 @@ const SceneContents = () => {
     setPreview,
   } = useV2BuilderStore();
   const groundRef = useRef<THREE.Mesh>(null);
+  const groundTexture = useMemo(() => createGroundTexture(groundStyle), [groundStyle]);
+  // Release the previous canvas texture's GPU memory when the style changes.
+  useEffect(() => () => groundTexture?.dispose(), [groundTexture]);
   const lastCursorRef = useRef<[number, number, number]>([0, 0, 0]);
 
   const updatePreview = (point: THREE.Vector3) => {
@@ -402,7 +453,11 @@ const SceneContents = () => {
         onClick={handleGroundClick}
       >
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#d2b076" roughness={0.95} />
+        <meshStandardMaterial
+          map={groundTexture}
+          color={groundTexture ? '#ffffff' : GROUND_BASE_COLOR}
+          roughness={0.95}
+        />
       </mesh>
       {/* Part GLBs load inside a Suspense boundary so a first-time load suspends
           only the meshes — never the ground plane above, which owns the pointer
@@ -518,6 +573,13 @@ const TAB_LABELS: Record<MenuTab, string> = {
   special: 'SPECIAL',
 };
 
+const GROUND_STYLE_LABELS: Record<GroundStyle, string> = {
+  flat: 'Flat',
+  gradient: 'Gradient',
+  'gradient-focused': 'Focused',
+  grain: 'Grain',
+};
+
 const MODE_LABELS: Record<BuildMode, string> = {
   build: 'Build',
   replace: 'Replace',
@@ -552,8 +614,16 @@ const BuildModePanel = () => {
 };
 
 const SettingsPanel = () => {
-  const { categoryOverrides, setCategoryOverride, settingsOpen, toggleSettings, reverseScrollZoom, toggleReverseScrollZoom } =
-    useV2BuilderStore();
+  const {
+    categoryOverrides,
+    setCategoryOverride,
+    settingsOpen,
+    toggleSettings,
+    reverseScrollZoom,
+    toggleReverseScrollZoom,
+    groundStyle,
+    setGroundStyle,
+  } = useV2BuilderStore();
   const [masterCopied, setMasterCopied] = useState(false);
 
   if (!settingsOpen) return null;
@@ -613,6 +683,27 @@ const SettingsPanel = () => {
             </span>
           </span>
         </label>
+        <div className="mt-3">
+          <div className="text-xs font-semibold">Ground style</div>
+          <div className="mb-1 text-[10px] leading-4 text-white/45">
+            Depth cue for the floor. All variants are baked once (no image assets, no shadows).
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {GROUND_STYLES.map((style) => (
+              <button
+                key={style}
+                onClick={() => setGroundStyle(style)}
+                className={`h-7 rounded px-2 text-[11px] font-semibold capitalize transition ${
+                  groundStyle === style
+                    ? 'bg-dune-gold text-black'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                {GROUND_STYLE_LABELS[style]}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
       <table className="w-full text-left text-xs">
         <thead>
