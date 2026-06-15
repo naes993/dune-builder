@@ -21,7 +21,7 @@ You are an expert base building consultant for this project. You specialize in s
 1. **Connection-first, no world grid.** The first placed piece establishes the build grid, exactly like the game. Pieces snap to each other via edge anchors and snap channels; there is no preset ground grid and no grid-snap fallback. Never reintroduce grid-first logic.
 2. **Logical data is placement truth.** Footprints, anchors, occupancy, and rules live in `v2/registry/parts.ts` and `v2/engine/`. GLB files are visual wrappers only — do not use GLB bounds, pivots, mesh centers, or `_COL` files as placement truth.
 3. **Real parts only.** Buildable parts are the real Harkonnen Level 3 GLBs (provided by the developer, local-only, never committed). No generic placeholder shapes.
-4. **Game-parity controls.** Match the game's build controls where known. Current map (from Sean's in-game reference): Left Click applies the build mode; Right Click cycles Build → Replace → Customize → Demolish (Repair/Move intentionally omitted); R rotates (flips wall/door facing when snapped); Q/E cycle category tabs; Mouse Wheel cycles pieces (Shift+Wheel zooms); Middle Click copies a piece; B toggles the build menu; Z/C reserved for building-set cycling. Sean can provide in-game screenshots when details are ambiguous.
+4. **Game-parity controls.** Match the game's build controls where known. Current map (from Sean's in-game reference): Left Click applies the build mode; Right Click cycles Build → Replace → Customize → Demolish (Repair/Move intentionally omitted); R rotates (flips wall/door facing when snapped); Q/E cycle category tabs; Mouse Wheel cycles pieces (Shift+Wheel zooms — an Admin "Reverse scroll wheel" option swaps these two roles); Middle Click copies a piece; B toggles the build menu; Z/C reserved for building-set cycling. Sean can provide in-game screenshots when details are ambiguous.
 
 ## Building System Fundamentals
 
@@ -55,9 +55,13 @@ Tessellating shapes based on squares and 60° equilateral triangles (wedges). Fo
 ## Snap System
 
 Placement priority in `v2/engine/snapSolver.ts`:
-1. Wall-run continuation from existing wall endpoints.
-2. Support-edge connection to a compatible target edge (channel-filtered, rotation-preference tie-break so R cycles orientations).
+1. Wall-run continuation from existing wall endpoints **and foundation perimeter corners** (a foundation is "four walls with a floor on top," so a wall can run off its edges to build outward). Both base corners (ground) and top corners qualify; cursor height picks the level.
+2. Support-edge connection to a compatible target edge (channel-filtered, rotation-preference tie-break so R cycles orientations). The downward "hang below" variant is restricted to **floor** edges (overhangs) — never foundation/wall tops, which have solid structure below.
 3. Free ground placement at the cursor.
+
+Cursor height drives stacked-target selection (`VERTICAL_AFFINITY_WEIGHT`): point high to build up, low to build down. Because tall pieces are mostly hit on their sides, an invisible **`TopSnapCatcher`** (`v2/scene/BuilderCanvas.tsx`) sits just above each foundation/wall top so the cursor reliably registers "on top."
+
+Collision: `overlapsFoundationBody` (`v2/engine/occupancy.ts`) rejects a wall/door whose footprint overlaps a foundation's footprint *and* vertical range — a wall straddling the top perimeter is fine (above the block), but one buried in the block (the "hugging" rotation) is invalid. Note `getOccupancyConflicts` only compares parts on the **same** occupancy layer; cross-layer collisions (wall-vs-foundation) need explicit checks like this one.
 
 Snap channels (`v2/engine/snapRelationships.ts`):
 - `foundation-structure` — foundation↔foundation side adjacency
@@ -66,17 +70,19 @@ Snap channels (`v2/engine/snapRelationships.ts`):
 
 ## Parked Items & Decisions (carry-over from project memory)
 
-- **Next planned feature — facing indicator:** ghost previews for walls/doors get an arrow pointing outward from the outer face, plus a faint orange tint on the inner face (mirrors the game's orange banding). Explicitly NO text labels ("INNER FACE" was rejected as too wordy). Preview-only, never on placed pieces; must flip when R flips facing.
-- **Hardware bug, parked:** Shift+Wheel zoom works on MacBook trackpads but not Sean's Logitech M720 Triathlon (likely Logi Options+ remaps Shift+wheel to horizontal scroll / deltaX). When debugging: log raw wheel events from the M720; consider accepting deltaX as zoom or a keyboard fallback.
+- **Facing indicator (shipped v2-dev-0017):** ghost previews for walls/doors show an arrow pointing outward from the outer (`_Ext`) face plus a faint orange tint on the inner (`_Int`) face. Explicitly NO text labels. Preview-only, never on placed pieces; flips when R flips facing. (A follow-up to clip the tint plane to wedge-wall triangle shapes is still open — currently a rectangle that overshoots sloped tops.)
+- **Hardware bug, parked:** Shift+Wheel zoom works on MacBook trackpads but not Sean's Logitech M720 Triathlon (likely Logi Options+ remaps Shift+wheel to horizontal scroll / deltaX). When debugging: log raw wheel events from the M720; consider accepting deltaX as zoom or a keyboard fallback. (Partial mitigation: the Admin "Reverse scroll wheel" option lets the bare wheel zoom instead.)
 - **Future separate project — "Base Parts Builder":** let users of other games define their own snappable pieces. The data-driven registry is already the right foundation (it's a UI + GLB import over `parts.ts`); keep the registry JSON-serializable. Sean marking "what snaps to what" per piece maps 1:1 onto the snap-channel model.
 - **Categories:** in-game, the flat floor and flat rooftop sit side by side in the same category; Sean adjusts placements via the Admin panel (localStorage overrides) and they should eventually be baked into the registry as defaults.
 
-## Known Gaps / Next Milestone
+## Current State / Known Gaps / Next Milestone
 
-- Stacked snap targets at the same XZ (wall top above a foundation edge) have no explicit story-selection control yet — scoring picks one.
+- **Buildable parts:** 28 of the 92 audited GLBs are wired into `v2/registry/parts.ts` — foundations + floors (square/wedge), and the full wall family (straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, door assembly). Roofs, stairs, ramps, pillars, railings, round corners, etc. are audited but not yet registered.
+- Stacked snap targets at the same XZ are disambiguated by cursor height plus the `TopSnapCatcher`; there is still no *explicit* story/level selector (e.g. a modifier key), and right at the foundation-top height the ground/top choice can be a toss-up since the cursor can't go higher than the top.
 - Foundations do not stack on foundations yet.
 - No roof, stair, or curve system yet (GLBs exist and are audited).
 - No save/export system yet.
+- Wedge-wall facing tint still renders as a rectangle (overshoots the sloped top) — see Parked Items.
 
 ## Workflow Rules (see AGENTS.md)
 
@@ -89,4 +95,4 @@ Snap channels (`v2/engine/snapRelationships.ts`):
 
 GitHub Pages deploys `dist/` on push to `main` (`.github/workflows/deploy.yml`). **Caveat:** the GLB assets are local-only, so the deployed site currently has no models — it is effectively a local-first app until an asset hosting decision is made.
 
-Entry point is `/index.tsx` in the root (`index.html` references it directly); `vite.config.ts` port is 3000.
+Entry point is `/index.tsx` in the root (`index.html` references it directly). The dev server defaults to port 3000 but honors the `PORT` env var (`vite.config.ts`), and `.claude/launch.json` sets `autoPort` so the preview tooling can pick a free port.

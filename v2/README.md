@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0016`
+Current V2 build: `v2-dev-0025`
 
-Description: Floors attach on either side of wall edges (cursor side picks); inner ceilings now possible.
+Description: Walls reject placements that pass through a foundation's solid block (the "hugging" rotations); R cycles only valid edge placements. See `v2/CHANGELOG.md` for full history.
 
 ## Checkpoint Summary
 
@@ -43,12 +43,15 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - Edge alignment (connection-first, no world grid).
 - Snap profiles and relationship channels for floor, foundation, and wall placement.
 - Wall-edge slot occupancy for snapped wall and door parts.
-- Wall-run continuation from existing wall endpoints.
+- Wall-run continuation from existing wall endpoints **and foundation perimeter corners** (build walls outward off a foundation at ground or top level).
+- Full wall family registered: straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, door assembly (28 of 92 audited GLBs).
+- Walls reject placements that pass through a foundation's solid block; an invisible top-snap catcher makes "build on top" reliable.
 - Invalid overlap preview.
-- Material-name mapping for `_Ext` and `_Int`.
-- R rotates the preview, including snapped previews (rotation-preference tie-break in the solver).
-- Separate Debug helper.
-- Harkonnen asset audit and manifest.
+- Material-name mapping for `_Ext` and `_Int`; facing indicator (outward arrow + inner-face tint) on wall/door ghosts.
+- R rotates the preview, including snapped previews (rotation-preference tie-break in the solver); flips facing in place when snapped.
+- All part GLBs preloaded behind a Suspense boundary, so first-time part selection never freezes the preview.
+- Separate Debug helper (observe-only — never affects placement).
+- Harkonnen asset audit and manifest; committed master category organization with Admin overrides.
 
 ## Controls (game parity)
 
@@ -56,7 +59,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - **Right Click** — cycle build mode: Build → Replace → Customize → Demolish.
 - **R** — rotate the preview (flips wall/door facing when snapped).
 - **Q / E** — previous / next category tab.
-- **Mouse Wheel** — cycle pieces in the active tab; **Shift+Wheel** zooms the camera.
+- **Mouse Wheel** — cycle pieces in the active tab; **Shift+Wheel** zooms the camera. (Admin "Reverse scroll wheel" swaps these two roles.)
 - **Middle Click** — copy a hovered piece (makes it the active piece).
 - **Middle-drag** — orbit camera; **Left-drag** — pan camera.
 - **B** — collapse/expand the build menu.
@@ -84,12 +87,13 @@ Expected smoke checks for `v2-dev-0011`:
 
 ## Known Limitations
 
-- Targets stacked at the same XZ (e.g. a wall top directly above a foundation edge) are disambiguated by scoring only; there is no explicit story-selection control yet.
+- Targets stacked at the same XZ are disambiguated by cursor height plus the top-snap catcher; there is still no *explicit* story-selection control, and right at the foundation-top height the ground/top choice can be ambiguous.
 - Foundations do not stack on foundations yet.
+- The wedge-wall facing tint is still a rectangle (overshoots the sloped top).
 - There is no final Part Builder yet.
 - There is no final V2 save/export system yet.
-- There is no full roof, stair, or curve system yet.
+- There is no full roof, stair, or curve system yet (GLBs audited, not registered).
 
 ## Next Recommended Task
 
-Verify vertical alignment and control parity against in-game screenshots, then add a story-selection/ambiguity control for stacked snap targets and foundation-on-foundation stacking.
+Register the next part group (roofs or stairs/ramps), or add an explicit story-selection control for stacked snap targets and foundation-on-foundation stacking.

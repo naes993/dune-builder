@@ -1,6 +1,6 @@
 # Dune Builder
 
-This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0016`.
+This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0025`.
 
 ## V2 Builder Prototype
 
@@ -18,17 +18,14 @@ The V2 code lives under `v2/`; the root `App.tsx` is a thin wrapper that renders
 
 ## Current V2 Checkpoint
 
-`v2-dev-0010` removes the world grid and promotes the real Harkonnen parts:
+`v2-dev-0025`. See `v2/CHANGELOG.md` for the full history; highlights of the current state:
 
-- Global grid snapping and the visible ground grid are removed entirely.
-- When no connection target is found, the preview and placed part use the ground hit position.
-- The buildable parts are the real Harkonnen floor/foundation squares and wedges plus the wall batch; the generic placeholder square/triangle are gone.
-- Logical heights are calibrated from measured GLBs: floors are 0.3735 thick (pivot at walking surface), foundations 3.8968 tall (pivot at base).
-- Pressing R rotates the preview, including snapped previews (the solver prefers the orientation nearest the requested rotation).
-- Foundation pieces use the structural side-adjacency channel.
-- Floor pieces use the floor-support channel and expose wall-compatible sides.
-- Wall pieces use the wall-support channel.
-- Walls use full-edge wall support on floors and foundation-specific endpoint support on foundations.
+- Connection-first placement: no world grid; the first placed piece establishes the build grid. When no connection target is found, the part uses the ground hit position.
+- Buildable parts are real Harkonnen GLBs: foundations + floors (square/wedge) and the full wall family — straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, and the door assembly (28 of 92 audited GLBs registered).
+- Logical heights are calibrated from measured GLBs: floors 0.3735 thick (pivot at walking surface), foundations 3.8968 tall (pivot at base).
+- Snapping by profile/channel: foundations use structural side-adjacency; floors use floor-support and expose wall-compatible sides; walls use wall-support. Walls stand on foundation/floor/wall tops, can run off a foundation's perimeter to build outward, and cannot pass through a foundation's solid block.
+- R flips wall/door facing when snapped; the cursor's height picks which stacked target (build up vs down). Ghost previews show a facing arrow + inner-face tint.
+- All part GLBs are preloaded and the scene is wrapped in Suspense, so selecting a new part never freezes the placement preview.
 
 Do not use GLB bounds, pivots, mesh centers, or `_COL` files as placement truth.
 
