@@ -67,6 +67,7 @@ Snap channels (`v2/engine/snapRelationships.ts`):
 - `foundation-structure` — foundation↔foundation side adjacency
 - `floor-support` — floors to floor-compatible edges (incl. foundation bases)
 - `wall-support` — walls to wall-compatible edges on floors/foundations
+- `incline-edge` — incline↔incline (stairs/ramps): inclined side edges → side-by-side wide staircases; horizontal high↔low edges → tiled slopes (sloped roofs/ceilings, climbing runs). Edge-length difference keeps the two from cross-matching.
 
 ## Parked Items & Decisions (carry-over from project memory)
 
@@ -78,7 +79,7 @@ Snap channels (`v2/engine/snapRelationships.ts`):
 ## Current State / Known Gaps / Next Milestone
 
 - **Buildable parts:** 32 of the 92 audited GLBs are wired into `v2/registry/parts.ts` — foundations + floors (square/wedge), the full wall family (straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, door assembly), and **inclines** (straight stairs/ramps + half versions). Roofs, stair/ramp **corners**, pillars, railings, round corners, etc. are audited but not yet registered.
-- **Inclines (v1):** an incline's high edge mates with a foundation/floor top edge (`floor-support`) and descends outward to the ground; the high edge also supports the upper landing. Only the top edge snaps so far — corner variants and a two-end (bottom+top) solve are roadmap items. See `inclineVariant`/`inclineAnchors` in `parts.ts`.
+- **Inclines:** an incline's high edge mates with a foundation/floor top edge (`floor-support`) and descends outward to the ground; the high edge also supports the upper landing. Inclines also snap to each other via the `incline-edge` channel — side-by-side (inclined side edges) and tiled slopes (high↔low edges). Still roadmap: corner variants and a two-end (bottom+top) solve. See `inclineVariant`/`inclineAnchors` in `parts.ts`.
 - Stacked snap targets at the same XZ are disambiguated by cursor height plus the `TopSnapCatcher`; there is still no *explicit* story/level selector (e.g. a modifier key), and right at the foundation-top height the ground/top choice can be a toss-up since the cursor can't go higher than the top.
 - Foundations do not stack on foundations yet.
 - No roof or curve system yet (GLBs exist and are audited). Stairs/ramps have a v1 (straight + half); corners and two-end snapping pending.

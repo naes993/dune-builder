@@ -1,12 +1,12 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0025`
+Current V2 build: `v2-dev-0027`
 
-Description: Walls reject placements that pass through a foundation's solid block (the "hugging" rotations); R cycles only valid edge placements. See `v2/CHANGELOG.md` for full history.
+Description: Incline-to-incline snapping — stairs/ramps snap side-by-side into wide staircases and tile edge-to-edge into sloped roofs/ceilings. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
 
 ## Checkpoint Summary
 
-`v2-dev-0011` is a connection-first placement checkpoint with vertical building. There is no world grid: the first placed piece establishes the build grid, exactly like the game. Placement priority is:
+A connection-first placement engine with vertical building. There is no world grid: the first placed piece establishes the build grid, exactly like the game. Placement priority is:
 
 1. Connection snap target if available (wall-run, then support-edge).
 2. Free ground placement at the cursor otherwise.
@@ -73,7 +73,7 @@ Use the in-app browser, Browser plugin, or Chrome for interactive placement test
 http://127.0.0.1:3000/
 ```
 
-Expected smoke checks for `v2-dev-0011`:
+Expected smoke checks:
 
 - First-piece placement on open ground stays at the cursor location (no grid rounding).
 - Floor placement near a foundation edge previews elevated, walking surface flush with the foundation top.

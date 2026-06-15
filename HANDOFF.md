@@ -1,7 +1,10 @@
 # Handoff: Deploy the V2 Base Builder
 
 Audience: any model/agent (Codex etc.) picking this up to publish the V2 builder.
-State as of 2026-06-14, checkpoint `v2-dev-0025`, branch `v2-builder-engine-prototype`.
+State as of 2026-06-14, checkpoint `v2-dev-0027`, branch `v2-builder-engine-prototype`.
+
+> If you are an agent reading `AGENTS.md`, this file (`HANDOFF.md`) is the deploy
+> procedure; `CLAUDE.md` + `ROADMAP.md` describe current state and plans.
 
 ## What this is
 
@@ -63,7 +66,8 @@ ls dist/assets/parts/harkonnen/*.glb | wc -l   # must be ~92, NOT zero
 
 Smoke test the built site (`npx vite preview` or the deployed URL): place a Foundation,
 snap a Floor to a foundation edge (it must sit flush with the foundation TOP), stand a
-Wall on it, snap a Floor to the wall top. Controls reference is in `v2/README.md`.
+Wall on it (R flips its facing), and from the Inclines tab snap a Stairs/Ramp to a
+foundation edge so it descends to the ground. Controls reference is in `v2/README.md`.
 
 ## House rules (from AGENTS.md)
 
