@@ -69,6 +69,8 @@ interface BuilderState {
   categoryOverrides: CategoryOverrides;
   hoveredInstanceId: string | null;
   debugVisuals: boolean;
+  /** Debug + Admin controls are hidden until the secret button combo is entered. */
+  controlsUnlocked: boolean;
   rotationY: number;
   preview: PlacementCandidate | null;
   setActivePartId: (partId: PartId) => void;
@@ -84,6 +86,7 @@ interface BuilderState {
   rotateActivePart: () => void;
   setPreview: (preview: PlacementCandidate | null) => void;
   toggleDebugVisuals: () => void;
+  unlockControls: () => void;
   placePreview: () => void;
   demolishInstance: (instanceId: string) => void;
   replaceInstance: (instanceId: string) => void;
@@ -102,6 +105,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   categoryOverrides: loadCategoryOverrides(),
   hoveredInstanceId: null,
   debugVisuals: false,
+  controlsUnlocked: false,
   rotationY: 0,
   preview: null,
   setActivePartId: (partId) => {
@@ -173,6 +177,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   },
   setPreview: (preview) => set({ preview }),
   toggleDebugVisuals: () => set((state) => ({ debugVisuals: !state.debugVisuals })),
+  unlockControls: () => set({ controlsUnlocked: true }),
   placePreview: () => {
     const { activePartId, preview } = get();
     if (!preview?.isValid) return;

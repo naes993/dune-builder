@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "obfuscate-assets": "node scripts/obfuscate-assets.mjs",
+    "dev": "node scripts/obfuscate-assets.mjs && vite",
+    "build": "node scripts/obfuscate-assets.mjs && vite build && node scripts/strip-deploy-originals.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

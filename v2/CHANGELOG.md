@@ -1,5 +1,12 @@
 # V2 Changelog
 
+## v2-dev-0028 - 2026-06-15
+
+Deploy hardening: obfuscated model delivery + gated Debug/Admin.
+
+- **Model obfuscation.** `scripts/obfuscate-assets.mjs` (run as part of `npm run dev`/`build`) XOR-transforms every GLB with an app secret + per-file salt and writes it under an opaque sha256 name (`public/assets/m/<hash>.pak`); a downloaded blob is not a valid GLB (the `glTF` magic is gone). `v2/scene/obfuscatedGltf.ts` is a Suspense-compatible loader that reverses the transform in memory and hands the real buffer to Three.js; `PartMesh` uses it instead of drei's `useGLTF`. `scripts/strip-deploy-originals.mjs` removes the plain GLBs from `dist` post-build so only `.pak` ship, and the secret is stored base64-encoded so it isn't greppable in the bundle. This is friction, not DRM — a client app must deliver models to render them — but it raises the bar substantially. (npm `ignore-scripts` is on in this env, so the pipeline is chained explicitly in the `dev`/`build` scripts rather than via pre/post hooks.)
+- **Gated Debug + Admin.** Both controls are hidden until a Sega-Genesis-style code is entered: **A, B, A, C, A, B, B**. The combo detector absorbs its own key presses while in progress (so the `B` keys don't flicker the build menu), a lone `B` still toggles the menu, and a reload re-locks. Session-only; not persisted.
+
 ## v2-dev-0027 - 2026-06-14
 
 Added: incline-to-incline snapping — wide staircases and sloped surfaces.

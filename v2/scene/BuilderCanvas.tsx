@@ -661,6 +661,7 @@ const Toolbar = () => {
     buildMode,
     categoryOverrides,
     clear,
+    controlsUnlocked,
     cycleActivePart,
     cycleTab,
     debugVisuals,
@@ -675,12 +676,37 @@ const Toolbar = () => {
     toggleDebugVisuals,
     toggleMenuExpanded,
     toggleSettings,
+    unlockControls,
   } = useV2BuilderStore();
 
+  // Debug + Admin are hidden until this Sega-Genesis-style code is entered.
+  const unlockComboRef = useRef<string[]>([]);
+
   useEffect(() => {
+    const UNLOCK_COMBO = ['a', 'b', 'a', 'c', 'a', 'b', 'b'];
+    const isComboPrefix = (keys: string[]) =>
+      keys.every((key, index) => UNLOCK_COMBO[index] === key);
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       const key = event.key.toLowerCase();
+
+      // Track the longest tail of recent keys that is still a prefix of the combo.
+      let progress = [...unlockComboRef.current, key];
+      while (progress.length && !isComboPrefix(progress)) progress = progress.slice(1);
+      unlockComboRef.current = progress;
+
+      if (progress.length === UNLOCK_COMBO.length) {
+        unlockComboRef.current = [];
+        unlockControls();
+        return;
+      }
+
+      // While a combo is in progress (≥2 keys deep) the keypress belongs to the
+      // code, so its normal action (notably B toggling the menu) is suppressed —
+      // no flicker while entering it. A lone B etc. still works normally.
+      if (progress.length >= 2) return;
+
       if (key === 'r') rotateActivePart();
       if (key === 'q') cycleTab(-1);
       if (key === 'e') cycleTab(1);
@@ -688,7 +714,7 @@ const Toolbar = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cycleTab, rotateActivePart, toggleMenuExpanded]);
+  }, [cycleTab, rotateActivePart, toggleMenuExpanded, unlockControls]);
 
   useEffect(() => {
     // By default the wheel cycles pieces (Shift+Wheel zooms), like the game. The
@@ -763,21 +789,25 @@ const Toolbar = () => {
           >
             Clear
           </button>
-          <label className="flex h-10 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
-            <input
-              type="checkbox"
-              checked={debugVisuals}
-              onChange={toggleDebugVisuals}
-              className="h-4 w-4 accent-dune-gold"
-            />
-            Debug
-          </label>
-          <button
-            onClick={toggleSettings}
-            className="h-10 rounded-md bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/20"
-          >
-            Admin
-          </button>
+          {controlsUnlocked && (
+            <>
+              <label className="flex h-10 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
+                <input
+                  type="checkbox"
+                  checked={debugVisuals}
+                  onChange={toggleDebugVisuals}
+                  className="h-4 w-4 accent-dune-gold"
+                />
+                Debug
+              </label>
+              <button
+                onClick={toggleSettings}
+                className="h-10 rounded-md bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/20"
+              >
+                Admin
+              </button>
+            </>
+          )}
           <div className="ml-2 min-w-44 text-xs text-white/70">
             <div>
               {instances.length} placed · <span className="text-dune-gold">{MODE_LABELS[buildMode]}</span>

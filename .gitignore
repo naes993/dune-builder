@@ -29,3 +29,6 @@ recorded/
 
 # Local browser-testing artifacts
 .playwright-cli/
+
+# Obfuscated model blobs (generated from local-only GLBs)
+public/assets/m/

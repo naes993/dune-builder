@@ -1,5 +1,5 @@
 export const V2_BUILD = {
-  id: 'v2-dev-0027',
-  date: '2026-06-14',
-  description: 'Incline-to-incline snapping: stairs/ramps snap side-by-side (wide staircases) and tile edge-to-edge into sloped roofs/ceilings and climbing runs.',
+  id: 'v2-dev-0028',
+  date: '2026-06-15',
+  description: 'Deploy hardening: model GLBs ship XOR-obfuscated under opaque names (decoded in-app); Debug + Admin hidden behind a Sega-style unlock code.',
 } as const;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { preloadObfuscatedGltf, useObfuscatedGltf } from './obfuscatedGltf';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -141,7 +141,7 @@ const GltfVisual = ({
   ghost: boolean;
   valid: boolean;
 }) => {
-  const gltf = useGLTF(visualDef.url);
+  const gltf = useObfuscatedGltf(visualDef.url);
   const visual = useMemo(() => {
     const clone = cloneSkeleton(gltf.scene);
     applyVisualMaterials(clone, ghost, valid, visualDef.materialOverride);
@@ -344,7 +344,7 @@ for (const part of Object.values(PARTS)) {
   const visualDefs = part.meshes ?? (part.mesh ? [part.mesh] : []);
   for (const visualDef of visualDefs) {
     if (!isReferenceCollisionVisual(visualDef)) {
-      useGLTF.preload(visualDef.url);
+      preloadObfuscatedGltf(visualDef.url);
     }
   }
 }
