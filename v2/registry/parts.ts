@@ -230,6 +230,13 @@ const wallVariant = (options: {
 // with a foundation/floor top edge so the incline descends outward from a ledge;
 // it also exposes support channels so the upper landing (floor/wall) connects on
 // top. The LOW edge sits at the ground for a floor at the base.
+// Incline edges. High and low are horizontal (length = UNIT) and tile into a
+// continuous slope (one incline's low edge mates with another's high edge — for
+// sloped roofs/ceilings and climbing runs). The two inclined SIDE edges (length
+// = hypotenuse) mate with each other for side-by-side wide staircases. The
+// `incline-edge` channel keeps these connections incline-only, and the differing
+// edge lengths keep "tile a slope" and "side-by-side" from cross-matching. The
+// high edge also keeps floor-support so it can still descend off a foundation.
 const inclineAnchors = (height: number): EdgeAnchorDef[] => [
   {
     id: 'edge.incline-top',
@@ -238,7 +245,7 @@ const inclineAnchors = (height: number): EdgeAnchorDef[] => [
     start: [-HALF, height, -HALF],
     end: [HALF, height, -HALF],
     normal: [0, 0, -1],
-    channels: SUPPORT_CHANNELS,
+    channels: ['floor-support', 'wall-support', 'incline-edge'],
   },
   {
     id: 'edge.incline-bottom',
@@ -247,8 +254,25 @@ const inclineAnchors = (height: number): EdgeAnchorDef[] => [
     start: [HALF, 0, HALF],
     end: [-HALF, 0, HALF],
     normal: [0, 0, 1],
-    channels: ['floor-support'],
-    source: false,
+    channels: ['incline-edge'],
+  },
+  {
+    id: 'edge.incline-side-right',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [HALF, 0, HALF],
+    end: [HALF, height, -HALF],
+    normal: [1, 0, 0],
+    channels: ['incline-edge'],
+  },
+  {
+    id: 'edge.incline-side-left',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [-HALF, height, -HALF],
+    end: [-HALF, 0, HALF],
+    normal: [-1, 0, 0],
+    channels: ['incline-edge'],
   },
 ];
 
@@ -264,8 +288,8 @@ const inclineVariant = (options: {
   menuCategory: 'inclines',
   occupancyLayer: 'foundation',
   snapProfile: 'floor',
-  snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
-  snapTargetChannels: [...SUPPORT_CHANNELS],
+  snapSourceChannels: ['incline-edge', 'floor-support'],
+  snapTargetChannels: ['floor-support', 'wall-support', 'incline-edge'],
   height: options.height,
   yOffset: 0,
   allowedRotations: STANDARD_ROTATIONS,

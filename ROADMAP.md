@@ -37,9 +37,9 @@ _Last updated: 2026-06-14 (build `v2-dev-0025`)._
 
 - **Stairs & ramps** — inclines that connect one level to the next.
   - ✅ Straight stairs/ramps + half versions, descending from a foundation/floor edge.
-  - ☐ **Side-by-side** — snap two inclines flush along their side edges (wide staircases).
-  - ☐ **Sloped surfaces** — tile ramps edge-to-edge (high edge to next low edge) to
-    build sloped roofs/ceilings, as in the reference bases.
+  - ✅ **Side-by-side** — snap two inclines flush along their side edges (wide staircases).
+  - ✅ **Sloped surfaces** — tile ramps/stairs edge-to-edge (high edge to next low
+    edge) to build sloped roofs/ceilings and climbing runs, as in the reference bases.
   - ☐ **Corner variants** — the corner stair/ramp pieces (90° turns).
   - ☐ **Two-end snapping** — connect an incline's bottom to a lower level and its
     top to an upper level at once (also fixes a half-incline floating from a

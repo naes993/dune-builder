@@ -1,5 +1,15 @@
 # V2 Changelog
 
+## v2-dev-0027 - 2026-06-14
+
+Added: incline-to-incline snapping — wide staircases and sloped surfaces.
+
+- New `incline-edge` snap channel (`v2/types.ts`). Incline anchors (`v2/registry/parts.ts`) now expose all four edges on this channel: the horizontal high/low edges (length = UNIT) and the two inclined side edges (length = hypotenuse). Differing edge lengths keep the two use cases from cross-matching.
+- **Side-by-side:** an incline's side edge mates with another incline's side edge, placing them flush (e.g. two stairs → a double-wide staircase).
+- **Sloped surfaces / climbing runs:** an incline's low edge mates with another's high edge (and vice-versa), so stairs/ramps tile edge-to-edge into a continuous slope — sloped roofs/ceilings and multi-tile climbs, as in the reference bases.
+- Inclines now source on `['incline-edge', 'floor-support']` and target on `['floor-support', 'wall-support', 'incline-edge']`. The high edge keeps `floor-support`, so descending off a foundation/floor edge still works (verified: 55 foundation-edge snaps, no regression).
+- Verified in-browser: side-by-side stairs sit flush; three ramps tile into one seamless slope; descend-from-foundation unaffected.
+
 ## v2-dev-0026 - 2026-06-14
 
 Added: inclines (stairs & ramps) — first increment — and a public roadmap.

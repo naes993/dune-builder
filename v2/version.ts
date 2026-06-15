@@ -1,5 +1,5 @@
 export const V2_BUILD = {
-  id: 'v2-dev-0026',
+  id: 'v2-dev-0027',
   date: '2026-06-14',
-  description: 'Inclines: straight stairs/ramps + half versions snap their top edge to a foundation/floor top edge and descend to the ground. Public ROADMAP added.',
+  description: 'Incline-to-incline snapping: stairs/ramps snap side-by-side (wide staircases) and tile edge-to-edge into sloped roofs/ceilings and climbing runs.',
 } as const;

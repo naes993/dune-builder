@@ -40,7 +40,7 @@ export type OccupancyLayer = 'foundation' | 'wall-edge';
 export type AnchorKind = 'edge';
 export type AnchorRole = 'foundation-edge';
 export type PlacementMode = 'support-edge' | 'wall-run' | 'free-ground';
-export type SnapChannel = 'foundation-structure' | 'floor-support' | 'wall-support';
+export type SnapChannel = 'foundation-structure' | 'floor-support' | 'wall-support' | 'incline-edge';
 export type SnapProfile = 'floor' | 'foundation' | 'wall';
 
 export interface EdgeAnchorDef {
