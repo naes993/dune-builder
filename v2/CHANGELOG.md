@@ -1,5 +1,15 @@
 # V2 Changelog
 
+## v2-dev-0026 - 2026-06-14
+
+Added: inclines (stairs & ramps) — first increment — and a public roadmap.
+
+- New `incline` category in the **Inclines** tab: straight Stairs, Half Stairs, Ramp, Half Ramp (`incline.harkonnen.level3.*`). 32 of 92 audited GLBs now registered.
+- Measured the GLBs (`scripts/measure-stairs-ramps.mjs` + a one-off climb probe): one-tile footprint, pivot at the base, low end toward +Z and high end toward −Z, rising ~one foundation height (half versions ~half). New `inclineVariant`/`inclineAnchors` in `v2/registry/parts.ts`.
+- Snap model (v1): the incline's **high edge** is the connector — it mates with a foundation/floor top edge (`floor-support`) so the incline descends *outward* from a ledge to the ground, oriented correctly. The high edge also exposes support channels for the upper landing, and the low edge is a ground-level floor target. Verified in-browser: stairs and ramps snap to all four foundation top edges and descend to the ground.
+- **Known limitations (tracked on the roadmap):** corner stair/ramp variants aren't registered yet; the snap currently connects the *top* edge only (no explicit bottom-up/two-end solve), so a half incline snapped to a full-height foundation top floats from mid-height until a matching lower level exists.
+- New top-level `ROADMAP.md` (public): shipped / in-progress / planned features and known issues.
+
 ## v2-dev-0025 - 2026-06-14
 
 Fixed: rotating a wall on a foundation corner produced "hugging" placements that buried the wall in the foundation.

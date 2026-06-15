@@ -223,6 +223,67 @@ const wallVariant = (options: {
   };
 };
 
+// Stairs/ramps occupy a one-tile footprint and climb one story (full) or half a
+// story (half). Measured from the GLBs (scripts/measure-stairs-ramps.mjs +
+// climb probe): pivot at the base, low end toward +Z, high end toward -Z, rising
+// to ~foundation height at the -Z edge. The HIGH edge is the connector — it mates
+// with a foundation/floor top edge so the incline descends outward from a ledge;
+// it also exposes support channels so the upper landing (floor/wall) connects on
+// top. The LOW edge sits at the ground for a floor at the base.
+const inclineAnchors = (height: number): EdgeAnchorDef[] => [
+  {
+    id: 'edge.incline-top',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [-HALF, height, -HALF],
+    end: [HALF, height, -HALF],
+    normal: [0, 0, -1],
+    channels: SUPPORT_CHANNELS,
+  },
+  {
+    id: 'edge.incline-bottom',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [HALF, 0, HALF],
+    end: [-HALF, 0, HALF],
+    normal: [0, 0, 1],
+    channels: ['floor-support'],
+    source: false,
+  },
+];
+
+const inclineVariant = (options: {
+  id: PartId;
+  name: string;
+  glb: string;
+  height: number;
+}): PartDefinition => ({
+  id: options.id,
+  name: options.name,
+  category: 'incline',
+  menuCategory: 'inclines',
+  occupancyLayer: 'foundation',
+  snapProfile: 'floor',
+  snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
+  snapTargetChannels: [...SUPPORT_CHANNELS],
+  height: options.height,
+  yOffset: 0,
+  allowedRotations: STANDARD_ROTATIONS,
+  anchors: inclineAnchors(options.height),
+  footprint: SQUARE_FOOTPRINT,
+  placeholderMesh: {
+    type: 'box',
+    size: [UNIT, options.height, UNIT],
+  },
+  mesh: {
+    url: `/assets/parts/harkonnen/${options.glb}`,
+    scale: [1, 1, 1],
+    offset: [0, 0, 0],
+    rotation: [0, 0, 0],
+    materialOverride: HARKONNEN_SURFACE_MATERIAL,
+  },
+});
+
 export const PARTS: PartRegistry = {
   // GLB pivot conventions (measured by scripts/measure-core-parts.mjs):
   // floor pivots sit at the walking surface, foundation pivots at the base.
@@ -604,6 +665,30 @@ export const PARTS: PartRegistry = {
       },
     ],
   },
+  'incline.harkonnen.level3.stairs': inclineVariant({
+    id: 'incline.harkonnen.level3.stairs',
+    name: 'Harkonnen Level 3 Stairs',
+    glb: 'SM_Env_PB_Hark_Level3_Stairs.glb',
+    height: FOUNDATION_HEIGHT,
+  }),
+  'incline.harkonnen.level3.stairs.half': inclineVariant({
+    id: 'incline.harkonnen.level3.stairs.half',
+    name: 'Harkonnen Level 3 Half Stairs',
+    glb: 'SM_Env_PB_Hark_Level3_Stairs_Half.glb',
+    height: FOUNDATION_HEIGHT / 2,
+  }),
+  'incline.harkonnen.level3.ramp': inclineVariant({
+    id: 'incline.harkonnen.level3.ramp',
+    name: 'Harkonnen Level 3 Ramp',
+    glb: 'SM_Env_PB_Hark_Level3_Ramp.glb',
+    height: FOUNDATION_HEIGHT,
+  }),
+  'incline.harkonnen.level3.ramp.half': inclineVariant({
+    id: 'incline.harkonnen.level3.ramp.half',
+    name: 'Harkonnen Level 3 Half Ramp',
+    glb: 'SM_Env_PB_Hark_Level3_Ramp_Half.glb',
+    height: FOUNDATION_HEIGHT / 2,
+  }),
 };
 
 export const getPart = (partId: keyof typeof PARTS) => PARTS[partId];

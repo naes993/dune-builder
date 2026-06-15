@@ -28,8 +28,12 @@ export type PartId =
   | 'wall.harkonnen.level3.triangle.top.tall.right'
   | 'wall.harkonnen.level3.corner.tall'
   | 'wall.harkonnen.level3.inclined.tall'
-  | 'wall.harkonnen.level3.door';
-export type PartCategory = 'foundation' | 'floor' | 'wall' | 'wall-corner' | 'wall-door';
+  | 'wall.harkonnen.level3.door'
+  | 'incline.harkonnen.level3.stairs'
+  | 'incline.harkonnen.level3.stairs.half'
+  | 'incline.harkonnen.level3.ramp'
+  | 'incline.harkonnen.level3.ramp.half';
+export type PartCategory = 'foundation' | 'floor' | 'wall' | 'wall-corner' | 'wall-door' | 'incline';
 /** Build-menu tab, mirroring the game's subcategories. */
 export type MenuCategory = 'structural' | 'walls' | 'wedge-walls' | 'roofs' | 'inclines' | 'special';
 export type OccupancyLayer = 'foundation' | 'wall-edge';
