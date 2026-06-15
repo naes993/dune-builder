@@ -605,11 +605,11 @@ const SettingsPanel = () => {
             className="mt-0.5"
           />
           <span>
-            <span className="font-semibold">Reverse scroll wheel</span>
+            <span className="font-semibold">Wheel zooms camera</span>
             <span className="block text-[10px] leading-4 text-white/45">
               {reverseScrollZoom
-                ? 'Wheel zooms the camera; hold Shift + Wheel to cycle pieces.'
-                : 'Wheel cycles pieces; hold Shift + Wheel to zoom (default).'}
+                ? 'Wheel zooms the camera; hold Shift + Wheel to cycle pieces (default).'
+                : 'Wheel cycles pieces; hold Shift + Wheel to zoom.'}
             </span>
           </span>
         </label>
@@ -682,6 +682,21 @@ const Toolbar = () => {
   // Debug + Admin are hidden until this Sega-Genesis-style code is entered.
   const unlockComboRef = useRef<string[]>([]);
 
+  // Cheat code: in Customize mode, tap the square Foundation 7× to unlock too.
+  const foundationTapsRef = useRef(0);
+  const handlePartClick = (partId: PartId) => {
+    setActivePartId(partId);
+    if (buildMode === 'customize' && partId === 'foundation.harkonnen.level3.square') {
+      foundationTapsRef.current += 1;
+      if (foundationTapsRef.current >= 7) {
+        foundationTapsRef.current = 0;
+        unlockControls();
+      }
+    } else {
+      foundationTapsRef.current = 0;
+    }
+  };
+
   useEffect(() => {
     const UNLOCK_COMBO = ['a', 'b', 'a', 'c', 'a', 'b', 'b'];
     const isComboPrefix = (keys: string[]) =>
@@ -746,52 +761,63 @@ const Toolbar = () => {
 
   return (
     <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center px-4 pointer-events-none">
-      <div className="pointer-events-auto flex max-w-[min(96vw,1280px)] flex-col items-center gap-2 rounded-lg border border-white/15 bg-black/75 px-3 py-3 text-white shadow-2xl backdrop-blur">
-        <div className="flex flex-wrap items-center justify-center gap-1">
-          <span className="mr-1 rounded bg-white/10 px-2 py-1 text-[10px] font-bold text-white/60">Q</span>
-          {MENU_TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`h-8 rounded px-3 text-xs font-bold tracking-wide transition ${
-                activeTab === tab ? 'bg-dune-gold text-black' : 'bg-white/5 text-white/60 hover:bg-white/15'
-              }`}
-            >
-              {TAB_LABELS[tab]}
-            </button>
-          ))}
-          <span className="ml-1 rounded bg-white/10 px-2 py-1 text-[10px] font-bold text-white/60">E</span>
+      <div className="pointer-events-auto flex w-[min(96vw,1280px)] flex-col gap-3 rounded-xl border border-white/15 bg-black/80 px-4 py-3 text-white shadow-2xl backdrop-blur">
+        <div className="flex items-center gap-2">
+          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-white/50">Q</span>
+          <div className="flex flex-1 flex-wrap items-center justify-center gap-1">
+            {MENU_TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`h-8 rounded-md px-3 text-xs font-bold tracking-wide transition ${
+                  activeTab === tab
+                    ? 'bg-dune-gold text-black shadow'
+                    : 'bg-white/5 text-white/60 hover:bg-white/15 hover:text-white'
+                }`}
+              >
+                {TAB_LABELS[tab]}
+              </button>
+            ))}
+          </div>
+          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-white/50">E</span>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {tabParts.length === 0 && (
+
+        <div className="flex min-h-[2.5rem] flex-wrap items-center justify-center gap-2 rounded-lg bg-white/[0.03] px-2 py-2">
+          {tabParts.length === 0 ? (
             <div className="px-4 py-2 text-xs italic text-white/40">No pieces in this category yet</div>
+          ) : (
+            tabParts.map((partId) => (
+              <button
+                key={partId}
+                onClick={() => handlePartClick(partId)}
+                className={`h-10 rounded-md px-4 text-sm font-semibold transition ${
+                  activePartId === partId
+                    ? 'bg-dune-gold text-black shadow'
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                {partLabel(partId)}
+              </button>
+            ))
           )}
-          {tabParts.map((partId) => (
-            <button
-              key={partId}
-              onClick={() => setActivePartId(partId)}
-              className={`h-10 rounded-md px-4 text-sm font-semibold transition ${
-                activePartId === partId ? 'bg-dune-gold text-black' : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
-            >
-              {partLabel(partId)}
-            </button>
-          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-white/10 pt-3">
           <button
             onClick={rotateActivePart}
-            className="h-10 rounded-md bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/20"
+            className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
           >
-            Rotate {Math.round((rotationY * 180) / Math.PI)} deg
+            Rotate {Math.round((rotationY * 180) / Math.PI)}°
           </button>
           <button
             onClick={clear}
-            className="h-10 rounded-md bg-red-950/70 px-4 text-sm font-semibold text-red-100 hover:bg-red-900"
+            className="h-9 rounded-md bg-red-950/70 px-3 text-sm font-semibold text-red-100 hover:bg-red-900"
           >
             Clear
           </button>
           {controlsUnlocked && (
             <>
-              <label className="flex h-10 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
+              <label className="flex h-9 items-center gap-2 rounded-md bg-white/10 px-3 text-sm font-semibold text-white">
                 <input
                   type="checkbox"
                   checked={debugVisuals}
@@ -802,17 +828,17 @@ const Toolbar = () => {
               </label>
               <button
                 onClick={toggleSettings}
-                className="h-10 rounded-md bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/20"
+                className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
               >
                 Admin
               </button>
             </>
           )}
-          <div className="ml-2 min-w-44 text-xs text-white/70">
-            <div>
-              {instances.length} placed · <span className="text-dune-gold">{MODE_LABELS[buildMode]}</span>
-            </div>
-            <div className={preview?.isValid === false ? 'text-red-300' : 'text-emerald-300'}>
+          <div className="ml-auto flex items-center gap-3 text-xs">
+            <span className="text-white/60">
+              {instances.length} placed · <span className="font-semibold text-dune-gold">{MODE_LABELS[buildMode]}</span>
+            </span>
+            <span className={preview?.isValid === false ? 'text-red-300' : 'text-emerald-300'}>
               {buildMode === 'demolish'
                 ? 'Click a piece to demolish'
                 : buildMode === 'replace'
@@ -826,10 +852,74 @@ const Toolbar = () => {
                         : preview?.placementMode === 'support-edge'
                           ? `Support edge${formatSnapChannel(preview.binding?.snapChannel) ? `: ${formatSnapChannel(preview.binding?.snapChannel)}` : ''}`
                           : 'Free placement'}
-            </div>
+            </span>
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+const CONTROL_ROWS: { keys: string; action: string }[] = [
+  { keys: 'Left Click', action: 'Apply current mode' },
+  { keys: 'Right Click', action: 'Cycle build modes' },
+  { keys: 'R', action: 'Rotate piece' },
+  { keys: 'Q / E', action: 'Switch categories' },
+  { keys: 'Wheel', action: 'Cycle pieces' },
+  { keys: 'Middle Click', action: 'Copy a piece' },
+  { keys: 'B', action: 'Toggle build menu' },
+  { keys: 'Middle-drag', action: 'Orbit' },
+  { keys: 'Left-drag', action: 'Pan' },
+];
+
+const ControlsPanel = ({ reverseScrollZoom }: { reverseScrollZoom: boolean }) => {
+  const [open, setOpen] = useState(false);
+
+  const rows = [
+    ...CONTROL_ROWS,
+    reverseScrollZoom
+      ? { keys: 'Wheel / Shift+Wheel', action: 'Zoom / cycle pieces' }
+      : { keys: 'Shift+Wheel', action: 'Zoom' },
+  ];
+
+  return (
+    <div className="pointer-events-auto absolute left-4 top-4 z-10 w-72 overflow-hidden rounded-lg border border-white/15 bg-black/70 text-white shadow-xl backdrop-blur">
+      <button
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition hover:bg-white/5"
+      >
+        <span className="text-sm font-bold uppercase tracking-wide text-dune-gold">V2 Placement Engine</span>
+        <svg
+          className={`h-4 w-4 shrink-0 text-white/60 transition-transform ${open ? 'rotate-180' : ''}`}
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M5 7.5 10 12.5 15 7.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="border-t border-white/10 px-4 py-3">
+          <div className="text-[11px] leading-4 text-white/60">
+            Real Harkonnen parts; the first placed piece establishes the build grid.
+          </div>
+          <dl className="mt-3 space-y-1.5">
+            {rows.map((row) => (
+              <div key={row.keys} className="flex items-baseline justify-between gap-3 text-xs">
+                <dt className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wide text-dune-gold/90">
+                  {row.keys}
+                </dt>
+                <dd className="text-right text-white/70">{row.action}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-4 text-white/45">
+            <div className="font-semibold text-white/60">{V2_BUILD.id}</div>
+            <div>{V2_BUILD.description}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -871,19 +961,7 @@ export const BuilderCanvas = () => {
           mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.ROTATE }}
         />
       </Canvas>
-      <div className="pointer-events-none absolute left-4 top-4 z-10 max-w-sm rounded-lg border border-white/15 bg-black/70 p-4 text-white shadow-xl backdrop-blur">
-        <div className="text-sm font-bold uppercase tracking-wide text-dune-gold">V2 Placement Engine</div>
-        <div className="mt-2 text-xs leading-5 text-white/70">
-          Real Harkonnen parts; the first placed piece establishes the build grid. Left Click applies the current
-          mode, Right Click cycles modes, R rotates, Q/E switch categories, Mouse Wheel cycles pieces, Middle Click
-          copies a piece, B toggles this menu. Middle-drag orbits, Left-drag pans,{' '}
-          {reverseScrollZoom ? 'Wheel zooms, Shift+Wheel cycles pieces' : 'Shift+Wheel zooms'}.
-        </div>
-        <div className="mt-3 border-t border-white/10 pt-3 text-[11px] leading-4 text-white/55">
-          <div className="font-semibold text-white/70">{V2_BUILD.id}</div>
-          <div>{V2_BUILD.description}</div>
-        </div>
-      </div>
+      <ControlsPanel reverseScrollZoom={reverseScrollZoom} />
       <PlacementDebugPanel />
       <BuildModePanel />
       <SettingsPanel />

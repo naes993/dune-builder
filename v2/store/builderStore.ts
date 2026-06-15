@@ -9,7 +9,7 @@ export type BuildMode = 'build' | 'replace' | 'customize' | 'demolish';
 export const BUILD_MODES: BuildMode[] = ['build', 'replace', 'customize', 'demolish'];
 
 export type MenuTab = 'all' | MenuCategory;
-export const MENU_TABS: MenuTab[] = ['all', 'structural', 'walls', 'wedge-walls', 'roofs', 'inclines', 'special'];
+export const MENU_TABS: MenuTab[] = ['structural', 'walls', 'wedge-walls', 'roofs', 'inclines', 'special', 'all'];
 
 export type CategoryOverrides = Partial<Record<PartId, MenuCategory>>;
 
@@ -25,10 +25,12 @@ const loadCategoryOverrides = (): CategoryOverrides => {
 };
 
 const loadReverseScrollZoom = (): boolean => {
+  // Default ON: the bare wheel zooms the camera (Shift+Wheel cycles pieces).
+  // Only an explicit opt-out persisted as 'false' restores the classic mapping.
   try {
-    return window.localStorage.getItem(REVERSE_SCROLL_ZOOM_STORAGE_KEY) === 'true';
+    return window.localStorage.getItem(REVERSE_SCROLL_ZOOM_STORAGE_KEY) !== 'false';
   } catch {
-    return false;
+    return true;
   }
 };
 
@@ -97,7 +99,7 @@ interface BuilderState {
 export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   instances: [],
   activePartId: 'foundation.harkonnen.level3.square',
-  activeTab: 'all',
+  activeTab: 'structural',
   buildMode: 'build',
   menuExpanded: true,
   settingsOpen: false,

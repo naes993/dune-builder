@@ -12,4 +12,8 @@ import { MenuCategory, PartId } from '../types';
  * (or hand it to the agent to commit). The next deploy makes it the default
  * for everyone.
  */
-export const CATEGORY_MASTER: Partial<Record<PartId, MenuCategory>> = {};
+export const CATEGORY_MASTER: Partial<Record<PartId, MenuCategory>> = {
+  // The flat floor and flat rooftop sit side by side under ROOFS in-game.
+  'floor.harkonnen.level3.square': 'roofs',
+  'floor.harkonnen.level3.wedge': 'roofs',
+};

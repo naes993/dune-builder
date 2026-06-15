@@ -1,5 +1,26 @@
 # V2 Changelog
 
+## v2-dev-0031 - 2026-06-15
+
+Wheel-zoom by default + a second unlock cheat code.
+
+- **Scroll wheel zooms by default.** `loadReverseScrollZoom` (`v2/store/builderStore.ts`) now defaults to ON — the bare wheel zooms the camera and Shift+Wheel cycles pieces. An explicit opt-out (persisted as `'false'`) restores the classic game-parity mapping. The Admin toggle is relabeled "Wheel zooms camera" (checked = default). This also largely sidesteps the parked Logitech M720 Shift+Wheel bug.
+- **Foundation cheat code.** In addition to the A,B,A,C,A,B,B button combo, Debug + Admin now unlock when, in **Customize** mode, you tap the square **Foundation** piece 7 times in a row (`handlePartClick` in `v2/scene/BuilderCanvas.tsx`). Tapping a different piece or leaving Customize resets the counter. Session-only, like the combo.
+
+## v2-dev-0030 - 2026-06-15
+
+Bake floor placements into the shipped master.
+
+- **`categoryMaster.ts`.** The flat floor (`floor.harkonnen.level3.square`) and wedge floor (`floor.harkonnen.level3.wedge`) now default to the ROOFS tab for every user, matching the in-game layout where the flat floor and flat rooftop sit side by side. Previously this lived only in local Admin (localStorage) edits.
+
+## v2-dev-0029 - 2026-06-15
+
+Build-menu polish + collapsible controls panel.
+
+- **Tab order.** `MENU_TABS` (`v2/store/builderStore.ts`) moves `all` to the end; the default `activeTab` is now `structural`, so the build menu opens on Structural for everyone instead of All.
+- **Menu layout.** The expanded build menu (`v2/scene/BuilderCanvas.tsx`) is now a fixed-width three-row card: tab bar (Q/E flanking), a recessed piece-picker strip, and an action row (Rotate/Clear/Debug/Admin) with the placed-count + status pushed to the right.
+- **Controls panel.** The top-left instructions paragraph is replaced by a collapsible `ControlsPanel` — a clickable header with a chevron that drops down a key/action list instead of a wall of prose.
+
 ## v2-dev-0028 - 2026-06-15
 
 Deploy hardening: obfuscated model delivery + gated Debug/Admin.
