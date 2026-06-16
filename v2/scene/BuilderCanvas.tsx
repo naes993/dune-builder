@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { PARTS } from '../registry/parts';
 import { solvePlacement } from '../engine/snapSolver';
@@ -24,6 +25,7 @@ import {
 import { PartId, PartInstance, PlacementCandidate, Transform2D } from '../types';
 import { V2_FOUNDATION_HEIGHT, V2_UNIT_SIZE } from '../constants';
 import { V2_BUILD } from '../version';
+import { baseDesignFilename, parseBaseDesign, serializeBaseDesign } from '../io/baseDesign';
 import { PartMesh } from './PartMesh';
 
 // Renders children with raycasting disabled on the whole subtree. Debug overlays
@@ -795,6 +797,145 @@ const ClaimPlannerGrid = () => {
   );
 };
 
+const ImportDesignModal = ({
+  onClose,
+  onImport,
+}: {
+  onClose: () => void;
+  onImport: (jsonText: string) => string;
+}) => {
+  const [jsonText, setJsonText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const applyImport = (text = jsonText) => {
+    try {
+      const message = onImport(text);
+      setError(null);
+      onClose();
+      return message;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not import that design.');
+      return null;
+    }
+  };
+
+  const importFile = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
+      setError('Drop a .json base design file.');
+      return;
+    }
+    const text = await file.text();
+    setJsonText(text);
+    applyImport(text);
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await importFile(file);
+    event.target.value = '';
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    setDragActive(false);
+  };
+
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      await importFile(file);
+      return;
+    }
+
+    const droppedText = event.dataTransfer.getData('text/plain');
+    if (droppedText.trim()) {
+      setJsonText(droppedText);
+      applyImport(droppedText);
+    }
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/55 px-4 backdrop-blur-sm">
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`w-[min(92vw,640px)] rounded-lg border p-4 text-white shadow-2xl transition ${
+          dragActive
+            ? 'border-dune-gold bg-dune-gold/10'
+            : 'border-white/15 bg-black/90'
+        }`}
+      >
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="text-sm font-bold uppercase tracking-wide text-dune-gold">Import Base JSON</div>
+          <button onClick={onClose} className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20">
+            Close
+          </button>
+        </div>
+        <div
+          className={`mb-3 rounded-md border border-dashed px-3 py-4 text-center text-xs transition ${
+            dragActive
+              ? 'border-dune-gold bg-dune-gold/15 text-dune-gold'
+              : 'border-white/20 bg-white/[0.03] text-white/55'
+          }`}
+        >
+          Drop a Dune Builder JSON file here, choose a file, or paste JSON below.
+        </div>
+        <textarea
+          value={jsonText}
+          onChange={(event) => setJsonText(event.target.value)}
+          spellCheck={false}
+          className="h-64 w-full resize-none rounded-md border border-white/10 bg-zinc-950 p-3 font-mono text-xs leading-5 text-white outline-none focus:border-dune-gold"
+          placeholder="{"
+        />
+        {error && (
+          <div className="mt-2 rounded border border-red-400/25 bg-red-950/50 px-3 py-2 text-xs text-red-100">
+            {error}
+          </div>
+        )}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => applyImport()}
+            className="h-9 rounded-md bg-dune-gold px-3 text-sm font-semibold text-black hover:bg-yellow-300"
+          >
+            Import Design
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
+          >
+            Choose File
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <div className="ml-auto text-xs text-white/45">Import replaces the current placed parts.</div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 const SettingsPanel = () => {
   const {
     categoryOverrides,
@@ -939,6 +1080,7 @@ const Toolbar = () => {
     cycleActivePart,
     cycleTab,
     debugVisuals,
+    importDesign,
     instances,
     menuExpanded,
     preview,
@@ -954,6 +1096,14 @@ const Toolbar = () => {
     unlockControls,
   } = useV2BuilderStore();
   const [claimPlannerOpen, setClaimPlannerOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [designStatus, setDesignStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!designStatus) return;
+    const timeout = window.setTimeout(() => setDesignStatus(null), 3500);
+    return () => window.clearTimeout(timeout);
+  }, [designStatus]);
 
   // Debug + Admin are hidden until this Sega-Genesis-style code is entered.
   const unlockComboRef = useRef<string[]>([]);
@@ -1023,6 +1173,26 @@ const Toolbar = () => {
 
   const tabParts = getTabParts(activeTab, categoryOverrides);
 
+  const handleExportDesign = () => {
+    const json = serializeBaseDesign(instances);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = baseDesignFilename();
+    link.click();
+    URL.revokeObjectURL(url);
+    setDesignStatus(`Exported ${instances.length} ${instances.length === 1 ? 'part' : 'parts'}`);
+  };
+
+  const handleImportDesign = (jsonText: string) => {
+    const parsed = parseBaseDesign(jsonText);
+    importDesign(parsed.instances);
+    const message = `Imported ${parsed.instances.length} ${parsed.instances.length === 1 ? 'part' : 'parts'}`;
+    setDesignStatus(message);
+    return message;
+  };
+
   if (!menuExpanded) {
     return (
       <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center px-4 pointer-events-none">
@@ -1038,6 +1208,12 @@ const Toolbar = () => {
   return (
     <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center px-4 pointer-events-none">
       <div className="pointer-events-auto flex w-[min(96vw,1280px)] flex-col gap-3 rounded-xl border border-white/15 bg-black/80 px-4 py-3 text-white shadow-2xl backdrop-blur">
+        {importModalOpen && (
+          <ImportDesignModal
+            onClose={() => setImportModalOpen(false)}
+            onImport={handleImportDesign}
+          />
+        )}
         <div className="flex items-center gap-2">
           <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-white/50">Q</span>
           <div className="flex flex-1 flex-wrap items-center justify-center gap-1">
@@ -1093,6 +1269,18 @@ const Toolbar = () => {
           >
             Clear
           </button>
+          <button
+            onClick={handleExportDesign}
+            className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
+          >
+            Export JSON
+          </button>
+          <button
+            onClick={() => setImportModalOpen(true)}
+            className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
+          >
+            Import JSON
+          </button>
           <label className="flex h-9 items-center gap-2 rounded-md bg-cyan-950/60 px-3 text-sm font-semibold text-cyan-100">
             <input
               type="checkbox"
@@ -1136,7 +1324,8 @@ const Toolbar = () => {
               {instances.length} placed · <span className="font-semibold text-dune-gold">{MODE_LABELS[buildMode]}</span>
             </span>
             <span className={preview?.isValid === false ? 'text-red-300' : 'text-emerald-300'}>
-              {buildMode === 'demolish'
+              {designStatus ??
+                (buildMode === 'demolish'
                 ? 'Click a piece to demolish'
                 : buildMode === 'replace'
                   ? 'Click a wall piece to swap it'
@@ -1148,7 +1337,7 @@ const Toolbar = () => {
                         ? 'Wall run'
                         : preview?.placementMode === 'support-edge'
                           ? `Support edge${formatSnapChannel(preview.binding?.snapChannel) ? `: ${formatSnapChannel(preview.binding?.snapChannel)}` : ''}`
-                          : 'Free placement'}
+                          : 'Free placement')}
             </span>
           </div>
         </div>

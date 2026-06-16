@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0035 - 2026-06-16
+
+Base design import/export.
+
+- **Export JSON.** Added a toolbar action that downloads the current placed parts as a versioned `dune-builder-v2.base-design` JSON document. The export includes part IDs, transforms, instance IDs, and snap/occupancy bindings so shared starter bases keep their build relationships intact.
+- **Import JSON.** Added an Import Base JSON modal with drag-and-drop, file-pick, and paste paths. Import validates the schema/version, rejects unknown part IDs and invalid transforms, then replaces the current placed parts with the imported design.
+- **Dedicated schema module.** New `v2/io/baseDesign.ts` owns serialization, filename generation, and defensive parsing so the UI is not responsible for trusting arbitrary shared files.
+- **Scope.** Claim overlay planning remains local-only and is intentionally not included in base design exports.
+
 ## v2-dev-0034 - 2026-06-16
 
 Claim overlay planner.

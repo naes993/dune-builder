@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0034` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
+Current V2 build: `v2-dev-0035` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
 
-Description: Claim overlay planner — optional visual-only 10x10 land-claim chunks with horizontal and vertical staking controls. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
+Description: Base design import/export — share placed parts through versioned JSON files. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
 
 ## Checkpoint Summary
 
@@ -35,6 +35,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - `v2/store/builderStore.ts`: Builder state for selected part, placed instances, preview, rotation, and debug visuals.
 - `v2/engine/*`: Anchor transforms, snap solving, placement rules, and occupancy validation.
 - `v2/engine/snapRelationships.ts`: Snap channel compatibility helpers.
+- `v2/io/baseDesign.ts`: Versioned JSON export/import schema and parser.
 - `v2/scene/*`: React Three Fiber scene, UI controls, debug helpers, and GLB visual wrappers.
 
 ## Implemented Features
@@ -52,6 +53,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - All part GLBs preloaded behind a Suspense boundary, so first-time part selection never freezes the preview.
 - Separate Debug helper (observe-only — never affects placement).
 - Visual-only claim overlay with 10x10 chunks, up to 6 horizontal staking units, and one vertical staking tier; build placement ignores it.
+- Export/import placed parts as versioned JSON for sharing and starter bases. Claim overlay settings stay local-only and are not exported.
 - Harkonnen asset audit and manifest; committed master category organization with Admin overrides.
 
 ## Controls (game parity)
@@ -64,6 +66,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - **Middle Click** — copy a hovered piece (makes it the active piece).
 - **Middle-drag** — orbit camera; **Left-drag** — pan camera.
 - **B** — collapse/expand the build menu.
+- **Export JSON / Import JSON** — download or load a shared base design by dropping, choosing, or pasting JSON.
 - **Z / C** — reserved for building-set cycling once multiple sets exist.
 
 ## Placement Testing
@@ -84,6 +87,7 @@ Expected smoke checks:
 - Foundation placement near a foundation edge snaps flush at ground level (structural channel).
 - Wall continuation near a wall endpoint prefers the wall-run target and preserves elevation.
 - Pressing R cycles the preview orientation; snapped previews keep the snap while honoring the nearest valid orientation.
+- Export JSON downloads a `dune-base-*.json`; importing it replaces the current placed parts and restores the same layout.
 - Debug visuals work independently.
 
 ## Known Limitations
@@ -92,7 +96,7 @@ Expected smoke checks:
 - Foundations do not stack on foundations yet.
 - The wedge-wall facing tint is still a rectangle (overshoots the sloped top).
 - There is no final Part Builder yet.
-- There is no final V2 save/export system yet.
+- There is no autosave/design-library UI yet; manual JSON export/import is the current sharing path.
 - There is no full roof, stair, or curve system yet (GLBs audited, not registered).
 
 ## Next Recommended Task

@@ -80,11 +80,12 @@ Snap channels (`v2/engine/snapRelationships.ts`):
 
 - **Buildable parts:** 32 of the 92 audited GLBs are wired into `v2/registry/parts.ts` — foundations + floors (square/wedge), the full wall family (straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, door assembly), and **inclines** (straight stairs/ramps + half versions). Roofs, stair/ramp **corners**, pillars, railings, round corners, etc. are audited but not yet registered.
 - **Claim overlay planner:** optional visual-only claim borders render 10x10 floor-tile chunks with up to 6 horizontal staking units and one vertical staking tier across the whole claim footprint. The overlay is saved locally but stays outside `v2/engine/` placement logic; build pieces do not snap to it or collide with it.
+- **Base design JSON:** placed parts can be exported/imported as versioned `dune-builder-v2.base-design` JSON (`v2/io/baseDesign.ts`). Import preserves instance IDs and snap bindings, replaces the current placed parts, and intentionally does not include local-only claim overlay settings.
 - **Inclines:** an incline's high edge mates with a foundation/floor top edge (`floor-support`) and descends outward to the ground; the high edge also supports the upper landing. Inclines also snap to each other via the `incline-edge` channel — side-by-side (inclined side edges) and tiled slopes (high↔low edges). Still roadmap: corner variants and a two-end (bottom+top) solve. See `inclineVariant`/`inclineAnchors` in `parts.ts`.
 - Stacked snap targets at the same XZ are disambiguated by cursor height plus the `TopSnapCatcher`; there is still no *explicit* story/level selector (e.g. a modifier key), and right at the foundation-top height the ground/top choice can be a toss-up since the cursor can't go higher than the top.
 - Foundations do not stack on foundations yet.
 - No roof or curve system yet (GLBs exist and are audited). Stairs/ramps have a v1 (straight + half); corners and two-end snapping pending.
-- No save/export system yet.
+- No autosave or design-library UI yet; manual JSON export/import is the current sharing path.
 - Wedge-wall facing tint still renders as a rectangle (overshoots the sloped top) — see Parked Items.
 
 Public-facing roadmap + known issues live in `ROADMAP.md` (keep it in sync with this section).

@@ -201,6 +201,7 @@ interface BuilderState {
   toggleDebugVisuals: () => void;
   unlockControls: () => void;
   placePreview: () => void;
+  importDesign: (instances: PartInstance[]) => void;
   demolishInstance: (instanceId: string) => void;
   replaceInstance: (instanceId: string) => void;
   copyPiece: (instanceId: string) => void;
@@ -358,6 +359,13 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
         },
       ],
     }));
+  },
+  importDesign: (instances) => {
+    set({
+      instances,
+      preview: null,
+      hoveredInstanceId: null,
+    });
   },
   demolishInstance: (instanceId) => {
     set((state) => ({

@@ -1,5 +1,5 @@
 export const V2_BUILD = {
-  id: 'v2-dev-0034',
+  id: 'v2-dev-0035',
   date: '2026-06-16',
-  description: 'Claim overlay planner: optional visual-only 10x10 land-claim chunks with up to 6 horizontal staking units and one vertical staking tier, saved locally and ignored by build placement.',
+  description: 'Base design sharing: export placed parts to a versioned JSON file and import dropped, chosen, or pasted JSON designs back into the builder, preserving snap bindings for shareable starter bases.',
 } as const;
