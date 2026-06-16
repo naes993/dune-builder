@@ -18,9 +18,31 @@ export type CategoryOverrides = Partial<Record<PartId, MenuCategory>>;
 export type GroundStyle = 'flat' | 'gradient' | 'gradient-focused' | 'grain';
 export const GROUND_STYLES: GroundStyle[] = ['flat', 'gradient', 'gradient-focused', 'grain'];
 
+export interface ClaimChunk {
+  x: number;
+  z: number;
+}
+
+export interface ClaimSettings {
+  visible: boolean;
+  verticalStaking: boolean;
+  chunks: ClaimChunk[];
+}
+
+export const MAX_HORIZONTAL_STAKING_UNITS = 6;
+export const MAX_CLAIM_CHUNKS = 1 + MAX_HORIZONTAL_STAKING_UNITS;
+
 const OVERRIDES_STORAGE_KEY = 'v2.categoryOverrides';
 const REVERSE_SCROLL_ZOOM_STORAGE_KEY = 'v2.reverseScrollZoom';
 const GROUND_STYLE_STORAGE_KEY = 'v2.groundStyle';
+const CLAIM_SETTINGS_STORAGE_KEY = 'v2.claimSettings';
+
+const BASE_CLAIM_CHUNK: ClaimChunk = { x: 0, z: 0 };
+const DEFAULT_CLAIM_SETTINGS: ClaimSettings = {
+  visible: false,
+  verticalStaking: false,
+  chunks: [BASE_CLAIM_CHUNK],
+};
 
 const loadCategoryOverrides = (): CategoryOverrides => {
   try {
@@ -46,6 +68,72 @@ const loadGroundStyle = (): GroundStyle => {
     return GROUND_STYLES.includes(stored as GroundStyle) ? (stored as GroundStyle) : 'gradient';
   } catch {
     return 'gradient';
+  }
+};
+
+const claimKey = (chunk: ClaimChunk) => `${chunk.x},${chunk.z}`;
+
+const areAdjacentClaimChunks = (a: ClaimChunk, b: ClaimChunk) => {
+  return Math.abs(a.x - b.x) + Math.abs(a.z - b.z) === 1;
+};
+
+const areClaimChunksConnected = (chunks: ClaimChunk[]) => {
+  if (chunks.length === 0) return false;
+  const chunkKeys = new Set(chunks.map(claimKey));
+  const visited = new Set<string>();
+  const queue = [chunks[0]];
+
+  while (queue.length) {
+    const chunk = queue.shift()!;
+    const key = claimKey(chunk);
+    if (visited.has(key)) continue;
+    visited.add(key);
+
+    for (const neighbor of [
+      { x: chunk.x + 1, z: chunk.z },
+      { x: chunk.x - 1, z: chunk.z },
+      { x: chunk.x, z: chunk.z + 1 },
+      { x: chunk.x, z: chunk.z - 1 },
+    ]) {
+      if (chunkKeys.has(claimKey(neighbor)) && !visited.has(claimKey(neighbor))) {
+        queue.push(neighbor);
+      }
+    }
+  }
+
+  return visited.size === chunkKeys.size;
+};
+
+const normalizeClaimSettings = (settings: Partial<ClaimSettings> | null | undefined): ClaimSettings => {
+  const chunksByKey = new Map<string, ClaimChunk>();
+  chunksByKey.set(claimKey(BASE_CLAIM_CHUNK), BASE_CLAIM_CHUNK);
+
+  for (const chunk of settings?.chunks ?? []) {
+    if (!Number.isInteger(chunk.x) || !Number.isInteger(chunk.z)) continue;
+    chunksByKey.set(claimKey(chunk), { x: chunk.x, z: chunk.z });
+    if (chunksByKey.size >= MAX_CLAIM_CHUNKS) break;
+  }
+
+  return {
+    visible: Boolean(settings?.visible),
+    verticalStaking: Boolean(settings?.verticalStaking),
+    chunks: Array.from(chunksByKey.values()),
+  };
+};
+
+const loadClaimSettings = (): ClaimSettings => {
+  try {
+    return normalizeClaimSettings(JSON.parse(window.localStorage.getItem(CLAIM_SETTINGS_STORAGE_KEY) ?? 'null'));
+  } catch {
+    return DEFAULT_CLAIM_SETTINGS;
+  }
+};
+
+const persistClaimSettings = (settings: ClaimSettings) => {
+  try {
+    window.localStorage.setItem(CLAIM_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    // localStorage unavailable; setting stays session-only.
   }
 };
 
@@ -84,6 +172,7 @@ interface BuilderState {
   settingsOpen: boolean;
   reverseScrollZoom: boolean;
   groundStyle: GroundStyle;
+  claimSettings: ClaimSettings;
   categoryOverrides: CategoryOverrides;
   hoveredInstanceId: string | null;
   debugVisuals: boolean;
@@ -96,6 +185,11 @@ interface BuilderState {
   toggleSettings: () => void;
   toggleReverseScrollZoom: () => void;
   setGroundStyle: (style: GroundStyle) => void;
+  toggleClaimOverlay: () => void;
+  toggleClaimVerticalStaking: () => void;
+  addClaimChunk: (chunk: ClaimChunk) => void;
+  removeClaimChunk: (chunk: ClaimChunk) => void;
+  resetClaim: () => void;
   setCategoryOverride: (partId: PartId, category: MenuCategory | null) => void;
   cycleTab: (direction: 1 | -1) => void;
   cycleActivePart: (direction: 1 | -1) => void;
@@ -122,6 +216,7 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   settingsOpen: false,
   reverseScrollZoom: loadReverseScrollZoom(),
   groundStyle: loadGroundStyle(),
+  claimSettings: loadClaimSettings(),
   categoryOverrides: loadCategoryOverrides(),
   hoveredInstanceId: null,
   debugVisuals: false,
@@ -160,6 +255,48 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
       // localStorage unavailable; setting stays session-only.
     }
     set({ groundStyle: style });
+  },
+  toggleClaimOverlay: () => {
+    const next = { ...get().claimSettings, visible: !get().claimSettings.visible };
+    persistClaimSettings(next);
+    set({ claimSettings: next });
+  },
+  toggleClaimVerticalStaking: () => {
+    const next = { ...get().claimSettings, verticalStaking: !get().claimSettings.verticalStaking };
+    persistClaimSettings(next);
+    set({ claimSettings: next });
+  },
+  addClaimChunk: (chunk) => {
+    const current = get().claimSettings;
+    if (current.chunks.length >= MAX_CLAIM_CHUNKS) return;
+    if (current.chunks.some((entry) => entry.x === chunk.x && entry.z === chunk.z)) return;
+    if (!current.chunks.some((entry) => areAdjacentClaimChunks(entry, chunk))) return;
+
+    const next = normalizeClaimSettings({
+      ...current,
+      chunks: [...current.chunks, chunk],
+    });
+    persistClaimSettings(next);
+    set({ claimSettings: next });
+  },
+  removeClaimChunk: (chunk) => {
+    if (chunk.x === BASE_CLAIM_CHUNK.x && chunk.z === BASE_CLAIM_CHUNK.z) return;
+
+    const current = get().claimSettings;
+    const nextChunks = current.chunks.filter((entry) => entry.x !== chunk.x || entry.z !== chunk.z);
+    if (!areClaimChunksConnected(nextChunks)) return;
+
+    const next = normalizeClaimSettings({
+      ...current,
+      chunks: nextChunks,
+    });
+    persistClaimSettings(next);
+    set({ claimSettings: next });
+  },
+  resetClaim: () => {
+    const next = { ...DEFAULT_CLAIM_SETTINGS };
+    persistClaimSettings(next);
+    set({ claimSettings: next });
   },
   setCategoryOverride: (partId, category) => {
     const overrides = { ...get().categoryOverrides };

@@ -5,7 +5,7 @@
 >   deploy procedure.
 > - **Current state & plans:** `CLAUDE.md` (architecture + conventions), `ROADMAP.md`
 >   (shipped / planned / known issues), `v2/CHANGELOG.md` (per-build history).
-> - Current checkpoint: `v2-dev-0033` on branch `v2-builder-engine-prototype`.
+> - Current checkpoint: `v2-dev-0034` on branch `v2-builder-engine-prototype`.
 >   **Authoritative source for the current build is `v2/version.ts` and the _top_
 >   entry of `v2/CHANGELOG.md`** — if this line ever disagrees, trust those. Do not
 >   read an old changelog entry as the current version.

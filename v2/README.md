@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0033` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
+Current V2 build: `v2-dev-0034` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
 
-Description: Incline-to-incline snapping — stairs/ramps snap side-by-side into wide staircases and tile edge-to-edge into sloped roofs/ceilings. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
+Description: Claim overlay planner — optional visual-only 10x10 land-claim chunks with horizontal and vertical staking controls. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
 
 ## Checkpoint Summary
 
@@ -51,6 +51,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - R rotates the preview, including snapped previews (rotation-preference tie-break in the solver); flips facing in place when snapped.
 - All part GLBs preloaded behind a Suspense boundary, so first-time part selection never freezes the preview.
 - Separate Debug helper (observe-only — never affects placement).
+- Visual-only claim overlay with 10x10 chunks, up to 6 horizontal staking units, and one vertical staking tier; build placement ignores it.
 - Harkonnen asset audit and manifest; committed master category organization with Admin overrides.
 
 ## Controls (game parity)

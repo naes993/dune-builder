@@ -9,7 +9,7 @@ This page tracks what's done, what's being worked on, what's planned, and the
 known issues. It's updated as the tool evolves; the detailed per-build history
 lives in [`v2/CHANGELOG.md`](v2/CHANGELOG.md).
 
-_Last updated: 2026-06-15 (build `v2-dev-0033`)._
+_Last updated: 2026-06-16 (build `v2-dev-0034`)._
 
 ---
 
@@ -32,6 +32,10 @@ _Last updated: 2026-06-15 (build `v2-dev-0033`)._
   snaps; selecting a new piece never stalls the preview.
 - **Build menu** — category tabs, piece cycling, and an Admin panel for
   organizing pieces (incl. a "Reverse scroll wheel" control option).
+- **Claim overlay planner** — optional visual-only 10x10 land-claim chunks,
+  up to 6 horizontal staking units, and one vertical staking tier across the
+  whole claim footprint. The overlay is saved locally and never affects build
+  snapping or placement.
 
 ## 🚧 In progress
 

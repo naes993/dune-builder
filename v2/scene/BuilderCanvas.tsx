@@ -9,8 +9,11 @@ import { getWorldFootprint } from '../engine/occupancy';
 import {
   BUILD_MODES,
   BuildMode,
+  ClaimChunk,
   GROUND_STYLES,
   GroundStyle,
+  MAX_CLAIM_CHUNKS,
+  MAX_HORIZONTAL_STAKING_UNITS,
   MENU_TABS,
   MenuTab,
   getDefaultPartCategory,
@@ -19,7 +22,7 @@ import {
   useV2BuilderStore,
 } from '../store/builderStore';
 import { PartId, PartInstance, PlacementCandidate, Transform2D } from '../types';
-import { V2_FOUNDATION_HEIGHT } from '../constants';
+import { V2_FOUNDATION_HEIGHT, V2_UNIT_SIZE } from '../constants';
 import { V2_BUILD } from '../version';
 import { PartMesh } from './PartMesh';
 
@@ -292,6 +295,79 @@ const TopSnapCatcher = ({ instance }: { instance: PartInstance }) => {
   );
 };
 
+const CLAIM_CHUNK_SIZE = V2_UNIT_SIZE * 10;
+const CLAIM_TIER_HEIGHT = V2_FOUNDATION_HEIGHT * 6;
+const CLAIM_COLOR = '#24d8d8';
+
+const ClaimBox = ({
+  chunk,
+  height,
+  showTierSeam,
+}: {
+  chunk: ClaimChunk;
+  height: number;
+  showTierSeam: boolean;
+}) => {
+  const centerX = chunk.x * CLAIM_CHUNK_SIZE;
+  const centerZ = chunk.z * CLAIM_CHUNK_SIZE;
+  const seamPoints = [
+    -CLAIM_CHUNK_SIZE / 2, CLAIM_TIER_HEIGHT - height / 2, -CLAIM_CHUNK_SIZE / 2,
+    CLAIM_CHUNK_SIZE / 2, CLAIM_TIER_HEIGHT - height / 2, -CLAIM_CHUNK_SIZE / 2,
+    CLAIM_CHUNK_SIZE / 2, CLAIM_TIER_HEIGHT - height / 2, CLAIM_CHUNK_SIZE / 2,
+    -CLAIM_CHUNK_SIZE / 2, CLAIM_TIER_HEIGHT - height / 2, CLAIM_CHUNK_SIZE / 2,
+  ];
+
+  return (
+    <group position={[centerX, height / 2, centerZ]}>
+      <mesh>
+        <boxGeometry args={[CLAIM_CHUNK_SIZE, height, CLAIM_CHUNK_SIZE]} />
+        <meshBasicMaterial
+          color={CLAIM_COLOR}
+          transparent
+          opacity={0.075}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <lineSegments>
+        <edgesGeometry args={[new THREE.BoxGeometry(CLAIM_CHUNK_SIZE, height, CLAIM_CHUNK_SIZE)]} />
+        <lineBasicMaterial color={CLAIM_COLOR} transparent opacity={0.42} />
+      </lineSegments>
+      {showTierSeam && (
+        <lineLoop>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              args={[new Float32Array(seamPoints), 3]}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial color={CLAIM_COLOR} transparent opacity={0.28} />
+        </lineLoop>
+      )}
+    </group>
+  );
+};
+
+const ClaimOverlay = () => {
+  const claimSettings = useV2BuilderStore((state) => state.claimSettings);
+  if (!claimSettings.visible) return null;
+
+  const height = CLAIM_TIER_HEIGHT * (claimSettings.verticalStaking ? 2 : 1);
+
+  return (
+    <NonRaycastableGroup>
+      {claimSettings.chunks.map((chunk) => (
+        <ClaimBox
+          key={`${chunk.x},${chunk.z}`}
+          chunk={chunk}
+          height={height}
+          showTierSeam={claimSettings.verticalStaking}
+        />
+      ))}
+    </NonRaycastableGroup>
+  );
+};
+
 const formatSnapChannel = (channel?: string) => {
   if (channel === 'foundation-structure') return 'Structural';
   if (channel === 'floor-support') return 'Floor';
@@ -446,6 +522,7 @@ const SceneContents = () => {
           roughness={0.95}
         />
       </mesh>
+      <ClaimOverlay />
       {/* Part GLBs load inside a Suspense boundary so a first-time load suspends
           only the meshes — never the ground plane above, which owns the pointer
           handlers that drive the placement cursor. (GLBs are also preloaded in
@@ -600,6 +677,124 @@ const BuildModePanel = () => {
   );
 };
 
+const claimCellKey = (chunk: ClaimChunk) => `${chunk.x},${chunk.z}`;
+
+const claimNeighbors = (chunk: ClaimChunk): ClaimChunk[] => [
+  { x: chunk.x, z: chunk.z - 1 },
+  { x: chunk.x + 1, z: chunk.z },
+  { x: chunk.x, z: chunk.z + 1 },
+  { x: chunk.x - 1, z: chunk.z },
+];
+
+const ClaimPlannerGrid = () => {
+  const {
+    addClaimChunk,
+    claimSettings,
+    removeClaimChunk,
+    resetClaim,
+    toggleClaimVerticalStaking,
+  } = useV2BuilderStore();
+  const existingKeys = new Set(claimSettings.chunks.map(claimCellKey));
+  const candidateByKey = new Map<string, ClaimChunk>();
+
+  for (const chunk of claimSettings.chunks) {
+    for (const neighbor of claimNeighbors(chunk)) {
+      const key = claimCellKey(neighbor);
+      if (!existingKeys.has(key)) candidateByKey.set(key, neighbor);
+    }
+  }
+
+  const cells = [...claimSettings.chunks, ...candidateByKey.values()];
+  const minX = Math.min(...cells.map((chunk) => chunk.x));
+  const maxX = Math.max(...cells.map((chunk) => chunk.x));
+  const minZ = Math.min(...cells.map((chunk) => chunk.z));
+  const maxZ = Math.max(...cells.map((chunk) => chunk.z));
+  const width = maxX - minX + 1;
+  const horizontalCount = claimSettings.chunks.length - 1;
+  const atHorizontalLimit = claimSettings.chunks.length >= MAX_CLAIM_CHUNKS;
+  const totalHeightModules = claimSettings.verticalStaking ? 12 : 6;
+  const gridCells: ClaimChunk[] = [];
+
+  for (let z = minZ; z <= maxZ; z += 1) {
+    for (let x = minX; x <= maxX; x += 1) {
+      gridCells.push({ x, z });
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-cyan-300/15 bg-cyan-950/20 px-3 py-2">
+      <div className="flex items-center gap-3">
+        <div
+          className="grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${width}, minmax(0, 1.75rem))` }}
+        >
+          {gridCells.map((chunk) => {
+            const key = claimCellKey(chunk);
+            const isExisting = existingKeys.has(key);
+            const isBase = chunk.x === 0 && chunk.z === 0;
+            const isCandidate = candidateByKey.has(key);
+            const disabled = !isExisting && (!isCandidate || atHorizontalLimit);
+            const label = isBase ? 'B' : isExisting ? '#' : isCandidate ? '+' : '';
+
+            return (
+              <button
+                key={key}
+                onClick={() => (isExisting ? removeClaimChunk(chunk) : addClaimChunk(chunk))}
+                disabled={disabled || isBase}
+                title={
+                  isBase
+                    ? 'Base 10x10 claim'
+                    : isExisting
+                      ? 'Remove staking grid'
+                      : isCandidate
+                        ? 'Add staking grid'
+                        : undefined
+                }
+                className={`h-7 w-7 rounded border text-[11px] font-black transition ${
+                  isBase
+                    ? 'border-cyan-200 bg-cyan-200 text-black'
+                    : isExisting
+                      ? 'border-cyan-300/70 bg-cyan-300/25 text-cyan-100 hover:bg-cyan-300/40'
+                      : isCandidate && !atHorizontalLimit
+                        ? 'border-dashed border-cyan-300/35 bg-white/5 text-cyan-200 hover:bg-cyan-300/20'
+                        : 'border-transparent text-transparent'
+                }`}
+                style={{ gridColumn: chunk.x - minX + 1, gridRow: chunk.z - minZ + 1 }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="text-[11px] leading-4 text-white/55">
+          <div className="font-semibold text-cyan-100">Claim border</div>
+          <div>
+            {horizontalCount}/{MAX_HORIZONTAL_STAKING_UNITS} staking · {totalHeightModules} high
+          </div>
+          <div className="text-white/35">Each block is 10x10 floor tiles.</div>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex h-8 items-center gap-2 rounded-md bg-white/10 px-2 text-xs font-semibold text-white">
+          <input
+            type="checkbox"
+            checked={claimSettings.verticalStaking}
+            onChange={toggleClaimVerticalStaking}
+            className="h-4 w-4 accent-cyan-300"
+          />
+          Vertical
+        </label>
+        <button
+          onClick={resetClaim}
+          className="h-8 rounded-md bg-white/10 px-2 text-xs font-semibold text-white hover:bg-white/20"
+        >
+          Reset
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const SettingsPanel = () => {
   const {
     categoryOverrides,
@@ -738,6 +933,7 @@ const Toolbar = () => {
     activeTab,
     buildMode,
     categoryOverrides,
+    claimSettings,
     clear,
     controlsUnlocked,
     cycleActivePart,
@@ -752,10 +948,12 @@ const Toolbar = () => {
     setActivePartId,
     setActiveTab,
     toggleDebugVisuals,
+    toggleClaimOverlay,
     toggleMenuExpanded,
     toggleSettings,
     unlockControls,
   } = useV2BuilderStore();
+  const [claimPlannerOpen, setClaimPlannerOpen] = useState(false);
 
   // Debug + Admin are hidden until this Sega-Genesis-style code is entered.
   const unlockComboRef = useRef<string[]>([]);
@@ -880,6 +1078,8 @@ const Toolbar = () => {
           )}
         </div>
 
+        {claimPlannerOpen && <ClaimPlannerGrid />}
+
         <div className="flex flex-wrap items-center gap-2 border-t border-white/10 pt-3">
           <button
             onClick={rotateActivePart}
@@ -892,6 +1092,25 @@ const Toolbar = () => {
             className="h-9 rounded-md bg-red-950/70 px-3 text-sm font-semibold text-red-100 hover:bg-red-900"
           >
             Clear
+          </button>
+          <label className="flex h-9 items-center gap-2 rounded-md bg-cyan-950/60 px-3 text-sm font-semibold text-cyan-100">
+            <input
+              type="checkbox"
+              checked={claimSettings.visible}
+              onChange={toggleClaimOverlay}
+              className="h-4 w-4 accent-cyan-300"
+            />
+            Claim
+          </label>
+          <button
+            onClick={() => setClaimPlannerOpen((value) => !value)}
+            className={`h-9 rounded-md px-3 text-sm font-semibold transition ${
+              claimPlannerOpen
+                ? 'bg-cyan-300 text-black'
+                : 'bg-white/10 text-white hover:bg-white/20'
+            }`}
+          >
+            Plan Claim
           </button>
           {controlsUnlocked && (
             <>

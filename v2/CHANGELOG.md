@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0034 - 2026-06-16
+
+Claim overlay planner.
+
+- **Visual-only land claim border.** Added an optional claim overlay that renders translucent cyan `10 x 10` chunks, sized from the real floor/foundation unit (`10 * V2_UNIT_SIZE`) and one height tier of `6 * V2_FOUNDATION_HEIGHT`. It is reference-only: it is rendered through `NonRaycastableGroup` and is not read by `solvePlacement`, occupancy, or rules, so build pieces do not snap to it or collide with it.
+- **Horizontal staking planner.** The build menu now has a Claim toggle and a Plan Claim panel. The base claim chunk is fixed at the reference origin; clicking adjacent `+` cells adds staking grids that snap only to existing claim chunks. The cap is one base claim plus **6** horizontal staking units.
+- **Vertical staking planner.** A single Vertical checkbox adds one more 6-high tier across the entire current horizontal claim footprint, matching the game behavior where the vertical extension affects all normal claim chunks.
+- **Saved locally.** Claim visibility, chunk positions, and the vertical staking toggle persist in `localStorage` (`v2.claimSettings`) for planning continuity, but are not part of build export.
+
 ## v2-dev-0033 - 2026-06-15
 
 Performance: kill per-frame churn + on-demand rendering.
