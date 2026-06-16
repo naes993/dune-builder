@@ -9,7 +9,7 @@ This page tracks what's done, what's being worked on, what's planned, and the
 known issues. It's updated as the tool evolves; the detailed per-build history
 lives in [`v2/CHANGELOG.md`](v2/CHANGELOG.md).
 
-_Last updated: 2026-06-14 (build `v2-dev-0025`)._
+_Last updated: 2026-06-15 (build `v2-dev-0033`)._
 
 ---
 

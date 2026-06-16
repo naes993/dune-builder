@@ -1,6 +1,6 @@
 # Dune Builder
 
-This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0027`.
+This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0033` (authoritative source: `v2/version.ts` and the top of `v2/CHANGELOG.md`).
 
 > **Deploying / uploading this build?** Read [`HANDOFF.md`](HANDOFF.md) first — the game-asset `.glb` files are local-only, so a plain git-connected deploy produces a site with **no building models**. A local `npm run build` (which copies the GLBs into `dist/`) followed by a direct upload is the only correct path.
 

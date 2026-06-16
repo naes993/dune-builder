@@ -1,7 +1,8 @@
 # Handoff: Deploy the V2 Base Builder
 
 Audience: any model/agent (Codex etc.) picking this up to publish the V2 builder.
-State as of 2026-06-14, checkpoint `v2-dev-0027`, branch `v2-builder-engine-prototype`.
+State as of 2026-06-15, checkpoint `v2-dev-0033`, branch `v2-builder-engine-prototype`.
+(Authoritative current build: `v2/version.ts` + the top of `v2/CHANGELOG.md`.)
 
 > If you are an agent reading `AGENTS.md`, this file (`HANDOFF.md`) is the deploy
 > procedure; `CLAUDE.md` + `ROADMAP.md` describe current state and plans.

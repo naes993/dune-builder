@@ -1,6 +1,6 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0027`
+Current V2 build: `v2-dev-0033` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
 
 Description: Incline-to-incline snapping — stairs/ramps snap side-by-side into wide staircases and tile edge-to-edge into sloped roofs/ceilings. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
 
