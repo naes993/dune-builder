@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, ThreeEvent, useFrame } from '@react-three/fiber';
+import { Canvas, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { PARTS } from '../registry/parts';
@@ -331,7 +331,7 @@ const createGroundTexture = (style: GroundStyle): THREE.Texture | null => {
     const image = ctx.getImageData(0, 0, size, size);
     const data = image.data;
     for (let i = 0; i < data.length; i += 4) {
-      const n = (Math.random() - 0.5) * 26; // subtle ±13 luminance jitter
+      const n = (Math.random() - 0.5) * 14; // gentle ±7 luminance jitter (toned down)
       data[i] += n;
       data[i + 1] += n;
       data[i + 2] += n;
@@ -429,19 +429,6 @@ const SceneContents = () => {
       })
     );
   }, [activePartId, instances, rotationY, setPreview]);
-
-  useFrame(() => {
-    if (!preview && groundRef.current) {
-      setPreview(
-        solvePlacement({
-          cursor: [0, 0, 0],
-          activePartId,
-          rotationY,
-          instances,
-        })
-      );
-    }
-  });
 
   return (
     <group>
@@ -1040,7 +1027,11 @@ export const BuilderCanvas = () => {
         cycleBuildMode();
       }}
     >
-      <Canvas camera={{ position: [10, 12, 10], fov: 50 }}>
+      {/* frameloop="demand" renders only when something changes (controls move,
+          state updates) instead of every frame — idle/typing no longer competes
+          with a constant render loop. dpr is capped so high-DPI displays don't
+          pay 3-4x the fragment cost on the large ground plane at grazing angles. */}
+      <Canvas frameloop="demand" dpr={[1, 2]} camera={{ position: [10, 12, 10], fov: 50 }}>
         <color attach="background" args={['#111827']} />
         <ambientLight intensity={0.75} />
         <directionalLight position={[10, 20, 10]} intensity={1.1} />

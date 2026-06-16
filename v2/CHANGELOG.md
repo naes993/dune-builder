@@ -1,5 +1,14 @@
 # V2 Changelog
 
+## v2-dev-0033 - 2026-06-15
+
+Performance: kill per-frame churn + on-demand rendering.
+
+- **Removed a per-frame placement solve.** `SceneContents` (`v2/scene/BuilderCanvas.tsx`) had a `useFrame` that, whenever `preview` was null (Demolish/Customize/Replace modes, or any unresolved placement), re-ran `solvePlacement` over *all* placed instances and called `setPreview(...)` **every animation frame**. That meant a full Zustand update + scene re-render every frame, with cost scaling by build size — the main-thread saturation behind the reported typing/tilt lag. It was redundant: preview is already kept current by the `useEffect` (deps `activePartId, instances, rotationY`) and the pointer-move handlers. (It also used a hardcoded `[0,0,0]` cursor that fought the real cursor tracking.)
+- **On-demand rendering.** The `<Canvas>` now uses `frameloop="demand"` so it only renders when something actually changes (controls move, state updates) instead of running a 60fps loop while idle. Pointer events and drei `OrbitControls` both invalidate correctly, so the ghost still tracks the cursor and orbiting stays smooth.
+- **Capped pixel ratio.** `dpr={[1, 2]}` keeps high-DPI displays from paying 3–4× the fragment cost on the large ground plane at grazing angles.
+- **Toned-down grain.** The `grain` ground style's noise amplitude is reduced (±7 from ±13) — softer look and lighter high-frequency texture sampling at a tilt.
+
 ## v2-dev-0032 - 2026-06-15
 
 Ground depth cue (procedural floor texture) + Admin selector.
