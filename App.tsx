@@ -6,9 +6,11 @@ import { useDebugRecorder } from './hooks/useDebugRecorder';
 import { useGameStore } from './store/gameStore';
 
 const BLUEPRINT_VERSION = 1;
+const V2_URL = 'https://arx-studio.pages.dev/';
 
 export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showV2Notice, setShowV2Notice] = useState(true);
 
   // Debug recorder
   const debugRecorder = useDebugRecorder();
@@ -246,6 +248,36 @@ export default function App() {
           setActiveBuildingSet={setActiveBuildingSet}
         />
       </div>
+
+      {showV2Notice && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/55 px-4 pointer-events-auto">
+          <div className="w-full max-w-md rounded-xl border border-dune-gold/50 bg-dune-ui/95 p-6 text-white shadow-2xl">
+            <div className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-dune-gold">
+              New Version Available
+            </div>
+            <h1 className="text-2xl font-bold leading-tight">Dune Builder V2 is live</h1>
+            <p className="mt-3 text-sm leading-6 text-white/75">
+              This is the original builder. A newer V2 planner is now available with the latest
+              build system work and will continue receiving updates.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <a
+                href={V2_URL}
+                className="inline-flex flex-1 items-center justify-center rounded-lg bg-dune-gold px-4 py-3 text-sm font-bold uppercase tracking-wider text-black transition hover:bg-dune-gold/90"
+              >
+                Open V2
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowV2Notice(false)}
+                className="inline-flex flex-1 items-center justify-center rounded-lg border border-white/20 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white/80 transition hover:bg-white/10 hover:text-white"
+              >
+                Continue V1
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
