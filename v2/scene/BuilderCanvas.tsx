@@ -936,6 +936,268 @@ const ImportDesignModal = ({
   );
 };
 
+type InfoTab = 'features' | 'roadmap' | 'feedback';
+type FeedbackType = 'bug' | 'placement' | 'missing-part' | 'idea';
+
+const FEATURE_SECTIONS = [
+  {
+    title: 'Build Planning',
+    items: [
+      '3D Dune: Awakening base planner using real Harkonnen build-piece models.',
+      'Connection-first placement, so pieces attach to other pieces instead of a world grid.',
+      'Build, Replace, Customize, and Demolish modes for laying out and revising a base.',
+    ],
+  },
+  {
+    title: 'Planning Tools',
+    items: [
+      'Claim overlay for planning Subfief, staking-unit, and vertical staking-unit space.',
+      'JSON import/export so bases can be saved, shared, and used as starter layouts.',
+      'Orbit, pan, and wheel zoom for inspecting builds from any angle.',
+    ],
+  },
+];
+
+const ROADMAP_SECTIONS = [
+  {
+    title: 'More Parts',
+    items: [
+      'Roof pieces, curved pieces, pillars, railings, ladders, gates, and more Harkonnen parts.',
+      'Better organization as more in-game pieces are added.',
+    ],
+  },
+  {
+    title: 'Placement',
+    items: [
+      'Better stair, ramp, roof, and stacked-foundation behavior.',
+      'Clearer vertical controls for choosing the intended story/height.',
+    ],
+  },
+  {
+    title: 'Sharing',
+    items: [
+      'Autosave, named saved designs, and starter-base examples.',
+      'Optional buildability warnings for issues like pieces outside a claim plan.',
+      'Direct feedback submission when a backend is available.',
+    ],
+  },
+];
+
+const CURRENT_LIMITATIONS = [
+  'Some Harkonnen parts are still being added.',
+  'Roofs, curved pieces, and saved-design libraries are not finished yet.',
+  'Claim overlay settings are local planning aids and are not included in exported base JSON.',
+];
+
+const FEEDBACK_TYPE_LABELS: Record<FeedbackType, string> = {
+  bug: 'Bug',
+  placement: 'Placement issue',
+  'missing-part': 'Missing part',
+  idea: 'Idea',
+};
+
+const AboutFeedbackModal = ({ onClose }: { onClose: () => void }) => {
+  const [activeTab, setActiveTab] = useState<InfoTab>('features');
+  const [feedbackType, setFeedbackType] = useState<FeedbackType>('bug');
+  const [summary, setSummary] = useState('');
+  const [details, setDetails] = useState('');
+  const [steps, setSteps] = useState('');
+  const [contact, setContact] = useState('');
+  const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
+
+  const report = useMemo(() => {
+    return {
+      appBuild: V2_BUILD.id,
+      type: feedbackType,
+      summary,
+      details,
+      steps,
+      contact,
+      pageUrl: window.location.href,
+      userAgent: navigator.userAgent,
+      createdAt: new Date().toISOString(),
+    };
+  }, [contact, details, feedbackType, steps, summary]);
+
+  const reportText = JSON.stringify(report, null, 2);
+
+  const copyReport = async () => {
+    try {
+      await navigator.clipboard.writeText(reportText);
+      setFeedbackStatus('Copied feedback');
+    } catch {
+      setFeedbackStatus('Copy failed; use Download Feedback instead');
+    }
+  };
+
+  const downloadReport = () => {
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    const blob = new Blob([`${reportText}\n`], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `arx-studio-feedback-${stamp}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setFeedbackStatus('Downloaded feedback');
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+      <div className="flex max-h-[88vh] w-[min(94vw,980px)] flex-col overflow-hidden rounded-lg border border-white/15 bg-black/92 text-white shadow-2xl">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-white/10 px-5 py-4">
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-bold uppercase tracking-wide text-dune-gold">About Arx Studio</div>
+            <div className="break-words text-xs text-white/45">{V2_BUILD.id} · public preview</div>
+          </div>
+          <button onClick={onClose} className="shrink-0 rounded bg-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/20">
+            Close
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 border-b border-white/10 px-5 py-3">
+          {(['features', 'roadmap', 'feedback'] as InfoTab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`h-8 rounded-md px-3 text-xs font-bold uppercase tracking-wide ${
+                activeTab === tab
+                  ? 'bg-dune-gold text-black'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              }`}
+            >
+              {tab === 'feedback' ? 'Feedback' : tab}
+            </button>
+          ))}
+        </div>
+
+        <div className="overflow-y-auto px-5 py-4">
+          {activeTab === 'features' && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {FEATURE_SECTIONS.map((section) => (
+                <section key={section.title} className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                  <h3 className="text-sm font-bold text-dune-gold">{section.title}</h3>
+                  <ul className="mt-3 space-y-2 text-sm leading-5 text-white/70">
+                    {section.items.map((item) => (
+                      <li key={item}>- {item}</li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+              <section className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                <h3 className="text-sm font-bold text-dune-gold">Current Limitations</h3>
+                <ul className="mt-3 space-y-2 text-sm leading-5 text-white/70">
+                  {CURRENT_LIMITATIONS.map((item) => (
+                    <li key={item}>- {item}</li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'roadmap' && (
+            <div className="grid gap-4 md:grid-cols-3">
+              {ROADMAP_SECTIONS.map((section) => (
+                <section key={section.title} className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                  <h3 className="text-sm font-bold text-dune-gold">{section.title}</h3>
+                  <ul className="mt-3 space-y-2 text-sm leading-5 text-white/70">
+                    {section.items.map((item) => (
+                      <li key={item}>- {item}</li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'feedback' && (
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
+              <div className="space-y-3">
+                <label className="block text-xs font-semibold uppercase tracking-wide text-white/50">
+                  Report type
+                  <select
+                    value={feedbackType}
+                    onChange={(event) => setFeedbackType(event.target.value as FeedbackType)}
+                    className="mt-1 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm normal-case text-white outline-none focus:border-dune-gold"
+                  >
+                    {Object.entries(FEEDBACK_TYPE_LABELS).map(([value, label]) => (
+                      <option key={value} value={value} className="bg-zinc-950">
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-white/50">
+                  Short summary
+                  <input
+                    value={summary}
+                    onChange={(event) => setSummary(event.target.value)}
+                    className="mt-1 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm normal-case text-white outline-none focus:border-dune-gold"
+                    placeholder="Wall snapped to the wrong height"
+                  />
+                </label>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-white/50">
+                  What happened?
+                  <textarea
+                    value={details}
+                    onChange={(event) => setDetails(event.target.value)}
+                    className="mt-1 h-24 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm normal-case leading-5 text-white outline-none focus:border-dune-gold"
+                    placeholder="Describe what you saw and what you expected."
+                  />
+                </label>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-white/50">
+                  Steps to reproduce
+                  <textarea
+                    value={steps}
+                    onChange={(event) => setSteps(event.target.value)}
+                    className="mt-1 h-24 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm normal-case leading-5 text-white outline-none focus:border-dune-gold"
+                    placeholder="1. Place a foundation. 2. Select wall. 3. Hover near..."
+                  />
+                </label>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-white/50">
+                  Contact or Discord name
+                  <input
+                    value={contact}
+                    onChange={(event) => setContact(event.target.value)}
+                    className="mt-1 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm normal-case text-white outline-none focus:border-dune-gold"
+                    placeholder="Optional"
+                  />
+                </label>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                <h3 className="text-sm font-bold text-dune-gold">Report Package</h3>
+                <p className="mt-2 text-xs leading-4 text-white/55">
+                  Feedback is not sent automatically yet. Copy or download this report and share it with a screenshot or exported base JSON.
+                </p>
+                <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-zinc-950 p-3 text-[10px] leading-4 text-white/55">
+                  {reportText}
+                </pre>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={copyReport}
+                    className="h-9 rounded-md bg-dune-gold px-3 text-sm font-semibold text-black hover:bg-yellow-300"
+                  >
+                    Copy Feedback
+                  </button>
+                  <button
+                    onClick={downloadReport}
+                    className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
+                  >
+                    Download Feedback
+                  </button>
+                </div>
+                {feedbackStatus && <div className="mt-2 text-xs text-emerald-300">{feedbackStatus}</div>}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 const SettingsPanel = () => {
   const {
     categoryOverrides,
@@ -1097,6 +1359,7 @@ const Toolbar = () => {
   } = useV2BuilderStore();
   const [claimPlannerOpen, setClaimPlannerOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [aboutFeedbackOpen, setAboutFeedbackOpen] = useState(false);
   const [designStatus, setDesignStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1214,6 +1477,7 @@ const Toolbar = () => {
             onImport={handleImportDesign}
           />
         )}
+        {aboutFeedbackOpen && <AboutFeedbackModal onClose={() => setAboutFeedbackOpen(false)} />}
         <div className="flex items-center gap-2">
           <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-white/50">Q</span>
           <div className="flex flex-1 flex-wrap items-center justify-center gap-1">
@@ -1280,6 +1544,12 @@ const Toolbar = () => {
             className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
           >
             Import JSON
+          </button>
+          <button
+            onClick={() => setAboutFeedbackOpen(true)}
+            className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
+          >
+            About / Feedback
           </button>
           <label className="flex h-9 items-center gap-2 rounded-md bg-cyan-950/60 px-3 text-sm font-semibold text-cyan-100">
             <input

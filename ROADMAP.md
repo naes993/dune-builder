@@ -9,7 +9,7 @@ This page tracks what's done, what's being worked on, what's planned, and the
 known issues. It's updated as the tool evolves; the detailed per-build history
 lives in [`v2/CHANGELOG.md`](v2/CHANGELOG.md).
 
-_Last updated: 2026-06-16 (build `v2-dev-0035`)._
+_Last updated: 2026-06-16 (build `v2-dev-0037`)._
 
 ---
 
@@ -38,6 +38,8 @@ _Last updated: 2026-06-16 (build `v2-dev-0035`)._
   snapping or placement.
 - **Base design import/export** — download placed parts as a versioned JSON file
   and import/paste shared JSON designs back into the builder.
+- **Public About / Feedback modal** — trimmed in-app Features, Roadmap, and
+  Feedback tabs with copy/download report packaging.
 
 ## 🚧 In progress
 
@@ -62,6 +64,8 @@ _Last updated: 2026-06-16 (build `v2-dev-0035`)._
 - **Foundation-on-foundation stacking** — stack foundations to raise terrain.
 - **Autosave / design library** — persistent local design slots and starter-base
   browsing on top of the JSON import/export format.
+- **Hosted feedback submission** — send bug reports directly from the app once a
+  backend or form endpoint exists.
 - **Hosted models** — serve the building-piece models so the public site shows
   them (today the deployed site is geometry-only; see Known Issues).
 - **"Base Parts Builder" (separate project)** — let players of other games define

@@ -1,5 +1,21 @@
 # V2 Changelog
 
+## v2-dev-0037 - 2026-06-16
+
+Public About/Feedback modal.
+
+- **Public-facing About modal.** Reworked the toolbar entry from tester/internal framing to a public `About / Feedback` modal branded for Arx Studio.
+- **Trimmed feature and roadmap copy.** Shortened the Features and Roadmap tabs into scan-friendly public bullets focused on what users can do now and what is planned next.
+- **General feedback packaging.** Renamed Bug Report to Feedback and kept the copy/download JSON package flow. Feedback is still not submitted automatically; users can share the generated report with a screenshot or exported base JSON.
+
+## v2-dev-0036 - 2026-06-16
+
+Tester info and feedback mockup.
+
+- **Info / Feedback modal.** Added a toolbar button that opens an in-app tester modal with three tabs: Features, Roadmap, and Bug Report. This keeps the current tester-facing overview inside the builder instead of sending users to a separate page.
+- **Tester feature/roadmap copy.** The modal summarizes current build features, current limitations, and upcoming roadmap areas in shareable tester-friendly language.
+- **Bug report package.** The Bug Report tab collects report type, summary, details, reproduction steps, and optional contact, then packages it with the current app build, page URL, browser user agent, and timestamp. Testers can copy or download the report JSON; no backend submission happens yet.
+
 ## v2-dev-0035 - 2026-06-16
 
 Base design import/export.

@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0035` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
+Current V2 build: `v2-dev-0037` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
 
-Description: Base design import/export — share placed parts through versioned JSON files. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
+Description: Public About/Feedback modal — trimmed Arx Studio features, roadmap, and feedback packaging. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
 
 ## Checkpoint Summary
 
@@ -54,6 +54,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - Separate Debug helper (observe-only — never affects placement).
 - Visual-only claim overlay with 10x10 chunks, up to 6 horizontal staking units, and one vertical staking tier; build placement ignores it.
 - Export/import placed parts as versioned JSON for sharing and starter bases. Claim overlay settings stay local-only and are not exported.
+- About / Feedback modal with public Features, Roadmap, and Feedback tabs. Feedback reports can be copied or downloaded; they are not submitted to a backend yet.
 - Harkonnen asset audit and manifest; committed master category organization with Admin overrides.
 
 ## Controls (game parity)
@@ -67,6 +68,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - **Middle-drag** — orbit camera; **Left-drag** — pan camera.
 - **B** — collapse/expand the build menu.
 - **Export JSON / Import JSON** — download or load a shared base design by dropping, choosing, or pasting JSON.
+- **About / Feedback** — open public features, roadmap, and feedback packaging.
 - **Z / C** — reserved for building-set cycling once multiple sets exist.
 
 ## Placement Testing
