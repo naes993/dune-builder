@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0037` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
+Current V2 build: `v2-dev-0040` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
 
-Description: Public About/Feedback modal — trimmed Arx Studio features, roadmap, and feedback packaging. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
+Description: Grain is the default ground style for new local sessions. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
 
 ## Checkpoint Summary
 
@@ -45,7 +45,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - Snap profiles and relationship channels for floor, foundation, and wall placement.
 - Wall-edge slot occupancy for snapped wall and door parts.
 - Wall-run continuation from existing wall endpoints **and foundation perimeter corners** (build walls outward off a foundation at ground or top level).
-- Full wall family registered: straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, door assembly (28 of 92 audited GLBs).
+- Wall family registered: straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, round corners, and door assembly (33 of 92 audited GLBs).
 - Walls reject placements that pass through a foundation's solid block; an invisible top-snap catcher makes "build on top" reliable.
 - Invalid overlap preview.
 - Material-name mapping for `_Ext` and `_Int`; facing indicator (outward arrow + inner-face tint) on wall/door ghosts.
@@ -99,7 +99,7 @@ Expected smoke checks:
 - The wedge-wall facing tint is still a rectangle (overshoots the sloped top).
 - There is no final Part Builder yet.
 - There is no autosave/design-library UI yet; manual JSON export/import is the current sharing path.
-- There is no full roof, stair, or curve system yet (GLBs audited, not registered).
+- There is no full roof, stair-corner, or remaining curved-filler/opening system yet (GLBs audited, not registered).
 
 ## Next Recommended Task
 

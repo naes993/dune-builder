@@ -9,7 +9,7 @@ This page tracks what's done, what's being worked on, what's planned, and the
 known issues. It's updated as the tool evolves; the detailed per-build history
 lives in [`v2/CHANGELOG.md`](v2/CHANGELOG.md).
 
-_Last updated: 2026-06-16 (build `v2-dev-0037`)._
+_Last updated: 2026-06-18 (build `v2-dev-0040`)._
 
 ---
 
@@ -17,11 +17,11 @@ _Last updated: 2026-06-16 (build `v2-dev-0037`)._
 
 - **Connection-first placement engine** — no world grid; pieces snap to each
   other's edges. Free placement on open ground when nothing is nearby.
-- **Foundations & floors** — square and wedge (triangle) tiles, calibrated to the
+- **Foundations & floors** — square, wedge (triangle), and round-corner pieces, calibrated to the
   real in-game dimensions.
 - **Full wall family** — straight wall styles 1–5, half wall, windows (incl.
-  glazed), all 12 wedge/gable walls, tall corner, inclined tall wall, and the
-  door assembly.
+  glazed), all 12 wedge/gable walls, tall corner, inclined tall wall, round
+  corners, and the door assembly.
 - **Walls on foundations** — stand walls on a foundation's top edges to build
   rooms and towers; stack walls to add stories.
 - **Walls off foundations** — run a wall outward from a foundation's edge to
@@ -56,7 +56,8 @@ _Last updated: 2026-06-16 (build `v2-dev-0037`)._
 ## 🗺️ Planned
 
 - **Roofs** — roof tiles, tops, wedges, caps, and corners (already inventoried).
-- **Round corners** — curved wall, floor, foundation, and window corner pieces.
+- **Remaining curved fillers/openings** — the inner floor round-corner filler and
+  window round-corner pieces.
 - **Structural & access extras** — pillars, railings, ladders, hatches, gates,
   passageways, and columns.
 - **Level/story selector** — an explicit control to choose which floor a piece

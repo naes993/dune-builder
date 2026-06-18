@@ -127,6 +127,47 @@ const wallAnchors = (height: number): EdgeAnchorDef[] => [
 const wallAnchorsSlopedTop = (height: number): EdgeAnchorDef[] =>
   wallAnchors(height).filter((anchor) => anchor.id !== 'edge.wall-top');
 
+const cornerWallAnchors = (height: number): EdgeAnchorDef[] => [
+  {
+    id: 'edge.corner-front',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [-HALF, 0, -HALF],
+    end: [HALF, 0, -HALF],
+    normal: [0, 0, 1],
+    channels: ['floor-support'],
+  },
+  {
+    id: 'edge.corner-side',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [HALF, 0, HALF],
+    end: [HALF, 0, -HALF],
+    normal: [1, 0, 0],
+    channels: ['floor-support'],
+  },
+  {
+    id: 'edge.corner-front.top',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [-HALF, height, -HALF],
+    end: [HALF, height, -HALF],
+    normal: [0, 0, 1],
+    channels: SUPPORT_CHANNELS,
+    source: false,
+  },
+  {
+    id: 'edge.corner-side.top',
+    kind: 'edge',
+    role: 'foundation-edge',
+    start: [HALF, height, HALF],
+    end: [HALF, height, -HALF],
+    normal: [1, 0, 0],
+    channels: SUPPORT_CHANNELS,
+    source: false,
+  },
+];
+
 const SQUARE_FOOTPRINT: FootprintDef = {
   type: 'polygon',
   points: [
@@ -308,6 +349,72 @@ const inclineVariant = (options: {
   },
 });
 
+const floorRoundCornerVariant = (options: {
+  id: PartId;
+  name: string;
+  glb: string;
+}): PartDefinition => ({
+  id: options.id,
+  name: options.name,
+  category: 'floor',
+  menuCategory: 'structural',
+  occupancyLayer: 'foundation',
+  snapProfile: 'floor',
+  snapSourceChannels: [...FLOOR_SOURCE_CHANNELS],
+  snapTargetChannels: [...SUPPORT_CHANNELS],
+  height: FLOOR_HEIGHT,
+  yOffset: FLOOR_HEIGHT / 2,
+  allowedRotations: STANDARD_ROTATIONS,
+  anchors: FLOOR_SQUARE_ANCHORS,
+  footprint: SQUARE_FOOTPRINT,
+  placeholderMesh: {
+    type: 'box',
+    size: [UNIT, FLOOR_HEIGHT, UNIT],
+  },
+  mesh: {
+    url: `/assets/parts/harkonnen/${options.glb}`,
+    scale: [1, 1, 1],
+    offset: [0, FLOOR_HEIGHT / 2, 0],
+    rotation: [0, 0, 0],
+    materialOverride: HARKONNEN_SURFACE_MATERIAL,
+  },
+});
+
+const wallRoundCornerVariant = (options: {
+  id: PartId;
+  name: string;
+  glb: string;
+  height?: number;
+}): PartDefinition => {
+  const height = options.height ?? STANDARD_WALL_HEIGHT;
+  return {
+    id: options.id,
+    name: options.name,
+    category: 'wall-corner',
+    menuCategory: 'walls',
+    occupancyLayer: 'wall-edge',
+    snapProfile: 'wall',
+    snapSourceChannels: [...WALL_SOURCE_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
+    height,
+    yOffset: height / 2,
+    allowedRotations: STANDARD_ROTATIONS,
+    anchors: cornerWallAnchors(height),
+    footprint: SQUARE_FOOTPRINT,
+    placeholderMesh: {
+      type: 'box',
+      size: [UNIT, height, UNIT],
+    },
+    mesh: {
+      url: `/assets/parts/harkonnen/${options.glb}`,
+      scale: [1, 1, 1],
+      offset: [0, -height / 2, 0],
+      rotation: [0, 0, 0],
+      materialOverride: HARKONNEN_FALLBACK_MATERIAL,
+    },
+  };
+};
+
 export const PARTS: PartRegistry = {
   // GLB pivot conventions (measured by scripts/measure-core-parts.mjs):
   // floor pivots sit at the walking surface, foundation pivots at the base.
@@ -363,6 +470,11 @@ export const PARTS: PartRegistry = {
       materialOverride: HARKONNEN_SURFACE_MATERIAL,
     },
   },
+  'floor.harkonnen.level3.round-corner': floorRoundCornerVariant({
+    id: 'floor.harkonnen.level3.round-corner',
+    name: 'Harkonnen Floor Round Corner',
+    glb: 'SM_Env_PB_Hark_Level3_FloorRoundCorner.glb',
+  }),
   'foundation.harkonnen.level3.square': {
     id: 'foundation.harkonnen.level3.square',
     name: 'Harkonnen Foundation',
@@ -409,6 +521,32 @@ export const PARTS: PartRegistry = {
     },
     mesh: {
       url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FoundationWedge.glb',
+      scale: [1, 1, 1],
+      offset: [0, -FOUNDATION_HEIGHT / 2, 0],
+      rotation: [0, 0, 0],
+      materialOverride: HARKONNEN_SURFACE_MATERIAL,
+    },
+  },
+  'foundation.harkonnen.level3.round-corner': {
+    id: 'foundation.harkonnen.level3.round-corner',
+    name: 'Harkonnen Foundation Round Corner',
+    category: 'foundation',
+    menuCategory: 'structural',
+    occupancyLayer: 'foundation',
+    snapProfile: 'foundation',
+    snapSourceChannels: [...FOUNDATION_SOURCE_CHANNELS],
+    snapTargetChannels: [...FOUNDATION_TARGET_CHANNELS],
+    height: FOUNDATION_HEIGHT,
+    yOffset: FOUNDATION_HEIGHT / 2,
+    allowedRotations: STANDARD_ROTATIONS,
+    anchors: FOUNDATION_SQUARE_ANCHORS,
+    footprint: SQUARE_FOOTPRINT,
+    placeholderMesh: {
+      type: 'box',
+      size: [UNIT, FOUNDATION_HEIGHT, UNIT],
+    },
+    mesh: {
+      url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_FoundationRoundCorner.glb',
       scale: [1, 1, 1],
       offset: [0, -FOUNDATION_HEIGHT / 2, 0],
       rotation: [0, 0, 0],
@@ -575,46 +713,7 @@ export const PARTS: PartRegistry = {
     height: TALL_WALL_HEIGHT,
     yOffset: TALL_WALL_HEIGHT / 2,
     allowedRotations: STANDARD_ROTATIONS,
-    anchors: [
-      {
-        id: 'edge.corner-front',
-        kind: 'edge',
-        role: 'foundation-edge',
-        start: [-HALF, 0, -HALF],
-        end: [HALF, 0, -HALF],
-        normal: [0, 0, 1],
-        channels: ['floor-support'],
-      },
-      {
-        id: 'edge.corner-side',
-        kind: 'edge',
-        role: 'foundation-edge',
-        start: [HALF, 0, HALF],
-        end: [HALF, 0, -HALF],
-        normal: [1, 0, 0],
-        channels: ['floor-support'],
-      },
-      {
-        id: 'edge.corner-front.top',
-        kind: 'edge',
-        role: 'foundation-edge',
-        start: [-HALF, TALL_WALL_HEIGHT, -HALF],
-        end: [HALF, TALL_WALL_HEIGHT, -HALF],
-        normal: [0, 0, 1],
-        channels: SUPPORT_CHANNELS,
-        source: false,
-      },
-      {
-        id: 'edge.corner-side.top',
-        kind: 'edge',
-        role: 'foundation-edge',
-        start: [HALF, TALL_WALL_HEIGHT, HALF],
-        end: [HALF, TALL_WALL_HEIGHT, -HALF],
-        normal: [1, 0, 0],
-        channels: SUPPORT_CHANNELS,
-        source: false,
-      },
-    ],
+    anchors: cornerWallAnchors(TALL_WALL_HEIGHT),
     footprint: SQUARE_FOOTPRINT,
     placeholderMesh: {
       type: 'box',
@@ -628,6 +727,32 @@ export const PARTS: PartRegistry = {
       materialOverride: HARKONNEN_FALLBACK_MATERIAL,
     },
   },
+  'wall.harkonnen.level3.round-corner.01': wallRoundCornerVariant({
+    id: 'wall.harkonnen.level3.round-corner.01',
+    name: 'Harkonnen Level 3 Wall Round Corner 1',
+    glb: 'SM_Env_PB_Hark_Level3_WallRoundCorner_01.glb',
+  }),
+  'wall.harkonnen.level3.round-corner.02': wallRoundCornerVariant({
+    id: 'wall.harkonnen.level3.round-corner.02',
+    name: 'Harkonnen Level 3 Wall Round Corner 2',
+    glb: 'SM_Env_PB_Hark_Level3_WallRoundCorner_02.glb',
+  }),
+  'wall.harkonnen.level3.round-corner.03': wallRoundCornerVariant({
+    id: 'wall.harkonnen.level3.round-corner.03',
+    name: 'Harkonnen Level 3 Wall Round Corner 3',
+    glb: 'SM_Env_PB_Hark_Level3_WallRoundCorner_03.glb',
+  }),
+  'wall.harkonnen.level3.round-corner.04': wallRoundCornerVariant({
+    id: 'wall.harkonnen.level3.round-corner.04',
+    name: 'Harkonnen Level 3 Wall Round Corner 4',
+    glb: 'SM_Env_PB_Hark_Level3_WallRoundCorner_04.glb',
+  }),
+  'wall.harkonnen.level3.round-corner.half': wallRoundCornerVariant({
+    id: 'wall.harkonnen.level3.round-corner.half',
+    name: 'Harkonnen Level 3 Half Wall Round Corner',
+    glb: 'SM_Env_PB_Hark_Level3_WallRoundCorner_Half.glb',
+    height: HALF_WALL_HEIGHT,
+  }),
   'wall.harkonnen.level3.inclined.tall': {
     id: 'wall.harkonnen.level3.inclined.tall',
     name: 'Harkonnen Level 3 Inclined Tall Wall',

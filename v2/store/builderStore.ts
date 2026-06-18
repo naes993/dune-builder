@@ -65,9 +65,9 @@ const loadReverseScrollZoom = (): boolean => {
 const loadGroundStyle = (): GroundStyle => {
   try {
     const stored = window.localStorage.getItem(GROUND_STYLE_STORAGE_KEY);
-    return GROUND_STYLES.includes(stored as GroundStyle) ? (stored as GroundStyle) : 'gradient';
+    return GROUND_STYLES.includes(stored as GroundStyle) ? (stored as GroundStyle) : 'grain';
   } catch {
-    return 'gradient';
+    return 'grain';
   }
 };
 

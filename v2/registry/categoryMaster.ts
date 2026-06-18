@@ -16,4 +16,5 @@ export const CATEGORY_MASTER: Partial<Record<PartId, MenuCategory>> = {
   // The flat floor and flat rooftop sit side by side under ROOFS in-game.
   'floor.harkonnen.level3.square': 'roofs',
   'floor.harkonnen.level3.wedge': 'roofs',
+  'floor.harkonnen.level3.round-corner': 'roofs',
 };

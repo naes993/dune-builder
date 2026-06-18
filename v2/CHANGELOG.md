@@ -1,5 +1,29 @@
 # V2 Changelog
 
+## v2-dev-0040 - 2026-06-18
+
+Default ground style: Grain.
+
+- **Grain by default.** New browser sessions now start with the Admin ground style set to `Grain`, giving the build plane the focused depth cue plus subtle procedural sand speckle immediately.
+- **Local preference preserved.** Existing users who already have `v2.groundStyle` in `localStorage` keep their saved choice; the new default only applies when no valid local setting exists.
+
+## v2-dev-0039 - 2026-06-18
+
+Parked the inner floor round-corner filler.
+
+- **Removed from active builder.** `FloorRoundCorner_In` is no longer registered as a buildable part or shown in the Roofs tab.
+- **Why.** The `_In` mesh is a specialized filler for gaps created by curved pieces, not a normal one-tile floor. Treating it as a standard square floor made it selectable and placeable but semantically wrong.
+- **Scope preserved.** The working `FloorRoundCorner`, `FoundationRoundCorner`, and WallRoundCorner pieces remain registered with their existing logical placement data. The `_In` asset stays in the audit/manifest for a future dedicated curved-filler solve.
+
+## v2-dev-0038 - 2026-06-18
+
+Registered Harkonnen round-corner pieces.
+
+- **Round floor corner.** Added `FloorRoundCorner` as a buildable floor piece using the existing logical one-tile floor footprint/support anchors; its visual GLB stays a wrapper only.
+- **Round foundation corner.** Added `FoundationRoundCorner` as a buildable structural foundation piece using the existing one-tile foundation footprint, base structure anchors, and top support anchors.
+- **Round wall corners.** Added WallRoundCorner styles 1-4 plus the Half variant as wall-corner pieces using the existing two-edge corner-wall logical model at standard or half wall height.
+- **Build menu mapping.** The floor round corner ships in the Roofs tab with the existing floor pieces; foundation and wall round-corner pieces stay in Structural and Walls respectively.
+
 ## v2-dev-0037 - 2026-06-16
 
 Public About/Feedback modal.

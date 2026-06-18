@@ -1,6 +1,6 @@
 # Dune Builder
 
-This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0037` (authoritative source: `v2/version.ts` and the top of `v2/CHANGELOG.md`).
+This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0040` (authoritative source: `v2/version.ts` and the top of `v2/CHANGELOG.md`).
 
 > **Deploying / uploading this build?** Read [`HANDOFF.md`](HANDOFF.md) first — the game-asset `.glb` files are local-only, so a plain git-connected deploy produces a site with **no building models**. A local `npm run build` (which copies the GLBs into `dist/`) followed by a direct upload is the only correct path.
 
@@ -20,10 +20,10 @@ The V2 code lives under `v2/`; the root `App.tsx` is a thin wrapper that renders
 
 ## Current V2 Checkpoint
 
-`v2-dev-0037`. See `v2/CHANGELOG.md` for the full history and [`ROADMAP.md`](ROADMAP.md) for what's planned; highlights of the current state:
+`v2-dev-0040`. See `v2/CHANGELOG.md` for the full history and [`ROADMAP.md`](ROADMAP.md) for what's planned; highlights of the current state:
 
 - Connection-first placement: no world grid; the first placed piece establishes the build grid. When no connection target is found, the part uses the ground hit position.
-- Buildable parts are real Harkonnen GLBs (32 of 92 audited registered): foundations + floors (square/wedge); the full wall family — straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, door assembly; and inclines — straight stairs/ramps + half versions.
+- Buildable parts are real Harkonnen GLBs (39 of 92 audited registered): foundations + floors (square/wedge/round-corner); the wall family — straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, round corners, door assembly; and inclines — straight stairs/ramps + half versions. The specialized `FloorRoundCorner_In` filler is audited but parked until curved filler placement has its own logic.
 - Logical heights are calibrated from measured GLBs: floors 0.3735 thick (pivot at walking surface), foundations 3.8968 tall (pivot at base).
 - Snapping by profile/channel: foundations use structural side-adjacency; floors use floor-support and expose wall-compatible sides; walls use wall-support. Walls stand on foundation/floor/wall tops, can run off a foundation's perimeter to build outward, and cannot pass through a foundation's solid block.
 - Inclines descend off a foundation/floor edge, snap side-by-side into wide staircases, and tile edge-to-edge into sloped roofs/ceilings and climbing runs.
