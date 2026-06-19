@@ -4,18 +4,48 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { PARTS } from '../registry/parts';
+import { useV2BuilderStore } from '../store/builderStore';
 import { MaterialOverrideDef, MeshVisualDef, PartDefinition, PartId, Transform2D } from '../types';
 
-const HARKONNEN_EXTERIOR_MATERIAL: Required<MaterialOverrideDef> = {
-  color: '#050505',
-  metalness: 0.35,
-  roughness: 0.7,
+type VisualMaterialProfile = MaterialOverrideDef & {
+  emissive?: string;
+  emissiveIntensity?: number;
 };
 
-const HARKONNEN_INTERIOR_MATERIAL: Required<MaterialOverrideDef> = {
+const interpolateHexColor = (from: string, to: string, amount: number) => {
+  const start = new THREE.Color(from);
+  const end = new THREE.Color(to);
+  return `#${start.lerp(end, amount).getHexString()}`;
+};
+
+const getHarkonnenExteriorMaterial = (
+  darkDetail: number,
+  adminHueEnabled: boolean,
+  adminHue: number
+): Required<VisualMaterialProfile> => {
+  const amount = THREE.MathUtils.clamp(darkDetail / 100, 0, 1);
+  const color = adminHueEnabled
+    ? new THREE.Color().setHSL(adminHue / 360, 0.42, THREE.MathUtils.lerp(0.05, 0.28, amount))
+    : new THREE.Color(interpolateHexColor('#050505', '#313a45', amount));
+  const emissive = adminHueEnabled
+    ? new THREE.Color().setHSL(adminHue / 360, 0.36, THREE.MathUtils.lerp(0.015, 0.09, amount))
+    : new THREE.Color(interpolateHexColor('#000000', '#111821', amount));
+
+  return {
+    color: `#${color.getHexString()}`,
+    metalness: THREE.MathUtils.lerp(0.22, 0.04, amount),
+    roughness: THREE.MathUtils.lerp(0.72, 0.84, amount),
+    emissive: `#${emissive.getHexString()}`,
+    emissiveIntensity: THREE.MathUtils.lerp(0.02, 0.38, amount),
+  };
+};
+
+const HARKONNEN_INTERIOR_MATERIAL: Required<VisualMaterialProfile> = {
   color: '#9a9a9a',
   metalness: 0.45,
   roughness: 0.55,
+  emissive: '#000000',
+  emissiveIntensity: 0,
 };
 
 const triangleGeometry = (part: PartDefinition) => {
@@ -55,10 +85,13 @@ const triangleGeometry = (part: PartDefinition) => {
 
 const resolveMaterialOverride = (
   originalMaterialName: string,
-  partOverride?: MaterialOverrideDef
-) => {
+  partOverride: MaterialOverrideDef | undefined,
+  darkDetail: number,
+  adminHueEnabled: boolean,
+  adminHue: number
+): VisualMaterialProfile | undefined => {
   if (originalMaterialName.includes('_Ext')) {
-    return HARKONNEN_EXTERIOR_MATERIAL;
+    return getHarkonnenExteriorMaterial(darkDetail, adminHueEnabled, adminHue);
   }
 
   if (originalMaterialName.includes('_Int')) {
@@ -71,7 +104,7 @@ const resolveMaterialOverride = (
 const createMaterial = (
   ghost: boolean,
   valid: boolean,
-  override?: MaterialOverrideDef,
+  override?: VisualMaterialProfile,
   sourceName?: string
 ) => {
   if (ghost) {
@@ -90,6 +123,8 @@ const createMaterial = (
     color: override?.color ?? '#8c8c8c',
     metalness: override?.metalness ?? 0,
     roughness: override?.roughness ?? 0.8,
+    emissive: override?.emissive ?? '#000000',
+    emissiveIntensity: override?.emissiveIntensity ?? 0,
   });
   material.name = sourceName ? `${sourceName}:v2-override` : 'v2-override';
   return material;
@@ -99,12 +134,15 @@ const createVisualMaterial = (
   sourceMaterial: THREE.Material | null | undefined,
   ghost: boolean,
   valid: boolean,
-  partOverride?: MaterialOverrideDef
+  partOverride: MaterialOverrideDef | undefined,
+  darkDetail: number,
+  adminHueEnabled: boolean,
+  adminHue: number
 ) => {
   const sourceName = sourceMaterial?.name ?? '';
   const override = ghost
     ? partOverride
-    : resolveMaterialOverride(sourceName, partOverride);
+    : resolveMaterialOverride(sourceName, partOverride, darkDetail, adminHueEnabled, adminHue);
 
   return createMaterial(ghost, valid, override, sourceName);
 };
@@ -113,7 +151,10 @@ const applyVisualMaterials = (
   root: THREE.Object3D,
   ghost: boolean,
   valid: boolean,
-  override?: MaterialOverrideDef
+  override: MaterialOverrideDef | undefined,
+  darkDetail: number,
+  adminHueEnabled: boolean,
+  adminHue: number
 ) => {
   root.traverse((child) => {
     const mesh = child as THREE.Mesh;
@@ -121,8 +162,10 @@ const applyVisualMaterials = (
 
     const sourceMaterial = mesh.material;
     mesh.material = Array.isArray(sourceMaterial)
-      ? sourceMaterial.map((material) => createVisualMaterial(material, ghost, valid, override))
-      : createVisualMaterial(sourceMaterial, ghost, valid, override);
+      ? sourceMaterial.map((material) =>
+          createVisualMaterial(material, ghost, valid, override, darkDetail, adminHueEnabled, adminHue)
+        )
+      : createVisualMaterial(sourceMaterial, ghost, valid, override, darkDetail, adminHueEnabled, adminHue);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
   });
@@ -135,18 +178,24 @@ const GltfVisual = ({
   debugVisuals,
   ghost,
   valid,
+  darkDetail,
+  adminHueEnabled,
+  adminHue,
 }: {
   visualDef: MeshVisualDef;
   debugVisuals: boolean;
   ghost: boolean;
   valid: boolean;
+  darkDetail: number;
+  adminHueEnabled: boolean;
+  adminHue: number;
 }) => {
   const gltf = useObfuscatedGltf(visualDef.url);
   const visual = useMemo(() => {
     const clone = cloneSkeleton(gltf.scene);
-    applyVisualMaterials(clone, ghost, valid, visualDef.materialOverride);
+    applyVisualMaterials(clone, ghost, valid, visualDef.materialOverride, darkDetail, adminHueEnabled, adminHue);
     return clone;
-  }, [gltf.scene, ghost, valid, visualDef.materialOverride]);
+  }, [gltf.scene, ghost, valid, visualDef.materialOverride, darkDetail, adminHueEnabled, adminHue]);
 
   const scale = visualDef.scale ?? [1, 1, 1];
   const offset = visualDef.offset ?? [0, 0, 0];
@@ -203,11 +252,17 @@ const GltfVisuals = ({
   debugVisuals,
   ghost,
   valid,
+  darkDetail,
+  adminHueEnabled,
+  adminHue,
 }: {
   part: PartDefinition;
   debugVisuals: boolean;
   ghost: boolean;
   valid: boolean;
+  darkDetail: number;
+  adminHueEnabled: boolean;
+  adminHue: number;
 }) => {
   const visualDefs = part.meshes ?? (part.mesh ? [part.mesh] : []);
   const renderableVisuals = visualDefs.filter((visualDef) => !isReferenceCollisionVisual(visualDef));
@@ -225,6 +280,9 @@ const GltfVisuals = ({
           debugVisuals={debugVisuals}
           ghost={ghost}
           valid={valid}
+          darkDetail={darkDetail}
+          adminHueEnabled={adminHueEnabled}
+          adminHue={adminHue}
         />
       ))}
     </>
@@ -318,6 +376,9 @@ export const PartMesh = ({
   highlightColor?: string;
 }) => {
   const part = PARTS[partId];
+  const darkDetail = useV2BuilderStore((state) => state.darkDetail);
+  const adminHueEnabled = useV2BuilderStore((state) => state.adminHueEnabled);
+  const adminHue = useV2BuilderStore((state) => state.adminHue);
   const hasRenderableVisuals = Boolean(part.mesh || part.meshes?.length);
 
   return (
@@ -326,7 +387,15 @@ export const PartMesh = ({
       rotation={[0, transform.rotationY, 0]}
     >
       {hasRenderableVisuals ? (
-        <GltfVisuals part={part} debugVisuals={debugVisuals} ghost={ghost} valid={valid} />
+        <GltfVisuals
+          part={part}
+          debugVisuals={debugVisuals}
+          ghost={ghost}
+          valid={valid}
+          darkDetail={darkDetail}
+          adminHueEnabled={adminHueEnabled}
+          adminHue={adminHue}
+        />
       ) : (
         <PlaceholderVisual part={part} ghost={ghost} valid={valid} />
       )}

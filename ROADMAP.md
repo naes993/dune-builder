@@ -9,7 +9,7 @@ This page tracks what's done, what's being worked on, what's planned, and the
 known issues. It's updated as the tool evolves; the detailed per-build history
 lives in [`v2/CHANGELOG.md`](v2/CHANGELOG.md).
 
-_Last updated: 2026-06-18 (build `v2-dev-0040`)._
+_Last updated: 2026-06-19 (build `v2-dev-0045`)._
 
 ---
 
@@ -19,9 +19,9 @@ _Last updated: 2026-06-18 (build `v2-dev-0040`)._
   other's edges. Free placement on open ground when nothing is nearby.
 - **Foundations & floors** — square, wedge (triangle), and round-corner pieces, calibrated to the
   real in-game dimensions.
-- **Full wall family** — straight wall styles 1–5, half wall, windows (incl.
-  glazed), all 12 wedge/gable walls, tall corner, inclined tall wall, round
-  corners, and the door assembly.
+- **Full wall family** — straight wall styles 1–5, half wall, open-gap windows
+  (including the window round corner), all 12 wedge/gable walls, tall corner, inclined tall wall, round
+  corners, standard/tall/garage door assemblies, and passageway.
 - **Walls on foundations** — stand walls on a foundation's top edges to build
   rooms and towers; stack walls to add stories.
 - **Walls off foundations** — run a wall outward from a foundation's edge to
@@ -30,16 +30,17 @@ _Last updated: 2026-06-18 (build `v2-dev-0040`)._
   (outward arrow + inner-face tint); press **R** to flip it in place.
 - **Reliable building controls** — Debug overlays never change where a piece
   snaps; selecting a new piece never stalls the preview.
-- **Build menu** — category tabs, piece cycling, and an Admin panel for
-  organizing pieces (incl. a "Reverse scroll wheel" control option).
+- **Build menu** — category tabs, piece cycling, public Settings, and a hidden
+  Admin panel for organizing pieces.
 - **Claim overlay planner** — optional visual-only 10x10 land-claim chunks,
   up to 6 horizontal staking units, and one vertical staking tier across the
   whole claim footprint. The overlay is saved locally and never affects build
   snapping or placement.
 - **Base design import/export** — download placed parts as a versioned JSON file
   and import/paste shared JSON designs back into the builder.
-- **Public About / Feedback modal** — trimmed in-app Features, Roadmap, and
-  Feedback tabs with copy/download report packaging.
+- **Display adjustment** — local Dark detail slider for screen-dependent
+  Harkonnen material visibility.
+- **Admin easter eggs** — hidden spectrum tint control and sandworm Snake.
 
 ## 🚧 In progress
 
@@ -56,10 +57,9 @@ _Last updated: 2026-06-18 (build `v2-dev-0040`)._
 ## 🗺️ Planned
 
 - **Roofs** — roof tiles, tops, wedges, caps, and corners (already inventoried).
-- **Remaining curved fillers/openings** — the inner floor round-corner filler and
-  window round-corner pieces.
+- **Remaining curved fillers/openings** — the inner floor round-corner filler.
 - **Structural & access extras** — pillars, railings, ladders, hatches, gates,
-  passageways, and columns.
+  and columns.
 - **Level/story selector** — an explicit control to choose which floor a piece
   snaps to when targets stack vertically (today the cursor height decides).
 - **Foundation-on-foundation stacking** — stack foundations to raise terrain.
@@ -67,6 +67,8 @@ _Last updated: 2026-06-18 (build `v2-dev-0040`)._
   browsing on top of the JSON import/export format.
 - **Hosted feedback submission** — send bug reports directly from the app once a
   backend or form endpoint exists.
+- **About / Feedback refresh** — bring back the public about and feedback
+  surfaces after the content and submission path are ready.
 - **Hosted models** — serve the building-piece models so the public site shows
   them (today the deployed site is geometry-only; see Known Issues).
 - **"Base Parts Builder" (separate project)** — let players of other games define

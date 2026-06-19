@@ -33,9 +33,14 @@ export const MAX_HORIZONTAL_STAKING_UNITS = 6;
 export const MAX_CLAIM_CHUNKS = 1 + MAX_HORIZONTAL_STAKING_UNITS;
 
 const OVERRIDES_STORAGE_KEY = 'v2.categoryOverrides';
-const REVERSE_SCROLL_ZOOM_STORAGE_KEY = 'v2.reverseScrollZoom';
+const WHEEL_ZOOMS_CAMERA_STORAGE_KEY = 'v2.wheelZoomsCamera';
 const GROUND_STYLE_STORAGE_KEY = 'v2.groundStyle';
 const CLAIM_SETTINGS_STORAGE_KEY = 'v2.claimSettings';
+const DARK_DETAIL_STORAGE_KEY = 'v2.darkDetail';
+const ADMIN_HUE_ENABLED_STORAGE_KEY = 'v2.adminHueEnabled';
+const ADMIN_HUE_STORAGE_KEY = 'v2.adminHue';
+export const DEFAULT_DARK_DETAIL = 70;
+export const DEFAULT_ADMIN_HUE = 32;
 
 const BASE_CLAIM_CHUNK: ClaimChunk = { x: 0, z: 0 };
 const DEFAULT_CLAIM_SETTINGS: ClaimSettings = {
@@ -56,7 +61,7 @@ const loadReverseScrollZoom = (): boolean => {
   // Default ON: the bare wheel zooms the camera (Shift+Wheel cycles pieces).
   // Only an explicit opt-out persisted as 'false' restores the classic mapping.
   try {
-    return window.localStorage.getItem(REVERSE_SCROLL_ZOOM_STORAGE_KEY) !== 'false';
+    return window.localStorage.getItem(WHEEL_ZOOMS_CAMERA_STORAGE_KEY) !== 'false';
   } catch {
     return true;
   }
@@ -68,6 +73,43 @@ const loadGroundStyle = (): GroundStyle => {
     return GROUND_STYLES.includes(stored as GroundStyle) ? (stored as GroundStyle) : 'grain';
   } catch {
     return 'grain';
+  }
+};
+
+const normalizeDarkDetail = (value: unknown) => {
+  if (value === null || value === undefined || value === '') return DEFAULT_DARK_DETAIL;
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_DARK_DETAIL;
+  return Math.min(100, Math.max(0, Math.round(parsed)));
+};
+
+const loadDarkDetail = () => {
+  try {
+    return normalizeDarkDetail(window.localStorage.getItem(DARK_DETAIL_STORAGE_KEY));
+  } catch {
+    return DEFAULT_DARK_DETAIL;
+  }
+};
+
+const normalizeAdminHue = (value: unknown) => {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_ADMIN_HUE;
+  return Math.min(360, Math.max(0, Math.round(parsed)));
+};
+
+const loadAdminHueEnabled = () => {
+  try {
+    return window.localStorage.getItem(ADMIN_HUE_ENABLED_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const loadAdminHue = () => {
+  try {
+    return normalizeAdminHue(window.localStorage.getItem(ADMIN_HUE_STORAGE_KEY));
+  } catch {
+    return DEFAULT_ADMIN_HUE;
   }
 };
 
@@ -170,8 +212,12 @@ interface BuilderState {
   buildMode: BuildMode;
   menuExpanded: boolean;
   settingsOpen: boolean;
+  adminOpen: boolean;
   reverseScrollZoom: boolean;
   groundStyle: GroundStyle;
+  darkDetail: number;
+  adminHueEnabled: boolean;
+  adminHue: number;
   claimSettings: ClaimSettings;
   categoryOverrides: CategoryOverrides;
   hoveredInstanceId: string | null;
@@ -183,8 +229,12 @@ interface BuilderState {
   setActivePartId: (partId: PartId) => void;
   setActiveTab: (tab: MenuTab) => void;
   toggleSettings: () => void;
+  toggleAdmin: () => void;
   toggleReverseScrollZoom: () => void;
   setGroundStyle: (style: GroundStyle) => void;
+  setDarkDetail: (value: number) => void;
+  setAdminHueEnabled: (enabled: boolean) => void;
+  setAdminHue: (value: number) => void;
   toggleClaimOverlay: () => void;
   toggleClaimVerticalStaking: () => void;
   addClaimChunk: (chunk: ClaimChunk) => void;
@@ -215,8 +265,12 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
   buildMode: 'build',
   menuExpanded: true,
   settingsOpen: false,
+  adminOpen: false,
   reverseScrollZoom: loadReverseScrollZoom(),
   groundStyle: loadGroundStyle(),
+  darkDetail: loadDarkDetail(),
+  adminHueEnabled: loadAdminHueEnabled(),
+  adminHue: loadAdminHue(),
   claimSettings: loadClaimSettings(),
   categoryOverrides: loadCategoryOverrides(),
   hoveredInstanceId: null,
@@ -240,10 +294,11 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
     }
   },
   toggleSettings: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
+  toggleAdmin: () => set((state) => ({ adminOpen: !state.adminOpen })),
   toggleReverseScrollZoom: () => {
     const next = !get().reverseScrollZoom;
     try {
-      window.localStorage.setItem(REVERSE_SCROLL_ZOOM_STORAGE_KEY, String(next));
+      window.localStorage.setItem(WHEEL_ZOOMS_CAMERA_STORAGE_KEY, String(next));
     } catch {
       // localStorage unavailable; setting stays session-only.
     }
@@ -256,6 +311,33 @@ export const useV2BuilderStore = create<BuilderState>((set, get) => ({
       // localStorage unavailable; setting stays session-only.
     }
     set({ groundStyle: style });
+  },
+  setDarkDetail: (value) => {
+    const next = normalizeDarkDetail(value);
+    try {
+      window.localStorage.setItem(DARK_DETAIL_STORAGE_KEY, String(next));
+    } catch {
+      // localStorage unavailable; setting stays session-only.
+    }
+    set({ darkDetail: next });
+  },
+  setAdminHueEnabled: (enabled) => {
+    try {
+      window.localStorage.setItem(ADMIN_HUE_ENABLED_STORAGE_KEY, String(enabled));
+    } catch {
+      // localStorage unavailable; setting stays session-only.
+    }
+    set({ adminHueEnabled: enabled });
+  },
+  setAdminHue: (value) => {
+    const next = normalizeAdminHue(value);
+    try {
+      window.localStorage.setItem(ADMIN_HUE_STORAGE_KEY, String(next));
+      window.localStorage.setItem(ADMIN_HUE_ENABLED_STORAGE_KEY, 'true');
+    } catch {
+      // localStorage unavailable; setting stays session-only.
+    }
+    set({ adminHue: next, adminHueEnabled: true });
   },
   toggleClaimOverlay: () => {
     const next = { ...get().claimSettings, visible: !get().claimSettings.visible };

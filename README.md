@@ -1,6 +1,6 @@
 # Dune Builder
 
-This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0040` (authoritative source: `v2/version.ts` and the top of `v2/CHANGELOG.md`).
+This repository contains the V2 builder — a data-driven placement engine for planning Dune: Awakening bases. The legacy v1 builder has been removed; the V2 app now runs at the root URL. The current working checkpoint is `v2-dev-0045` (authoritative source: `v2/version.ts` and the top of `v2/CHANGELOG.md`).
 
 > **Deploying / uploading this build?** Read [`HANDOFF.md`](HANDOFF.md) first — the game-asset `.glb` files are local-only, so a plain git-connected deploy produces a site with **no building models**. A local `npm run build` (which copies the GLBs into `dist/`) followed by a direct upload is the only correct path.
 
@@ -20,16 +20,17 @@ The V2 code lives under `v2/`; the root `App.tsx` is a thin wrapper that renders
 
 ## Current V2 Checkpoint
 
-`v2-dev-0040`. See `v2/CHANGELOG.md` for the full history and [`ROADMAP.md`](ROADMAP.md) for what's planned; highlights of the current state:
+`v2-dev-0045`. See `v2/CHANGELOG.md` for the full history and [`ROADMAP.md`](ROADMAP.md) for what's planned; highlights of the current state:
 
 - Connection-first placement: no world grid; the first placed piece establishes the build grid. When no connection target is found, the part uses the ground hit position.
-- Buildable parts are real Harkonnen GLBs (39 of 92 audited registered): foundations + floors (square/wedge/round-corner); the wall family — straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, round corners, door assembly; and inclines — straight stairs/ramps + half versions. The specialized `FloorRoundCorner_In` filler is audited but parked until curved filler placement has its own logic.
+- Buildable parts are real Harkonnen GLBs (44 of 92 audited registered): foundations + floors (square/wedge/round-corner); the wall family — straight styles 1–5, half wall, open-gap windows, window round corner, all 12 wedge walls, tall corner, inclined tall, round corners, standard/tall/garage door assemblies, and passageway; and inclines — straight stairs/ramps + half versions. The specialized `FloorRoundCorner_In` filler is audited but parked until curved filler placement has its own logic.
 - Logical heights are calibrated from measured GLBs: floors 0.3735 thick (pivot at walking surface), foundations 3.8968 tall (pivot at base).
 - Snapping by profile/channel: foundations use structural side-adjacency; floors use floor-support and expose wall-compatible sides; walls use wall-support. Walls stand on foundation/floor/wall tops, can run off a foundation's perimeter to build outward, and cannot pass through a foundation's solid block.
 - Inclines descend off a foundation/floor edge, snap side-by-side into wide staircases, and tile edge-to-edge into sloped roofs/ceilings and climbing runs.
 - Claim borders can be shown as visual-only 10x10 planning chunks with up to 6 horizontal staking units and one vertical staking tier. Build pieces never snap to the claim overlay.
 - Base designs can be exported and imported as versioned JSON files for sharing or starter bases; import supports drag-and-drop, file picking, and paste.
-- Public About/Feedback modal with trimmed Features/Roadmap copy and copy/download feedback packaging.
+- Public Settings pane with Dark detail, ground style, and wheel zoom behavior.
+- Hidden Admin panel with registry tools, a spectrum tint slider, and a sandworm Snake easter egg.
 - R flips wall/door facing when snapped; the cursor's height picks which stacked target (build up vs down). Ghost previews show a facing arrow + inner-face tint.
 - All part GLBs are preloaded and the scene is wrapped in Suspense, so selecting a new part never freezes the placement preview.
 

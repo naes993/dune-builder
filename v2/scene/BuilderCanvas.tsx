@@ -655,6 +655,91 @@ const MODE_LABELS: Record<BuildMode, string> = {
 
 const partLabel = (partId: PartId) => PARTS[partId].name.replace(/^Harkonnen (Level 3 )?/, '');
 
+const SettingsPanel = () => {
+  const {
+    settingsOpen,
+    toggleSettings,
+    reverseScrollZoom,
+    toggleReverseScrollZoom,
+    groundStyle,
+    setGroundStyle,
+    darkDetail,
+    setDarkDetail,
+  } = useV2BuilderStore();
+
+  if (!settingsOpen) return null;
+
+  return (
+    <div className="absolute right-4 top-4 z-20 max-h-[80vh] w-96 overflow-y-auto rounded-lg border border-white/15 bg-black/90 p-4 text-white shadow-2xl backdrop-blur">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-sm font-bold uppercase tracking-wide text-dune-gold">Settings</div>
+        <button onClick={toggleSettings} className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20">
+          Close
+        </button>
+      </div>
+
+      <section className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+        <div className="text-xs font-bold uppercase tracking-wide text-white/55">Display</div>
+        <label className="mt-3 block">
+          <div className="mb-1 flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold">Dark detail</span>
+            <span className="font-mono text-xs text-white/55">{darkDetail}%</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={darkDetail}
+            onInput={(event) => setDarkDetail(Number(event.currentTarget.value))}
+            onChange={(event) => setDarkDetail(Number(event.target.value))}
+            className="w-full accent-dune-gold"
+            aria-label="Dark detail"
+          />
+        </label>
+        <div className="mt-4">
+          <div className="mb-2 text-sm font-semibold">Ground style</div>
+          <div className="flex flex-wrap gap-1">
+            {GROUND_STYLES.map((style) => (
+              <button
+                key={style}
+                onClick={() => setGroundStyle(style)}
+                className={`h-8 rounded px-2 text-xs font-semibold capitalize transition ${
+                  groundStyle === style
+                    ? 'bg-dune-gold text-black'
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+              >
+                {GROUND_STYLE_LABELS[style]}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+        <div className="text-xs font-bold uppercase tracking-wide text-white/55">Controls</div>
+        <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={reverseScrollZoom}
+            onChange={toggleReverseScrollZoom}
+            className="mt-0.5 h-4 w-4 accent-dune-gold"
+          />
+          <span>
+            <span className="font-semibold">Wheel zooms camera</span>
+            <span className="block text-xs leading-4 text-white/45">
+              {reverseScrollZoom
+                ? 'Wheel zooms; hold Shift + Wheel to cycle pieces.'
+                : 'Wheel cycles pieces; hold Shift + Wheel to zoom.'}
+            </span>
+          </span>
+        </label>
+      </section>
+    </div>
+  );
+};
+
 const BuildModePanel = () => {
   const { buildMode } = useV2BuilderStore();
 
@@ -1198,20 +1283,195 @@ const AboutFeedbackModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-const SettingsPanel = () => {
+const WORM_GRID_WIDTH = 14;
+const WORM_GRID_HEIGHT = 10;
+type WormDirection = 'up' | 'right' | 'down' | 'left';
+type WormCell = { x: number; y: number };
+
+const wormKey = (cell: WormCell) => `${cell.x},${cell.y}`;
+
+const randomSpiceCell = (worm: WormCell[]) => {
+  const occupied = new Set(worm.map(wormKey));
+  const open: WormCell[] = [];
+  for (let y = 0; y < WORM_GRID_HEIGHT; y += 1) {
+    for (let x = 0; x < WORM_GRID_WIDTH; x += 1) {
+      const cell = { x, y };
+      if (!occupied.has(wormKey(cell))) open.push(cell);
+    }
+  }
+  return open[Math.floor(Math.random() * open.length)] ?? { x: 1, y: 1 };
+};
+
+const INITIAL_WORM: WormCell[] = [
+  { x: 5, y: 5 },
+  { x: 4, y: 5 },
+  { x: 3, y: 5 },
+];
+
+const nextWormHead = (head: WormCell, direction: WormDirection): WormCell => {
+  if (direction === 'up') return { x: head.x, y: (head.y - 1 + WORM_GRID_HEIGHT) % WORM_GRID_HEIGHT };
+  if (direction === 'down') return { x: head.x, y: (head.y + 1) % WORM_GRID_HEIGHT };
+  if (direction === 'left') return { x: (head.x - 1 + WORM_GRID_WIDTH) % WORM_GRID_WIDTH, y: head.y };
+  return { x: (head.x + 1) % WORM_GRID_WIDTH, y: head.y };
+};
+
+const isReverseDirection = (current: WormDirection, next: WormDirection) =>
+  (current === 'up' && next === 'down') ||
+  (current === 'down' && next === 'up') ||
+  (current === 'left' && next === 'right') ||
+  (current === 'right' && next === 'left');
+
+const SandwormSnake = () => {
+  const [worm, setWorm] = useState<WormCell[]>(INITIAL_WORM);
+  const [direction, setDirection] = useState<WormDirection>('right');
+  const [spice, setSpice] = useState<WormCell>(() => randomSpiceCell(INITIAL_WORM));
+  const [running, setRunning] = useState(false);
+  const [lost, setLost] = useState(false);
+  const [score, setScore] = useState(0);
+
+  const reset = () => {
+    setWorm(INITIAL_WORM);
+    setDirection('right');
+    setSpice(randomSpiceCell(INITIAL_WORM));
+    setRunning(false);
+    setLost(false);
+    setScore(0);
+  };
+
+  const turn = (next: WormDirection) => {
+    setDirection((current) => (isReverseDirection(current, next) ? current : next));
+    if (!lost) setRunning(true);
+  };
+
+  useEffect(() => {
+    if (!running || lost) return;
+    const timer = window.setInterval(() => {
+      setWorm((current) => {
+        const head = nextWormHead(current[0], direction);
+        const ateSpice = head.x === spice.x && head.y === spice.y;
+        const bodyToCheck = ateSpice ? current : current.slice(0, -1);
+
+        if (bodyToCheck.some((cell) => cell.x === head.x && cell.y === head.y)) {
+          setRunning(false);
+          setLost(true);
+          return current;
+        }
+
+        const next = [head, ...current];
+        if (ateSpice) {
+          setScore((value) => value + 1);
+          setSpice(randomSpiceCell(next));
+          return next;
+        }
+
+        next.pop();
+        return next;
+      });
+    }, 180);
+
+    return () => window.clearInterval(timer);
+  }, [direction, lost, running, spice]);
+
+  const wormCells = new Set(worm.map(wormKey));
+  const headKey = wormKey(worm[0]);
+  const spiceKey = wormKey(spice);
+
+  const cells: WormCell[] = [];
+  for (let y = 0; y < WORM_GRID_HEIGHT; y += 1) {
+    for (let x = 0; x < WORM_GRID_WIDTH; x += 1) cells.push({ x, y });
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowUp') turn('up');
+    if (event.key === 'ArrowRight') turn('right');
+    if (event.key === 'ArrowDown') turn('down');
+    if (event.key === 'ArrowLeft') turn('left');
+    if (event.key === ' ') setRunning((value) => !value);
+    event.stopPropagation();
+  };
+
+  return (
+    <div
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      className="mb-3 rounded-lg border border-dune-gold/20 bg-amber-950/20 p-3 outline-none focus:border-dune-gold/60"
+    >
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs font-bold uppercase tracking-wide text-dune-gold">Sandworm Snake</div>
+          <div className="text-[10px] text-white/40">Score {score}{lost ? ' · swallowed itself' : ''}</div>
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={() => setRunning((value) => !value)}
+            className="rounded bg-dune-gold px-2 py-1 text-[11px] font-bold text-black"
+          >
+            {running ? 'Pause' : 'Start'}
+          </button>
+          <button onClick={reset} className="rounded bg-white/10 px-2 py-1 text-[11px] font-semibold hover:bg-white/20">
+            Reset
+          </button>
+        </div>
+      </div>
+      <div
+        className="grid gap-0.5 rounded bg-black/35 p-1"
+        style={{ gridTemplateColumns: `repeat(${WORM_GRID_WIDTH}, minmax(0, 1fr))` }}
+      >
+        {cells.map((cell) => {
+          const key = wormKey(cell);
+          const isHead = key === headKey;
+          const isWorm = wormCells.has(key);
+          const isSpice = key === spiceKey;
+          return (
+            <div
+              key={key}
+              className={`aspect-square rounded-sm ${
+                isHead
+                  ? 'bg-dune-gold'
+                  : isWorm
+                    ? 'bg-amber-700'
+                    : isSpice
+                      ? 'bg-cyan-300'
+                      : 'bg-white/[0.05]'
+              }`}
+            />
+          );
+        })}
+      </div>
+      <div className="mt-2 flex justify-center gap-1">
+        {[
+          ['up', '^'],
+          ['left', '<'],
+          ['down', 'v'],
+          ['right', '>'],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            onClick={() => turn(value as WormDirection)}
+            className="h-7 w-8 rounded bg-white/10 text-xs font-bold text-white/70 hover:bg-white/20"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AdminPanel = () => {
   const {
+    adminOpen,
     categoryOverrides,
     setCategoryOverride,
-    settingsOpen,
-    toggleSettings,
-    reverseScrollZoom,
-    toggleReverseScrollZoom,
-    groundStyle,
-    setGroundStyle,
+    toggleAdmin,
+    adminHueEnabled,
+    adminHue,
+    setAdminHueEnabled,
+    setAdminHue,
   } = useV2BuilderStore();
   const [masterCopied, setMasterCopied] = useState(false);
 
-  if (!settingsOpen) return null;
+  if (!adminOpen) return null;
 
   const categories = MENU_TABS.filter((tab): tab is Exclude<MenuTab, 'all'> => tab !== 'all');
 
@@ -1231,7 +1491,7 @@ const SettingsPanel = () => {
     <div className="absolute right-4 top-4 z-20 max-h-[80vh] w-96 overflow-y-auto rounded-lg border border-white/15 bg-black/90 p-4 text-white shadow-2xl backdrop-blur">
       <div className="mb-2 flex items-center justify-between">
         <div className="text-sm font-bold uppercase tracking-wide text-dune-gold">Admin · Part Registry</div>
-        <button onClick={toggleSettings} className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20">
+        <button onClick={toggleAdmin} className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20">
           Close
         </button>
       </div>
@@ -1251,45 +1511,46 @@ const SettingsPanel = () => {
         </span>
       </div>
       <div className="mb-3 border-t border-white/10 pt-3">
-        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/55">Controls</div>
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-white/55">Experimental</div>
         <label className="flex cursor-pointer items-start gap-2 text-xs">
           <input
             type="checkbox"
-            checked={reverseScrollZoom}
-            onChange={toggleReverseScrollZoom}
-            className="mt-0.5"
+            checked={adminHueEnabled}
+            onChange={(event) => setAdminHueEnabled(event.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-dune-gold"
           />
           <span>
-            <span className="font-semibold">Wheel zooms camera</span>
+            <span className="font-semibold">Spectrum tint</span>
             <span className="block text-[10px] leading-4 text-white/45">
-              {reverseScrollZoom
-                ? 'Wheel zooms the camera; hold Shift + Wheel to cycle pieces (default).'
-                : 'Wheel cycles pieces; hold Shift + Wheel to zoom.'}
+              Hidden color wash for Harkonnen exterior materials.
             </span>
           </span>
         </label>
         <div className="mt-3">
-          <div className="text-xs font-semibold">Ground style</div>
-          <div className="mb-1 text-[10px] leading-4 text-white/45">
-            Depth cue for the floor. All variants are baked once (no image assets, no shadows).
+          <div className="mb-1 flex items-center justify-between gap-3">
+            <div className="text-xs font-semibold">Hue</div>
+            <div className="font-mono text-[10px] text-white/45">{adminHue}°</div>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {GROUND_STYLES.map((style) => (
-              <button
-                key={style}
-                onClick={() => setGroundStyle(style)}
-                className={`h-7 rounded px-2 text-[11px] font-semibold capitalize transition ${
-                  groundStyle === style
-                    ? 'bg-dune-gold text-black'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20'
-                }`}
-              >
-                {GROUND_STYLE_LABELS[style]}
-              </button>
-            ))}
-          </div>
+          <input
+            type="range"
+            min={0}
+            max={360}
+            step={1}
+            value={adminHue}
+            onInput={(event) => setAdminHue(Number(event.currentTarget.value))}
+            onChange={(event) => setAdminHue(Number(event.target.value))}
+            className="w-full accent-dune-gold"
+            aria-label="Spectrum hue"
+          />
+          <button
+            onClick={() => setAdminHueEnabled(false)}
+            className="mt-2 rounded bg-white/10 px-2 py-1 text-[11px] font-semibold text-white/60 hover:bg-white/20 hover:text-white"
+          >
+            Reset normal color
+          </button>
         </div>
       </div>
+      <SandwormSnake />
       <table className="w-full text-left text-xs">
         <thead>
           <tr className="text-white/40">
@@ -1353,13 +1614,13 @@ const Toolbar = () => {
     setActiveTab,
     toggleDebugVisuals,
     toggleClaimOverlay,
+    toggleAdmin,
     toggleMenuExpanded,
     toggleSettings,
     unlockControls,
   } = useV2BuilderStore();
   const [claimPlannerOpen, setClaimPlannerOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
-  const [aboutFeedbackOpen, setAboutFeedbackOpen] = useState(false);
   const [designStatus, setDesignStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1477,7 +1738,6 @@ const Toolbar = () => {
             onImport={handleImportDesign}
           />
         )}
-        {aboutFeedbackOpen && <AboutFeedbackModal onClose={() => setAboutFeedbackOpen(false)} />}
         <div className="flex items-center gap-2">
           <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-white/50">Q</span>
           <div className="flex flex-1 flex-wrap items-center justify-center gap-1">
@@ -1546,10 +1806,10 @@ const Toolbar = () => {
             Import JSON
           </button>
           <button
-            onClick={() => setAboutFeedbackOpen(true)}
+            onClick={toggleSettings}
             className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
           >
-            About / Feedback
+            Settings
           </button>
           <label className="flex h-9 items-center gap-2 rounded-md bg-cyan-950/60 px-3 text-sm font-semibold text-cyan-100">
             <input
@@ -1582,7 +1842,7 @@ const Toolbar = () => {
                 Debug
               </label>
               <button
-                onClick={toggleSettings}
+                onClick={toggleAdmin}
                 className="h-9 rounded-md bg-white/10 px-3 text-sm font-semibold text-white hover:bg-white/20"
               >
                 Admin
@@ -1725,6 +1985,7 @@ export const BuilderCanvas = () => {
       <PlacementDebugPanel />
       <BuildModePanel />
       <SettingsPanel />
+      <AdminPanel />
       <Toolbar />
     </div>
   );

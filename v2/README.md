@@ -1,8 +1,8 @@
 # V2 Builder Prototype
 
-Current V2 build: `v2-dev-0040` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
+Current V2 build: `v2-dev-0045` (authoritative source: `v2/version.ts` + top of `v2/CHANGELOG.md`)
 
-Description: Grain is the default ground style for new local sessions. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
+Description: About/Feedback is parked for now and wheel zoom defaults to on in public Settings. See `v2/CHANGELOG.md` for full history and `ROADMAP.md` for what's planned.
 
 ## Checkpoint Summary
 
@@ -45,7 +45,7 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - Snap profiles and relationship channels for floor, foundation, and wall placement.
 - Wall-edge slot occupancy for snapped wall and door parts.
 - Wall-run continuation from existing wall endpoints **and foundation perimeter corners** (build walls outward off a foundation at ground or top level).
-- Wall family registered: straight styles 1–5, half wall, windows, all 12 wedge walls, tall corner, inclined tall, round corners, and door assembly (33 of 92 audited GLBs).
+- Wall family registered: straight styles 1–5, half wall, open-gap windows, window round corner, all 12 wedge walls, tall corner, inclined tall, round corners, standard/tall/garage door assemblies, and passageway (34 audited GLBs; 44 of 92 total audited GLBs registered).
 - Walls reject placements that pass through a foundation's solid block; an invisible top-snap catcher makes "build on top" reliable.
 - Invalid overlap preview.
 - Material-name mapping for `_Ext` and `_Int`; facing indicator (outward arrow + inner-face tint) on wall/door ghosts.
@@ -54,7 +54,8 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - Separate Debug helper (observe-only — never affects placement).
 - Visual-only claim overlay with 10x10 chunks, up to 6 horizontal staking units, and one vertical staking tier; build placement ignores it.
 - Export/import placed parts as versioned JSON for sharing and starter bases. Claim overlay settings stay local-only and are not exported.
-- About / Feedback modal with public Features, Roadmap, and Feedback tabs. Feedback reports can be copied or downloaded; they are not submitted to a backend yet.
+- Public Settings pane for Dark detail, ground style, and wheel zoom behavior.
+- Hidden Admin panel with registry tools, a spectrum tint slider, and a sandworm Snake easter egg.
 - Harkonnen asset audit and manifest; committed master category organization with Admin overrides.
 
 ## Controls (game parity)
@@ -63,12 +64,11 @@ Vertical building works through these elevation-aware anchors: floors snap flush
 - **Right Click** — cycle build mode: Build → Replace → Customize → Demolish.
 - **R** — rotate the preview (flips wall/door facing when snapped).
 - **Q / E** — previous / next category tab.
-- **Mouse Wheel** — cycle pieces in the active tab; **Shift+Wheel** zooms the camera. (Admin "Reverse scroll wheel" swaps these two roles.)
+- **Mouse Wheel** — zooms the camera by default; **Shift+Wheel** cycles pieces. Public Settings can swap these two roles.
 - **Middle Click** — copy a hovered piece (makes it the active piece).
 - **Middle-drag** — orbit camera; **Left-drag** — pan camera.
 - **B** — collapse/expand the build menu.
 - **Export JSON / Import JSON** — download or load a shared base design by dropping, choosing, or pasting JSON.
-- **About / Feedback** — open public features, roadmap, and feedback packaging.
 - **Z / C** — reserved for building-set cycling once multiple sets exist.
 
 ## Placement Testing
@@ -99,7 +99,7 @@ Expected smoke checks:
 - The wedge-wall facing tint is still a rectangle (overshoots the sloped top).
 - There is no final Part Builder yet.
 - There is no autosave/design-library UI yet; manual JSON export/import is the current sharing path.
-- There is no full roof, stair-corner, or remaining curved-filler/opening system yet (GLBs audited, not registered).
+- There is no full roof, stair-corner, or remaining curved-filler system yet (GLBs audited, not registered).
 
 ## Next Recommended Task
 

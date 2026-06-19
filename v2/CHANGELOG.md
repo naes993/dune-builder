@@ -1,5 +1,48 @@
 # V2 Changelog
 
+## v2-dev-0045 - 2026-06-19
+
+Settings cleanup.
+
+- **Parked About/Feedback.** Hid the `About / Feedback` toolbar entry for now; the modal code remains available for a later public-facing pass.
+- **Wheel zoom default reset.** Renamed the stored preference to `v2.wheelZoomsCamera` so the public Settings checkbox starts checked by default again instead of inheriting stale test values from the previous Admin-only setting key.
+
+## v2-dev-0044 - 2026-06-19
+
+Settings pane and hidden admin toys.
+
+- **Public Settings pane.** Added a normal Settings button in the build toolbar and moved tester-facing preferences there: Dark detail, ground style, and wheel zoom behavior.
+- **Admin split.** The hidden Admin button now opens a separate admin-only pane for part registry organization and experimental controls.
+- **Spectrum tint.** Added a hidden Admin hue slider that recolors Harkonnen exterior material overrides across the color spectrum, with a reset back to the normal material profile.
+- **Sandworm Snake.** Added a compact admin-only Snake easter egg themed as a sandworm/spice grid game.
+
+## v2-dev-0043 - 2026-06-19
+
+Display adjustment for dark Harkonnen pieces.
+
+- **Dark detail slider.** Added a visible Display panel with a `Dark detail` slider so testers can tune black Harkonnen exterior surfaces for their screen without changing scene lights, shadows, or placement behavior.
+- **Local preference.** The slider persists in `localStorage` (`v2.darkDetail`) and defaults to 70%; Reset restores that default.
+- **Material lift.** `_Ext` Harkonnen material overrides now derive color, roughness, metalness, emissive color, and emissive intensity from the slider, keeping pieces dark while preserving more visible edge and panel detail on dim/OLED displays.
+
+## v2-dev-0042 - 2026-06-18
+
+Access and opening registration batch.
+
+- **Preserved standard Door Assembly.** Confirmed the existing `DoorFrame` + `Door` assembly was already registered correctly in the Walls tab and kept it as the standard one-tile wall-door opening.
+- **Added Tall Door Assembly.** Registered `SM_Env_PB_Hark_Level3_DoorFrame_Tall.glb` + `SM_Env_PB_Hark_Level3_Door_Tall.glb` as a two-story wall-door opening using the existing wall-door snap and occupancy model.
+- **Added Garage Door Assembly.** Registered `SM_Env_PB_Hark_Level3_GarageDoorFrame.glb` + `SM_Env_PB_Hark_Level3_GarageDoor.glb` as a conservative two-tile-wide wall-door opening in the Walls tab.
+- **Added Passageway.** Registered `SM_Env_PB_Hark_Level3_Passageway.glb` as a standard wall-door opening using the current door/wall placement model.
+- **Count updated.** Registered audited GLBs are now 44 of 92: the existing standard door/frame pair plus tall door/frame, garage door/frame, and passageway.
+
+## v2-dev-0041 - 2026-06-18
+
+Window round corner without glass.
+
+- **Added WindowRoundCorner.** Registered `SM_Env_PB_Hark_Level3_WindowRoundCorner_01.glb` as a Walls-tab round-corner window piece using the existing two-edge corner-wall logical placement model.
+- **Skipped curved glass.** Left `SM_Env_PB_Hark_Level3_WindowRoundCorner_01_Glass.glb` out of the active builder so the piece keeps the open window gap and avoids extra translucent rendering cost.
+- **Removed glazed straight window.** Removed the `Window Wall (Glazed)` assembly from the active registry/menu; the regular `Window Wall` remains as the lighter open-gap variant.
+- **Count unchanged.** Registered audited GLBs remain at 39: removing `WindowGlass` and adding `WindowRoundCorner_01` cancel out.
+
 ## v2-dev-0040 - 2026-06-18
 
 Default ground style: Grain.

@@ -13,6 +13,7 @@ const DOOR_HALF_DEPTH = DOOR_DEPTH / 2;
 // tall wall pieces span exactly three modules (measured GLB: 11.644).
 const STANDARD_WALL_HEIGHT = V2_FOUNDATION_HEIGHT;
 const HALF_WALL_HEIGHT = V2_FOUNDATION_HEIGHT / 2;
+const DOUBLE_WALL_HEIGHT = V2_FOUNDATION_HEIGHT * 2;
 const TALL_WALL_HEIGHT = V2_FOUNDATION_HEIGHT * 3;
 const TRIANGLE_APOTHEM = UNIT / (2 * Math.sqrt(3));
 const TRIANGLE_RADIUS = UNIT / Math.sqrt(3);
@@ -197,6 +198,32 @@ const WALL_FOOTPRINT: FootprintDef = {
   ],
 };
 
+const garageDoorAnchors = (height: number): EdgeAnchorDef[] => {
+  const width = UNIT * 2;
+  const halfWidth = width / 2;
+  return [
+    {
+      id: 'edge.wall-bottom',
+      kind: 'edge',
+      role: 'foundation-edge',
+      start: [-halfWidth, 0, 0],
+      end: [halfWidth, 0, 0],
+      normal: [0, 0, 1],
+      channels: ['floor-support'],
+    },
+    {
+      id: 'edge.wall-top',
+      kind: 'edge',
+      role: 'foundation-edge',
+      start: [-halfWidth, height, 0],
+      end: [halfWidth, height, 0],
+      normal: [0, 0, 1],
+      channels: SUPPORT_CHANNELS,
+      source: false,
+    },
+  ];
+};
+
 const DOOR_FOOTPRINT: FootprintDef = {
   type: 'polygon',
   points: [
@@ -204,6 +231,16 @@ const DOOR_FOOTPRINT: FootprintDef = {
     [HALF, -DOOR_HALF_DEPTH],
     [HALF, DOOR_HALF_DEPTH],
     [-HALF, DOOR_HALF_DEPTH],
+  ],
+};
+
+const GARAGE_DOOR_FOOTPRINT: FootprintDef = {
+  type: 'polygon',
+  points: [
+    [-UNIT, -DOOR_HALF_DEPTH],
+    [UNIT, -DOOR_HALF_DEPTH],
+    [UNIT, DOOR_HALF_DEPTH],
+    [-UNIT, DOOR_HALF_DEPTH],
   ],
 };
 
@@ -259,6 +296,46 @@ const wallVariant = (options: {
     placeholderMesh: {
       type: 'box',
       size: [UNIT, height, WALL_DEPTH],
+    },
+    ...(visuals.length === 1 ? { mesh: visuals[0] } : { meshes: visuals }),
+  };
+};
+
+const wallDoorVariant = (options: {
+  id: PartId;
+  name: string;
+  glbs: string[];
+  height?: number;
+  footprint?: FootprintDef;
+  width?: number;
+  anchors?: EdgeAnchorDef[];
+}): PartDefinition => {
+  const height = options.height ?? STANDARD_WALL_HEIGHT;
+  const width = options.width ?? UNIT;
+  const visuals = options.glbs.map((glb) => ({
+    url: `/assets/parts/harkonnen/${glb}`,
+    scale: [1, 1, 1] as [number, number, number],
+    offset: [0, -height / 2, 0] as [number, number, number],
+    rotation: [0, 0, 0] as [number, number, number],
+    materialOverride: HARKONNEN_FALLBACK_MATERIAL,
+  }));
+  return {
+    id: options.id,
+    name: options.name,
+    category: 'wall-door',
+    menuCategory: 'walls',
+    occupancyLayer: 'wall-edge',
+    snapProfile: 'wall',
+    snapSourceChannels: [...WALL_SOURCE_CHANNELS],
+    snapTargetChannels: [...SUPPORT_CHANNELS],
+    height,
+    yOffset: height / 2,
+    allowedRotations: STANDARD_ROTATIONS,
+    anchors: options.anchors ?? wallAnchors(height),
+    footprint: options.footprint ?? DOOR_FOOTPRINT,
+    placeholderMesh: {
+      type: 'box',
+      size: [width, height, DOOR_DEPTH],
     },
     ...(visuals.length === 1 ? { mesh: visuals[0] } : { meshes: visuals }),
   };
@@ -610,11 +687,6 @@ export const PARTS: PartRegistry = {
     name: 'Harkonnen Level 3 Window Wall',
     glbs: ['SM_Env_PB_Hark_Level3_Window.glb'],
   }),
-  'wall.harkonnen.level3.window.glazed': wallVariant({
-    id: 'wall.harkonnen.level3.window.glazed',
-    name: 'Harkonnen Level 3 Window Wall (Glazed)',
-    glbs: ['SM_Env_PB_Hark_Level3_Window.glb', 'SM_Env_PB_Hark_Level3_WindowGlass.glb'],
-  }),
   'wall.harkonnen.level3.triangle.bottom.left': wallVariant({
     id: 'wall.harkonnen.level3.triangle.bottom.left',
     name: 'Harkonnen Level 3 Wedge Wall Bottom (Left)',
@@ -753,6 +825,11 @@ export const PARTS: PartRegistry = {
     glb: 'SM_Env_PB_Hark_Level3_WallRoundCorner_Half.glb',
     height: HALF_WALL_HEIGHT,
   }),
+  'wall.harkonnen.level3.window.round-corner.01': wallRoundCornerVariant({
+    id: 'wall.harkonnen.level3.window.round-corner.01',
+    name: 'Harkonnen Level 3 Window Round Corner',
+    glb: 'SM_Env_PB_Hark_Level3_WindowRoundCorner_01.glb',
+  }),
   'wall.harkonnen.level3.inclined.tall': {
     id: 'wall.harkonnen.level3.inclined.tall',
     name: 'Harkonnen Level 3 Inclined Tall Wall',
@@ -779,41 +856,39 @@ export const PARTS: PartRegistry = {
       materialOverride: HARKONNEN_FALLBACK_MATERIAL,
     },
   },
-  'wall.harkonnen.level3.door': {
+  'wall.harkonnen.level3.door': wallDoorVariant({
     id: 'wall.harkonnen.level3.door',
     name: 'Harkonnen Level 3 Door Assembly',
-    category: 'wall-door',
-    menuCategory: 'walls',
-    occupancyLayer: 'wall-edge',
-    snapProfile: 'wall',
-    snapSourceChannels: [...WALL_SOURCE_CHANNELS],
-    snapTargetChannels: [...SUPPORT_CHANNELS],
-    height: STANDARD_WALL_HEIGHT,
-    yOffset: STANDARD_WALL_HEIGHT / 2,
-    allowedRotations: STANDARD_ROTATIONS,
-    anchors: wallAnchors(STANDARD_WALL_HEIGHT),
-    footprint: DOOR_FOOTPRINT,
-    placeholderMesh: {
-      type: 'box',
-      size: [UNIT, STANDARD_WALL_HEIGHT, DOOR_DEPTH],
-    },
-    meshes: [
-      {
-        url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_DoorFrame.glb',
-        scale: [1, 1, 1],
-        offset: [0, -STANDARD_WALL_HEIGHT / 2, 0],
-        rotation: [0, 0, 0],
-        materialOverride: HARKONNEN_FALLBACK_MATERIAL,
-      },
-      {
-        url: '/assets/parts/harkonnen/SM_Env_PB_Hark_Level3_Door.glb',
-        scale: [1, 1, 1],
-        offset: [0, -STANDARD_WALL_HEIGHT / 2, 0],
-        rotation: [0, 0, 0],
-        materialOverride: HARKONNEN_FALLBACK_MATERIAL,
-      },
+    glbs: [
+      'SM_Env_PB_Hark_Level3_DoorFrame.glb',
+      'SM_Env_PB_Hark_Level3_Door.glb',
     ],
-  },
+  }),
+  'wall.harkonnen.level3.door.tall': wallDoorVariant({
+    id: 'wall.harkonnen.level3.door.tall',
+    name: 'Harkonnen Level 3 Tall Door Assembly',
+    glbs: [
+      'SM_Env_PB_Hark_Level3_DoorFrame_Tall.glb',
+      'SM_Env_PB_Hark_Level3_Door_Tall.glb',
+    ],
+    height: DOUBLE_WALL_HEIGHT,
+  }),
+  'wall.harkonnen.level3.garage-door': wallDoorVariant({
+    id: 'wall.harkonnen.level3.garage-door',
+    name: 'Harkonnen Level 3 Garage Door Assembly',
+    glbs: [
+      'SM_Env_PB_Hark_Level3_GarageDoorFrame.glb',
+      'SM_Env_PB_Hark_Level3_GarageDoor.glb',
+    ],
+    anchors: garageDoorAnchors(STANDARD_WALL_HEIGHT),
+    footprint: GARAGE_DOOR_FOOTPRINT,
+    width: UNIT * 2,
+  }),
+  'wall.harkonnen.level3.passageway': wallDoorVariant({
+    id: 'wall.harkonnen.level3.passageway',
+    name: 'Harkonnen Level 3 Passageway',
+    glbs: ['SM_Env_PB_Hark_Level3_Passageway.glb'],
+  }),
   'incline.harkonnen.level3.stairs': inclineVariant({
     id: 'incline.harkonnen.level3.stairs',
     name: 'Harkonnen Level 3 Stairs',
